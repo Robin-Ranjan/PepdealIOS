@@ -29,6 +29,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pepdeal.infotech.login.LoginScreen
+import com.pepdeal.infotech.navigation.routes.Routes
+import com.pepdeal.infotech.util.NavigationProvider
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
@@ -160,11 +162,11 @@ fun ProfileScreen() {
                 ProfileMenuItem(
                     text = "Open Your Shop",
                     icon = Res.drawable.shopping_bag,
-                    onClick = { println("Favorites") })
+                    onClick = { NavigationProvider.navController.navigate(Routes.OpenYourShopPage) })
                 ProfileMenuItem(
                     text = "Personal Info",
                     icon = Res.drawable.baseline_person_24,
-                    onClick = { println("Favorites") })
+                    onClick = {  })
                 Text(
                     text = "Seller Page",
                     color = Color.DarkGray,
@@ -220,16 +222,16 @@ fun ProfileScreen() {
                     onClick = { println("Favorites") })
                 // Logout Card
                 LogoutCard {
-                    if (it) isLogin = true
+                    if (it) NavigationProvider.navController.navigate(Routes.LoginPage)
                 }
 
-                if (isLogin) {
-                    Box(modifier = Modifier.fillMaxSize()){
-                        LoginScreen(onLoginClick = {},
-                            onRegisterClick = {},
-                            onForgotPasswordClick = {})
-                    }
-                }
+//                if (isLogin) {
+//                    Box(modifier = Modifier.fillMaxSize()){
+//                        LoginScreen(onLoginClick = {},
+//                            onRegisterClick = {},
+//                            onForgotPasswordClick = {})
+//                    }
+//                }
             }
         }
 

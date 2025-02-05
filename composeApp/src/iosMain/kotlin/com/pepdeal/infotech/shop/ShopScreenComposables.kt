@@ -47,6 +47,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.SystemFontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -56,6 +57,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pepdeal.infotech.ProductWithImages
 import com.pepdeal.infotech.ShopWithProducts
+import com.pepdeal.infotech.fonts.FontUtils
+import com.pepdeal.infotech.fonts.FontUtils.getFontResourceByName
 import com.pepdeal.infotech.product.SearchView
 import com.pepdeal.infotech.util.Util.fromHex
 import com.pepdeal.infotech.util.Util.toDiscountFormat
@@ -69,9 +72,13 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.Font
+import org.jetbrains.compose.resources.FontResource
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
+import pepdealios.composeapp.generated.resources.alkatra_bold
 import pepdealios.composeapp.generated.resources.compose_multiplatform
+import pepdealios.composeapp.generated.resources.manrope_bold
 import pepdealios.composeapp.generated.resources.pepdeal_logo
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -148,7 +155,7 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
                 .fillMaxSize()
                 .background(color = Color.White)
                 .padding(horizontal = 3.dp, vertical = 3.dp)
-                .pointerInput(Unit){
+                .pointerInput(Unit) {
                     detectTapGestures(onTap = {
                         keyboardController?.hide()
                     })
@@ -160,53 +167,53 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
             SideEffect {
                 println("ShopScreen recomposed with ${shopListNew.size} items")
             }
-                Column {
-                    Row(
+            Column {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                ) {
+                    Image(
+                        painter = painterResource(Res.drawable.pepdeal_logo),
+                        contentDescription = "Your image description",
                         modifier = Modifier
-                            .fillMaxWidth()
-                    ) {
-                        Image(
-                            painter = painterResource(Res.drawable.pepdeal_logo),
-                            contentDescription = "Your image description",
-                            modifier = Modifier
-                                .width(130.dp)
-                                .height(28.dp)
-                                .padding(start = 5.dp),
-                            contentScale = ContentScale.Fit // Adjust based on your needs (e.g., FillBounds, Fit)
-                        )
-                    }
+                            .width(130.dp)
+                            .height(28.dp)
+                            .padding(start = 5.dp),
+                        contentScale = ContentScale.Fit // Adjust based on your needs (e.g., FillBounds, Fit)
+                    )
+                }
 
-                    SearchView("Search Shop", searchQuery) {
-                        searchQuery = it
-                    }
-                    Text(text = shopListNew.size.toString())
+                SearchView("Search Shop", searchQuery) {
+                    searchQuery = it
+                }
+                Text(text = shopListNew.size.toString())
 
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .nestedScroll(nestedScrollConnection)
-                            .padding(0.dp)
-                            .pointerInput(Unit){
-                                detectVerticalDragGestures { change, dragAmount ->
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .nestedScroll(nestedScrollConnection)
+                        .padding(0.dp)
+                        .pointerInput(Unit) {
+                            detectVerticalDragGestures { change, dragAmount ->
 
-                                }
-                            },
-                        state = columnState
-                    ) {
-                        items(displayedProductList,
-                            key = { it.shop.shopId!! }
-                        ) { shop ->
-                            // Shop Card
-                            ShopCardView(shop)
-                        }
+                            }
+                        },
+                    state = columnState
+                ) {
+                    items(displayedProductList,
+                        key = { it.shop.shopId!! }
+                    ) { shop ->
+                        // Shop Card
+                        ShopCardView(shop)
                     }
+                }
 
 //            Spacer(modifier = Modifier.height(16.dp))
 
-                    // Additional content goes here
-                }
+                // Additional content goes here
+            }
 //            }
-            if(isLoading){
+            if (isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
@@ -224,6 +231,13 @@ fun ShopCardView(shopWithProduct: ShopWithProducts) {
     // Card background color
     val cardBackgroundColor = Color.fromHex(shopWithProduct.shop.bgColourId ?: "")
     val shopNameColor = Color.fromHex(shopWithProduct.shop.fontColourId)
+
+    val fontResource: FontResource =
+        getFontResourceByName(shopWithProduct.shop.fontStyleId ?: "") ?: Res.font.manrope_bold
+
+    val customFont = FontFamily(Font(fontResource))
+
+
     Card(
         modifier = Modifier
             .padding(8.dp)
@@ -254,7 +268,8 @@ fun ShopCardView(shopWithProduct: ShopWithProducts) {
                             modifier = Modifier
                                 .fillMaxWidth() // Makes the Text fill the available width
                                 .padding(top = 5.dp),
-                            textAlign = TextAlign.Center // Centers the text within the available width
+                            textAlign = TextAlign.Center,// Centers the text within the available width
+                            fontFamily = customFont
                         )
 
                         // Shop Address

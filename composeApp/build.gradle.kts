@@ -54,6 +54,8 @@ kotlin {
             implementation("org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose:2.8.2")
 
             implementation("io.github.ismai117:kottie:2.0.1")
+
+            implementation("org.jetbrains.androidx.navigation:navigation-compose:2.8.0-alpha10")
         }
 
         iosMain.dependencies {

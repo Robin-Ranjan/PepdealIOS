@@ -1,0 +1,185 @@
+<resources>
+    <string name="app_name">PEPDEAL</string>
+    <string name="navigation_drawer_open">Open Navigation Drawer</string>
+    <string name="navigation_drawer_close">Close Navigation Drawer</string>
+    <string name="todo">TODO</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="shop_note">Note: When adding shop make sure you will be in your shop as we are relocating your shop to serve you better.</string>
+    <string name="search_tag_note">you want search by multiple tags then add search tags separated by comma (,)..</string>
+    <string name="search_tag_note_image">you have to update the all image, previous images will be deleted </string>
+    <string name="size_tag_note">you want to add multiple sizes then add size separated by comma (,)..</string>
+    <!--    <string name="term_condition">This is an <u>Terms &amp; Conditions</u>.</string>-->
+
+    <string name="term_condition">
+        <font fgcolor='#2DBBDD'> <u>Agree and Start Now!</u> </font>
+    </string>
+
+    <string name="have_acc_login">
+        <font fgcolor='#FF000000'>Already have an account? </font><font fgcolor='#ffcc0000'><u>Login</u> </font>
+    </string>
+    <string name="unable_to_fetch_address">Unable To Fetch The Address</string>
+    <string name="shop_details">Shop Details</string>
+    <string name="passsword">Password</string>
+    <string name="login">Login</string>
+    <string name="login_Register"> </string>
+    <string name="forgot_password">Forgot Password?</string>
+    <string name="already_have_an_account_register">Already have an account? Register</string>
+    <string name="mobile_number">Mobile Number</string>
+    <string name="update">Update</string>
+    <string name="remove">Remove</string>
+    <!-- Strings used for fragments for navigation -->
+    <string name="first_fragment_label">First Fragment</string>
+    <string name="second_fragment_label">Second Fragment</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+
+    <string name="lorem_ipsum">
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam in scelerisque sem. Mauris
+        volutpat, dolor id interdum ullamcorper, risus dolor egestas lectus, sit amet mattis purus
+        dui nec risus. Maecenas non sodales nisi, vel dictum dolor. Class aptent taciti sociosqu ad
+        litora torquent per conubia nostra, per inceptos himenaeos. Suspendisse blandit eleifend
+        diam, vel rutrum tellus vulputate quis. Aliquam eget libero aliquet, imperdiet nisl a,
+        ornare ex. Sed rhoncus est ut libero porta lobortis. Fusce in dictum tellus.\n\n
+        Suspendisse interdum ornare ante. Aliquam nec cursus lorem. Morbi id magna felis. Vivamus
+        egestas, est a condimentum egestas, turpis nisl iaculis ipsum, in dictum tellus dolor sed
+        neque. Morbi tellus erat, dapibus ut sem a, iaculis tincidunt dui. Interdum et malesuada
+        fames ac ante ipsum primis in faucibus. Curabitur et eros porttitor, ultricies urna vitae,
+        molestie nibh. Phasellus at commodo eros, non aliquet metus. Sed maximus nisl nec dolor
+        bibendum, vel congue leo egestas.\n\n
+        Sed interdum tortor nibh, in sagittis risus mollis quis. Curabitur mi odio, condimentum sit
+        amet auctor at, mollis non turpis. Nullam pretium libero vestibulum, finibus orci vel,
+        molestie quam. Fusce blandit tincidunt nulla, quis sollicitudin libero facilisis et. Integer
+        interdum nunc ligula, et fermentum metus hendrerit id. Vestibulum lectus felis, dictum at
+        lacinia sit amet, tristique id quam. Cras eu consequat dui. Suspendisse sodales nunc ligula,
+        in lobortis sem porta sed. Integer id ultrices magna, in luctus elit. Sed a pellentesque
+        est.\n\n
+        Aenean nunc velit, lacinia sed dolor sed, ultrices viverra nulla. Etiam a venenatis nibh.
+        Morbi laoreet, tortor sed facilisis varius, nibh orci rhoncus nulla, id elementum leo dui
+        non lorem. Nam mollis ipsum quis auctor varius. Quisque elementum eu libero sed commodo. In
+        eros nisl, imperdiet vel imperdiet et, scelerisque a mauris. Pellentesque varius ex nunc,
+        quis imperdiet eros placerat ac. Duis finibus orci et est auctor tincidunt. Sed non viverra
+        ipsum. Nunc quis augue egestas, cursus lorem at, molestie sem. Morbi a consectetur ipsum, a
+        placerat diam. Etiam vulputate dignissim convallis. Integer faucibus mauris sit amet finibus
+        convallis.\n\n
+        Phasellus in aliquet mi. Pellentesque habitant morbi tristique senectus et netus et
+        malesuada fames ac turpis egestas. In volutpat arcu ut felis sagittis, in finibus massa
+        gravida. Pellentesque id tellus orci. Integer dictum, lorem sed efficitur ullamcorper,
+        libero justo consectetur ipsum, in mollis nisl ex sed nisl. Donec maximus ullamcorper
+        sodales. Praesent bibendum rhoncus tellus nec feugiat. In a ornare nulla. Donec rhoncus
+        libero vel nunc consequat, quis tincidunt nisl eleifend. Cras bibendum enim a justo luctus
+        vestibulum. Fusce dictum libero quis erat maximus, vitae volutpat diam dignissim.
+    </string>
+    <string name="shop_board_background">Shop Board Background</string>
+    <string name="your_name">Your Name</string>
+    <string name="email_id">Email Id</string>
+    <string name="save">Save</string>
+    <string name="edit_profile">Edit Profile</string>
+    <string name="edit">Edit</string>
+    <string name="personal_info">Personal Info</string>
+    <string name="shops">Shops</string>
+    <string name="search">Search</string>
+    <string name="send_otp">Send OTP</string>
+    <string name="don_t_have_an_account_register">Don\'t have an account? Register</string>
+    <string name="enter_the_otp_sent_to">Enter the OTP sent to</string>
+    <string name="verify">Verify</string>
+    <string name="didn_t_receive_otp_resend">Didn\'t Receive OTP? Resend</string>
+    <string name="register">Register</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="profile">Profile</string>
+    <string name="favroites_items">Favorites Products</string>
+    <string name="personl_info">Personal Info</string>
+    <string name="seller_window">Seller Window</string>
+    <string name="list_product">List Product</string>
+    <string name="update_listing">Update Listing</string>
+    <string name="your_shop">Your Shop</string>
+    <string name="edit_shop_details">Edit Shop Details</string>
+    <string name="tickets_amp_messages"><![CDATA[Tickets & Messages]]></string>
+    <string name="show_shop_number">Show Shop Number</string>
+    <string name="shop_services">Shop Services</string>
+    <string name="permission_denied">Permission Denied</string>
+    <string name="product">Product</string>
+    <string name="products">Products</string>
+    <string name="support">Support</string>
+    <string name="support_amp_faq"><![CDATA[Support & FAQ]]></string>
+    <string name="product_sub_categories">Product Sub-Categories</string>
+    <string name="product_sub_category">Product Sub-Category</string>
+    <string name="product_category">Product Category</string>
+    <string name="edit_product_details">Edit Product Details</string>
+    <string name="product_name">Product Name</string>
+    <string name="add_item">Add Item</string>
+    <string name="brand_name">Brand Name</string>
+    <string name="search_tag">Search Tag</string>
+    <string name="product_description">Product Description</string>
+    <string name="product_specification">Product Specification</string>
+    <string name="product_warrenty">Product Warranty</string>
+    <string name="colour">Colour</string>
+    <string name="size">Size</string>
+    <string name="discount">Discount(%)</string>
+    <string name="sale">Sale</string>
+    <string name="update_product_image">Update Product Image</string>
+    <string name="price">Price</string>
+    <string name="mrp">MRP</string>
+    <string name="permission_denied_forever">Permission Denied</string>
+    <string name="uploading_thumbnail">Uploading Thumbnail</string>
+    <string name="video_is_valid">Video is valid</string>
+    <string name="select_your_current_location">Select Your Current Location</string>
+    <string name="ticket_deleted">Ticket Deleted</string>
+    <string name="login_first">Please Login First</string>
+    <string name="on_call">On Call</string>
+    <string name="tickets">Tickets</string>
+    <string name="search_shop">Search shop</string>
+    <string name="what_are_you_looking_for">what are you looking for... ?</string>
+    <string name="ticketsSearch">Tickets... ?</string>
+    <string name="open_your_shop">Open Your Shop</string>
+    <string name="super_shop">Super Shop</string>
+    <string name="cutomer_page">Cutomer Page</string>
+    <string name="shop_video">Shop Video</string>
+    <string name="logout">Logout</string>
+    <string name="logout_sucessfully">Logout successfully</string>
+    <string name="submit">Submit</string>
+    <string name="choose_colors">Choose Colors</string>
+    <string name="upload">Upload</string>
+    <string name="like_button">like button</string>
+    <string name="notification_on_feed">notification on feed</string>
+    <string name="search_dot">search...</string>
+    <string name="test_discount">10</string>
+    <string name="text_mrp">300</string>
+    <string name="test_price">123</string>
+    <string name="test_product_name">Bellavita</string>
+    <string name="show_category_product">show category product</string>
+    <string name="save_video">save video</string>
+    <string name="pepdeal_logo">pepdeal logo</string>
+    <string name="product_image">product image</string>
+    <string name="additional_details">Additional Details</string>
+    <string name="brand">Brand</string>
+    <string name="color">Color:-</string>
+    <string name="category">Category</string>
+    <string name="_1_year_warranty">1 Year Warranty</string>
+    <string name="_1000">1000</string>
+    <string name="_340_00">340.00</string>
+    <string name="_60">- 60 %</string>
+    <string name="saved_video">Saved Video</string>
+    <string name="login_and_logout">login and logout</string>
+    <string name="banner">banner</string>
+    <string name="pepmedia_digital_masketing">Pepmedia Digital Masketing</string>
+    <string name="shop_address">Shop Address</string>
+    <string name="logo_on_the_product_page">logo on the product page</string>
+    <string name="shops_products">shops products</string>
+    <string name="enter_password">Enter Password</string>
+    <string name="reset_password">Reset Password</string>
+    <string name="shop_phone">shop phone</string>
+    <string name="add_to_super_shop">add to super shop</string>
+    <string name="profile_picture">profile picture</string>
+    <string name="if_you_have_added_your_shop_product_it_will_be_live_after_approval">If you have added your shop Product it will be live after approval.</string>
+
+    <string name="email_update_success">Email id is updated</string>
+    <string name="enter_email">Please Enter Your email id</string>
+    <string name="cash_on_delivery">Cash On Delivery</string>
+    <string name="upload_new_image_tag">Now You Can Upload New Images</string>
+
+    <!--    <string name="dont_hv_acc">-->
+    <!--       <font fgcolor = '#FF000000'> <u>Don't have an account? Register</u></font>-->
+    <!--    </string>-->
+
+</resources>

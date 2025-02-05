@@ -67,24 +67,57 @@ object Util {
     }
 
     fun Color.Companion.fromHex(hex: String): Color {
-        // Remove the '#' character if it's there
-        val cleanedHex = hex.removePrefix("#")
+        try {
+            // Remove the '#' character if it's there
+            val cleanedHex = hex.removePrefix("#")
 
-        // Ensure the hex code is valid (length 6 for RGB, 8 for ARGB)
-        require(cleanedHex.length == 6 || cleanedHex.length == 8) { "Invalid hex color code" }
+            // Ensure the hex code is valid (length 6 for RGB, 8 for ARGB)
+            require(cleanedHex.length == 6 || cleanedHex.length == 8) { "Invalid hex color code" }
 
-        // Parse the color components (Red, Green, Blue, and optionally Alpha)
-        val r = cleanedHex.substring(0, 2).toInt(16)
-        val g = cleanedHex.substring(2, 4).toInt(16)
-        val b = cleanedHex.substring(4, 6).toInt(16)
+            // Parse the color components (Red, Green, Blue, and optionally Alpha)
+            val r = cleanedHex.substring(0, 2).toInt(16)
+            val g = cleanedHex.substring(2, 4).toInt(16)
+            val b = cleanedHex.substring(4, 6).toInt(16)
 
-        val a = if (cleanedHex.length == 8) {
-            cleanedHex.substring(6, 8).toInt(16)
-        } else {
-            255 // Default alpha value if not provided
+            val a = if (cleanedHex.length == 8) {
+                cleanedHex.substring(6, 8).toInt(16)
+            } else {
+                255 // Default alpha value if not provided
+            }
+
+            // Return the Color object using integer values (0 to 255)
+            return Color(r, g, b, a)
+        }catch (e:Exception){
+            e.printStackTrace()
+            println(e.message)
+            return Color.Unspecified
         }
+    }
 
-        // Return the Color object using integer values (0 to 255)
-        return Color(r, g, b, a)
+    fun validateShopAndSubmit(
+        fields: Map<String, String>,
+        setError: (String) -> Unit,
+        status: (Boolean) -> Unit
+    ) {
+        // Check for empty fields
+        val emptyField = fields.entries.find { it.value.isBlank() }
+        if (emptyField != null) {
+            setError("${emptyField.key} cannot be empty!")
+            status(false)
+        } else {
+            // Validate phone number length
+            val phoneNumber = fields["Shop Phone Number"]
+            if (phoneNumber != null && phoneNumber.length < 10) {
+                setError("Phone number must be at least 10 digits long!")
+                status(false)
+                return
+            }
+
+            // Clear any previous error and submit logic
+            setError("")
+            // Submit logic
+            println("Form submitted successfully")
+            status(true)
+        }
     }
 }

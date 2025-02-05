@@ -11,7 +11,6 @@
 		058557D9273AAEEB004C7B11 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 058557D8273AAEEB004C7B11 /* Preview Assets.xcassets */; };
 		2152FB042600AC8F00CF470E /* iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2152FB032600AC8F00CF470E /* iOSApp.swift */; };
 		5D10D8E82D5226970037E0A0 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = 5D10D8E72D5226970037E0A0 /* Lottie */; };
-		5D10D8F02D52330F0037E0A0 /* login_anim.json in Resources */ = {isa = PBXBuildFile; fileRef = 5D10D8EF2D52330F0037E0A0 /* login_anim.json */; };
 		5D1B960D2D4B7D7200279282 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 5D1B960C2D4B7D7200279282 /* FirebaseAnalytics */; };
 		5D1B960F2D4B7D7200279282 /* FirebaseAnalyticsOnDeviceConversion in Frameworks */ = {isa = PBXBuildFile; productRef = 5D1B960E2D4B7D7200279282 /* FirebaseAnalyticsOnDeviceConversion */; };
 		5D1B96112D4B7D7200279282 /* FirebaseAnalyticsWithoutAdIdSupport in Frameworks */ = {isa = PBXBuildFile; productRef = 5D1B96102D4B7D7200279282 /* FirebaseAnalyticsWithoutAdIdSupport */; };
@@ -44,7 +43,6 @@
 		058557BA273AAA24004C7B11 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		058557D8273AAEEB004C7B11 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		2152FB032600AC8F00CF470E /* iOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSApp.swift; sourceTree = "<group>"; };
-		5D10D8EF2D52330F0037E0A0 /* login_anim.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = login_anim.json; sourceTree = "<group>"; };
 		5D1B96402D4B7FE400279282 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		7555FF7B242A565900829871 /* Pepdeal IOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Pepdeal IOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7555FF82242A565900829871 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -103,22 +101,6 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		5D10D8ED2D5232DB0037E0A0 /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-				5D10D8EE2D5232EA0037E0A0 /* files */,
-			);
-			path = Resources;
-			sourceTree = "<group>";
-		};
-		5D10D8EE2D5232EA0037E0A0 /* files */ = {
-			isa = PBXGroup;
-			children = (
-				5D10D8EF2D52330F0037E0A0 /* login_anim.json */,
-			);
-			path = files;
-			sourceTree = "<group>";
-		};
 		7555FF72242A565900829871 = {
 			isa = PBXGroup;
 			children = (
@@ -140,7 +122,6 @@
 		7555FF7D242A565900829871 /* iosApp */ = {
 			isa = PBXGroup;
 			children = (
-				5D10D8ED2D5232DB0037E0A0 /* Resources */,
 				5D1B96402D4B7FE400279282 /* GoogleService-Info.plist */,
 				058557BA273AAA24004C7B11 /* Assets.xcassets */,
 				7555FF82242A565900829871 /* ContentView.swift */,
@@ -250,7 +231,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5D10D8F02D52330F0037E0A0 /* login_anim.json in Resources */,
 				058557D9273AAEEB004C7B11 /* Preview Assets.xcassets in Resources */,
 				058557BB273AAA24004C7B11 /* Assets.xcassets in Resources */,
 				5D1B96412D4B7FE400279282 /* GoogleService-Info.plist in Resources */,

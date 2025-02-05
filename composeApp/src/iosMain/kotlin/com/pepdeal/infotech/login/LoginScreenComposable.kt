@@ -12,7 +12,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
@@ -48,10 +47,12 @@ import kottieComposition.animateKottieCompositionAsState
 import kottieComposition.rememberKottieComposition
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.InternalResourceApi
+import org.jetbrains.compose.resources.readResourceBytes
 import pepdealios.composeapp.generated.resources.Res
+import utils.kottieReadBytes
 
 
-@OptIn(ExperimentalResourceApi::class)
+@OptIn(ExperimentalResourceApi::class, InternalResourceApi::class)
 @Composable
 fun LoginScreen(
     onLoginClick: () -> Unit,
@@ -67,7 +68,7 @@ fun LoginScreen(
 
     LaunchedEffect(Unit){
         try {
-            animation = Res.readBytes("raw/login_amin.json").decodeToString()
+            animation = Res.readBytes("files/login_anim.json").decodeToString()
 //        animation = readResourceBytes("files/animation.json").decodeToString()
         }catch (e:Exception){
             println(e.message)
