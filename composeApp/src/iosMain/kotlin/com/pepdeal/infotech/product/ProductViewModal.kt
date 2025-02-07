@@ -2,6 +2,9 @@ package com.pepdeal.infotech.product
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pepdeal.infotech.categories.ProductCategories
+import com.pepdeal.infotech.categories.SubCategory
+import com.pepdeal.infotech.color.ColorItem
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.buffer
@@ -19,17 +22,6 @@ class ProductViewModal() : ViewModel() {
     private val _isLoading = MutableStateFlow(false) // Loading state
     val isLoading: StateFlow<Boolean> get() = _isLoading
 
-//    fun fetchItems() {
-//        viewModelScope.launch {
-//            productRepo.getAllProductsFlow()
-//                .onStart { _isLoading.value = true }
-//                .buffer(capacity = 1000)
-//                .collect { product ->
-//                    _products.update { oldList -> oldList + product } // More efficient update
-//                    _isLoading.value = false
-//                }
-//        }
-//    }
 
     private var currentPage = 0 // Page counter
     private val pageSize = 10   // Number of items per page
@@ -74,6 +66,39 @@ class ProductViewModal() : ViewModel() {
         }
     }
 
+    private val _selectedProductCategories = MutableStateFlow<ProductCategories?>(null)
+    val selectedProductCategories: StateFlow<ProductCategories?> = _selectedProductCategories
 
+    private val _selectedProductSubCategories = MutableStateFlow<SubCategory?>(null)
+    val selectedProductSubCategories: StateFlow<SubCategory?> = _selectedProductSubCategories
+
+    private val _selectedProductColours = MutableStateFlow<List<ColorItem>?>(null)
+    val selectedProductColours: StateFlow<List<ColorItem>?> = _selectedProductColours
+
+    fun updateProductCategories(productCategories:ProductCategories){
+        _selectedProductCategories.value = productCategories
+    }
+
+    fun updateProductSubCategories(productSubCategories:SubCategory){
+        _selectedProductSubCategories.value = productSubCategories
+    }
+
+    fun resetTheProductDetails(){
+        _selectedProductCategories.value = ProductCategories(
+            id = 0,
+            name = "",
+            false
+        )
+        _selectedProductSubCategories.value = SubCategory(id = 0, name = "", categoryId = 0, imageUrl = "", isSelected = false)
+        _selectedProductColours.value = emptyList()
+    }
+
+    fun resetTheSelectedSubCategories(){
+        _selectedProductSubCategories.value = SubCategory(id = 0, name = "", categoryId = 0, imageUrl = "", isSelected = false)
+    }
+
+    fun updateProductColours(colours:List<ColorItem>){
+        _selectedProductColours.value = colours
+    }
 
 }

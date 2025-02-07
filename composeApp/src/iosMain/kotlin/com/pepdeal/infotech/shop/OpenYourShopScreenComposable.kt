@@ -32,6 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -73,6 +74,7 @@ import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.FontResource
 import pepdealios.composeapp.generated.resources.Res
 import pepdealios.composeapp.generated.resources.manrope_bold
+import pepdealios.composeapp.generated.resources.manrope_medium
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -122,7 +124,7 @@ fun OpenYourShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
     )
 
     val fontDetails = viewModel.selectedFonts.collectAsStateWithLifecycle().value
-
+    val snackBar = remember { SnackbarHostState() }
     if (fontDetails != null) {
         shopBoardFontStyle.value = TextFieldValue(fontDetails.first)
         shopBoardFontResources.value = fontDetails.second
@@ -291,7 +293,7 @@ fun OpenYourShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
                         viewModel.updateTheTypeOfColor("shop_board_color")
                     },
                     isEditable = false,
-                    color = Color.fromHex(shopBoardBackgroundColorCode.value.text)
+                    color = if(shopBoardBackgroundColorName.value.text.isNotEmpty()) Color.fromHex(shopBoardBackgroundColorCode.value.text) else Color.Black
                 )
 
                 TextFieldWithLabel(
@@ -302,7 +304,7 @@ fun OpenYourShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
                         viewModel.updateTheTypeOfColor("shop_font_color")
                     },
                     isEditable = false,
-                    color = Color.fromHex(shopBoardFontColorCode.value.text)
+                    color = if(shopBoardFontColorName.value.text.isNotEmpty()) Color.fromHex(shopBoardFontColorCode.value.text) else Color.Black
                 )
 
                 TextFieldWithLabel(
@@ -371,7 +373,7 @@ fun OpenYourShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
 fun TextFieldWithLabel(
     label: String,
     maxLines: Int = 1,
-    fontResources:FontResource =Res.font.manrope_bold,
+    fontResources:FontResource =Res.font.manrope_medium,
     state: MutableState<TextFieldValue>,
     isEditable: Boolean = true,
     maxLength: Int = Int.MAX_VALUE,
@@ -402,7 +404,7 @@ fun TextFieldWithLabel(
             .background(Color.White, MaterialTheme.shapes.small)
             .padding(8.dp)
             .clickable { onClick() },
-        textStyle = TextStyle(color = color, fontSize = 18.sp, fontFamily = FontFamily(Font(fontResources))),
+        textStyle = TextStyle(color = color, fontSize = 15.sp, fontFamily = FontFamily(Font(fontResources)), lineHeight = 15.sp),
         enabled = isEditable,
         maxLines = maxLines,
         minLines = minLines,

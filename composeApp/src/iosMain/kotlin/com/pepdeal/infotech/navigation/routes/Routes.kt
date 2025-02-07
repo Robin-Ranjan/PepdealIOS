@@ -24,10 +24,16 @@ sealed class Routes {
     object OpenYourShopPage:Routes()
 
     @Serializable
-    object ColorBottomSheetPage:Routes()
+    object ListProductPage:Routes()
+
+    @Serializable
+    object FavouritesPage:Routes()
 
     companion object {
         const val ColorBottomSheet = "color_bottom_sheet"
+        const val MultiColorBottomSheet = "multi_color_bottom_sheet"
         const val FontBottomSheet = "font_bottom_sheet"
+        const val ProductCategoriesBottomSheet = "product_categories_bottom_sheet"
+        const val ProductSubCategoriesBottomSheet = "product_subcategories_bottom_sheet"
     }
 }

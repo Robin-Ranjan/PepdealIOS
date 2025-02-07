@@ -1,13 +1,18 @@
 package com.pepdeal.infotech.util
 
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.intl.Locale
+import androidx.compose.ui.text.input.TextFieldValue
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.crashlytics.crashlytics
 import kotlinx.cinterop.ExperimentalForeignApi
-import platform.Foundation.NSNumber
-import platform.Foundation.NSNumberFormatter
-import platform.UIKit.UIColor
+import kotlinx.cinterop.addressOf
+import kotlinx.cinterop.convert
+import kotlinx.cinterop.usePinned
+import platform.CoreCrypto.CC_SHA256
+import platform.CoreCrypto.CC_SHA256_DIGEST_LENGTH
+import platform.Foundation.*
+import kotlin.math.round
 
 object Util {
     fun String.toRupee(): String = "₹$this"
@@ -120,4 +125,49 @@ object Util {
             status(true)
         }
     }
+
+    fun calculateFinalPrice(mrpText: String, discountText: String, productSale: MutableState<TextFieldValue>):String {
+        val price = mrpText.toDoubleOrNull() ?: 0.0
+        val discount = discountText.toDoubleOrNull() ?: 0.0
+
+        if (discount > 100) return "0.00" // Reset if discount is greater than 100
+
+        val finalPrice = price - (price * discount / 100)
+
+        // Round to 2 decimal places
+        val roundedFinalPrice = (round(finalPrice * 100) / 100).toString()
+
+        return roundedFinalPrice
+    }
+
+    @OptIn(ExperimentalForeignApi::class)
+    fun hashPassword(password: String): String {
+        val data = password.encodeToByteArray().toUByteArray() // Convert to UByteArray
+        val hash = UByteArray(CC_SHA256_DIGEST_LENGTH)
+
+        data.usePinned { pinned ->
+            hash.usePinned { hashPinned ->
+                CC_SHA256(pinned.addressOf(0), data.size.convert(), hashPinned.addressOf(0))
+            }
+        }
+
+        return hash.joinToString("") { it.toString(16).padStart(2, '0') } // Corrected
+    }
+
+    fun formatDateWithTimestamp(timeMillis: String): String {
+        return try {
+            val timestamp = timeMillis.toDouble() / 1000  // Convert to seconds for NSDate
+            val date = NSDate(timestamp)
+
+            val dateFormatter = NSDateFormatter().apply {
+                dateFormat = "dd MMM yyyy"
+                locale = NSLocale.currentLocale
+            }
+            dateFormatter.stringFromDate(date)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            ""
+        }
+    }
+
 }

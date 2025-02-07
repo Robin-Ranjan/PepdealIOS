@@ -15,10 +15,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
 import com.pepdeal.infotech.categories.CategoriesScreen
-import com.pepdeal.infotech.login.LoginScreen
 import com.pepdeal.infotech.product.ProductScreen
 import com.pepdeal.infotech.profile.ProfileScreen
-import com.pepdeal.infotech.registration.RegisterScreen
 import com.pepdeal.infotech.shop.ShopScreen
 
 @Composable

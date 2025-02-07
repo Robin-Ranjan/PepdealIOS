@@ -28,12 +28,10 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -43,7 +41,6 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -51,24 +48,23 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.pepdeal.infotech.shop.ShopViewModal
 import com.pepdeal.infotech.util.Util.toDiscountFormat
 import com.pepdeal.infotech.util.Util.toTwoDecimalPlaces
 import com.pepdeal.infotech.util.ViewModals
@@ -76,10 +72,15 @@ import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil3.CoilImage
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
+import pepdealios.composeapp.generated.resources.black_heart
 import pepdealios.composeapp.generated.resources.compose_multiplatform
+import pepdealios.composeapp.generated.resources.manrope_light
+import pepdealios.composeapp.generated.resources.manrope_medium
 import pepdealios.composeapp.generated.resources.pepdeal_logo
+import pepdealios.composeapp.generated.resources.red_heart
 
 
 @Composable
@@ -95,8 +96,9 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
 
     val keyboardController = LocalSoftwareKeyboardController.current
 
+    var heartRes = Res.drawable.black_heart
     LaunchedEffect(Unit) {
-        if(productNewList.isEmpty()){
+        if (productNewList.isEmpty()) {
             coroutineScope.launch {
                 viewModel.fetchItemsPage()
             }
@@ -104,24 +106,15 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
     }
 
     val displayedProductList = remember(searchQuery, productNewList) {
-         if (searchQuery.isNotEmpty()) filteredProducts else productNewList
-//        filteredVideos.sortedByDescending {
-//            try{
-//                it..updatedAt.toLong()
-//            }catch (e:Exception){
-//                e.printStackTrace()
-//                println(e.message)
-//                0L
-//            }
-//        }
+        if (searchQuery.isNotEmpty()) filteredProducts else productNewList
     }
 
     // Observe search query and filter in the background
     LaunchedEffect(searchQuery, productNewList) {
 //        withContext(Dispatchers.Default) {
-            val filtered = productNewList.filter {
-                it.productName.contains(searchQuery, ignoreCase = true)
-            }
+        val filtered = productNewList.filter {
+            it.productName.contains(searchQuery, ignoreCase = true)
+        }
 //            withContext(Dispatchers.Main) {
         filteredProducts = filtered
 //            }
@@ -149,58 +142,57 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
                 .fillMaxSize()
                 .background(color = Color.White)
                 .padding(5.dp)
-                .pointerInput(Unit){
+                .pointerInput(Unit) {
                     detectTapGestures(onTap = {
                         keyboardController?.hide()
                     })
                 }
         ) {
-//            if (isLoading) {
-//                CircularProgressIndicator(Modifier.align(Alignment.Center), color = Color.Red)
-//            } else {
 
-                Column {
-                    Image(
-                        painter = painterResource(Res.drawable.pepdeal_logo),
-                        contentDescription = "Your image description",
-                        modifier = Modifier
-                            .width(130.dp)
-                            .height(28.dp)
-                            .padding(start = 5.dp),
-                        contentScale = ContentScale.Fit // Adjust based on your needs (e.g., FillBounds, Fit)
-                    )
-                    SearchView("Search Product", searchQuery) {
-                        searchQuery = it
-                    }
+            Column {
+                Image(
+                    painter = painterResource(Res.drawable.pepdeal_logo),
+                    contentDescription = "Your image description",
+                    modifier = Modifier
+                        .width(130.dp)
+                        .height(28.dp)
+                        .padding(start = 5.dp),
+                    contentScale = ContentScale.Fit // Adjust based on your needs (e.g., FillBounds, Fit)
+                )
+                SearchView("Search Product", searchQuery) {
+                    searchQuery = it
+                }
 
-                    Text(text = productNewList.size.toString())
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(2), // 2 columns
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(5.dp),
-                        horizontalArrangement = Arrangement.spacedBy(5.dp), // Space between columns
-                        verticalArrangement = Arrangement.spacedBy(8.dp), // Space between rows
-                        state = listState
-                    ) {
-                        items(items = displayedProductList,
-                            key = { it.productId }) { product ->
-                            // Shop Card
-                            AnimatedVisibility(
-                                visible = true, // Replace with your condition if necessary
-                                enter = fadeIn(tween(durationMillis = 300)) + slideInVertically(initialOffsetY = { it }),
-                                exit = fadeOut(tween(durationMillis = 300)) + slideOutVertically(targetOffsetY = { it })
-                            ) {
-                                ProductCard(product, onLikeClicked = {})
-                            }
+                Text(text = productNewList.size.toString())
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2), // 2 columns
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(5.dp),
+                    horizontalArrangement = Arrangement.spacedBy(5.dp), // Space between columns
+                    verticalArrangement = Arrangement.spacedBy(8.dp), // Space between rows
+                    state = listState
+                ) {
+                    items(items = displayedProductList,
+                        key = { it.productId }) { product ->
+                        // Shop Card
+                        AnimatedVisibility(
+                            visible = true, // Replace with your condition if necessary
+                            enter = fadeIn(tween(durationMillis = 300)) + slideInVertically(
+                                initialOffsetY = { it }),
+                            exit = fadeOut(tween(durationMillis = 300)) + slideOutVertically(
+                                targetOffsetY = { it })
+                        ) {
+                            ProductCard(product, onLikeClicked = {
+                                heartRes = Res.drawable.red_heart
+                            }, heartRes = painterResource(heartRes))
                         }
                     }
                 }
-//            }
+            }
 
             Spacer(modifier = Modifier.height(5.dp))
 
-            // Additional content goes here
         }
     }
 }
@@ -208,6 +200,7 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
 @Composable
 fun ProductCard(
     shopItems: ShopItems,
+    heartRes: Painter,
     onLikeClicked: () -> Unit
 ) {
     Card(
@@ -234,7 +227,6 @@ fun ProductCard(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(150.dp),
-//                            .clip(RoundedCornerShape(size = 10.dp)),
                         imageModel = { shopItems.image },
                         imageOptions = ImageOptions(
                             contentScale = ContentScale.Crop,
@@ -248,26 +240,26 @@ fun ProductCard(
                 }
 
                 IconButton(
-                    onClick = { onLikeClicked() },
+                    onClick = {
+                        onLikeClicked()
+                    },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(5.dp)
                         .size(48.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.CheckCircle,
+                        painter = heartRes,
                         contentDescription = "Like",
                         modifier = Modifier.size(30.dp),
-                        tint = Color.Unspecified
+                        tint = Color.Unspecified,
                     )
                 }
             }
 
-//            Spacer(modifier = Modifier.height(8.dp))
-
             Text(
                 text = shopItems.productName,
-//                fontFamily = FontFamily(FontFamily.Monospace),
+                fontFamily = FontFamily(Font(Res.font.manrope_medium)),
                 fontSize = 12.sp,
                 lineHeight = 12.sp,
                 color = Color.Black,
@@ -278,47 +270,40 @@ fun ProductCard(
                     .fillMaxWidth()
             )
 
-            if(shopItems.onCall == "1"){
+            if (shopItems.onCall == "1") {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(start = 5.dp, bottom = 5.dp)
                 ) {
                     Text(
                         text = shopItems.sellingPrice.toTwoDecimalPlaces(),
-//                    fontFamily = FontFamily(Font(R.font.manrope_light)),
+                        fontFamily = FontFamily(Font(Res.font.manrope_light)),
                         fontSize = 11.sp,
                         lineHeight = 10.sp,
                         color = Color.Black
                     )
 
-//                    if (shopItems.mrp.isNotEmpty()) {
-                        Text(
-                            text = shopItems.mrp.toTwoDecimalPlaces(),
-//                        fontFamily = FontFamily(Font(R.font.manrope_light)),
-                            fontSize = 10.sp,
-                            lineHeight = 10.sp,
-                            color = Color.Gray,
-                            textDecoration = TextDecoration.LineThrough,
-                            modifier = Modifier.padding(horizontal = 5.dp)
-                        )
-//                    }
+                    Text(
+                        text = shopItems.mrp.toTwoDecimalPlaces(),
+                        fontFamily = FontFamily(Font(Res.font.manrope_light)), fontSize = 10.sp,
+                        lineHeight = 10.sp,
+                        color = Color.Gray,
+                        textDecoration = TextDecoration.LineThrough,
+                        modifier = Modifier.padding(horizontal = 5.dp)
+                    )
 
-//                    if (shopItems.discountMrp.isNotEmpty()) {
-                        Text(
-                            text = shopItems.discountMrp.toDiscountFormat(),
-//                        fontFamily = FontFamily(Font(R.font.manrope_light)),
-                            fontSize = 10.sp,
-                            lineHeight = 10.sp,
-                            color = Color.Red,
-                            modifier = Modifier.padding(start = 3.dp)
-                        )
-//                    }
+                    Text(
+                        text = shopItems.discountMrp.toDiscountFormat(),
+                        fontFamily = FontFamily(Font(Res.font.manrope_light)), fontSize = 10.sp,
+                        lineHeight = 10.sp,
+                        color = Color.Red,
+                        modifier = Modifier.padding(start = 3.dp)
+                    )
                 }
-            }else{
+            } else {
                 Text(
                     text = "On Call",
-//                        fontFamily = FontFamily(Font(R.font.manrope_light)),
-                    fontSize = 10.sp,
+                    fontFamily = FontFamily(Font(Res.font.manrope_light)), fontSize = 10.sp,
                     lineHeight = 10.sp,
                     color = Color.Black,
                     modifier = Modifier.padding(start = 3.dp)
@@ -338,7 +323,7 @@ fun SearchView(label: String, searchQuery: String, onSearchQueryChanged: (String
             .fillMaxWidth(),
         shape = RoundedCornerShape(15.dp), // Rounded corners
         elevation = CardDefaults.cardElevation(0.dp),
-         colors = CardDefaults.cardColors(Color.White),
+        colors = CardDefaults.cardColors(Color.White),
         border = BorderStroke(0.5.dp, Color.Black) // Stroke color and width
     ) {
         Row(

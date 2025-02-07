@@ -81,10 +81,8 @@ import pepdealios.composeapp.generated.resources.compose_multiplatform
 import pepdealios.composeapp.generated.resources.manrope_bold
 import pepdealios.composeapp.generated.resources.pepdeal_logo
 
-@OptIn(ExperimentalCoroutinesApi::class)
 @Composable
 fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
-//    val viewModel = remember { ShopViewModal() }
 
     var showContent by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -96,14 +94,6 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
 //    var filteredShops by remember { mutableStateOf<List<ShopWithProducts>>(emptyList()) }
 
     var locationName by remember { mutableStateOf("") }
-//    LaunchedEffect(Unit) {
-//        if(shopListNew.isEmpty()){
-//            println("products:- loadMore")
-//            scope.launch {
-//                viewModel.loadMoreShops()
-//            }
-//        }
-//    }
 
     val latestShopList = rememberUpdatedState(shopListNew)
     LaunchedEffect(Unit) {
@@ -161,12 +151,7 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
                     })
                 }
         ) {
-//            if (isLoading) {
-//                CircularProgressIndicator(Modifier.align(Alignment.Center), color = Color.Red)
-//            } else {
-            SideEffect {
-                println("ShopScreen recomposed with ${shopListNew.size} items")
-            }
+
             Column {
                 Row(
                     modifier = Modifier
@@ -207,12 +192,7 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
                         ShopCardView(shop)
                     }
                 }
-
-//            Spacer(modifier = Modifier.height(16.dp))
-
-                // Additional content goes here
             }
-//            }
             if (isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier
