@@ -201,7 +201,7 @@ fun ProfileScreen() {
                     ProfileMenuItem(
                         text = "Tickets",
                         icon = Res.drawable.tickets,
-                        onClick = { println("Favorites") })
+                        onClick = { NavigationProvider.navController.navigate(Routes.CustomerTicketPage) })
                     ProfileMenuItem(
                         text = "Saved Shop Video",
                         icon = Res.drawable.super_shop_logo,

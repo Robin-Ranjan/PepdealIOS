@@ -5,6 +5,7 @@ import com.pepdeal.infotech.favourite.FavoriteProductViewModal
 import com.pepdeal.infotech.login.LoginViewModal
 import com.pepdeal.infotech.product.ProductViewModal
 import com.pepdeal.infotech.shop.ShopViewModal
+import com.pepdeal.infotech.tickets.TicketViewModal
 
 object ViewModals {
     val shopViewModel by lazy { ShopViewModal() }
@@ -12,4 +13,5 @@ object ViewModals {
     val categoriesViewModel by lazy { CategoriesViewModel() }
     val loginViewModal by lazy { LoginViewModal() }
     val favoriteProductViewModal by lazy { FavoriteProductViewModal() }
+    val customerTicketViewModal by lazy {TicketViewModal()}
 }

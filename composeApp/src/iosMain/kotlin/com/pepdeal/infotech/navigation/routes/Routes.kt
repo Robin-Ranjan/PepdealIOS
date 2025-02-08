@@ -29,6 +29,9 @@ sealed class Routes {
     @Serializable
     object FavouritesPage:Routes()
 
+    @Serializable
+    object CustomerTicketPage:Routes()
+
     companion object {
         const val ColorBottomSheet = "color_bottom_sheet"
         const val MultiColorBottomSheet = "multi_color_bottom_sheet"

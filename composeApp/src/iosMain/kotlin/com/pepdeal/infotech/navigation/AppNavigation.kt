@@ -20,6 +20,7 @@ import com.pepdeal.infotech.navigation.routes.SubGraph
 import com.pepdeal.infotech.product.ListProductScreen
 import com.pepdeal.infotech.registration.RegisterScreen
 import com.pepdeal.infotech.shop.OpenYourShopScreen
+import com.pepdeal.infotech.tickets.CustomerTicketScreen
 import com.pepdeal.infotech.util.NavigationProvider
 
 
@@ -69,6 +70,10 @@ fun AppNavigation() {
 
             composable<Routes.FavouritesPage> {
                 FavoriteProductScreen()
+            }
+
+            composable<Routes.CustomerTicketPage> {
+                CustomerTicketScreen()
             }
 
             dialog(
