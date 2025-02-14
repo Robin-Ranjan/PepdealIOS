@@ -37,6 +37,7 @@ class SuperShopRepo {
     fun getSuperShopWithProduct(userId:String): Flow<SuperShopsWithProduct> = flow{
         try {
             val superShops = fetchSuperShops(userId)
+                .sortedByDescending { it.createdAt.toLongOrNull()?: 0L }
             for (shop in superShops){
                 val shopDetails = fetchShopDetails(shop.shopId)
                 if(shopDetails?.flag == "0" && shopDetails.isActive == "0"){

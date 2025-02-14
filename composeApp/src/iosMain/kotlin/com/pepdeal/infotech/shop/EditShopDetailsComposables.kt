@@ -23,6 +23,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -53,11 +54,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pepdeal.infotech.ShopMaster
 import com.pepdeal.infotech.fonts.FontUtils
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.util.ColorUtil
 import com.pepdeal.infotech.util.NavigationProvider.navController
+import com.pepdeal.infotech.util.Util
 import com.pepdeal.infotech.util.Util.fromHex
+import com.pepdeal.infotech.util.Util.toNameFormat
 import com.pepdeal.infotech.util.ViewModals
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -70,38 +74,57 @@ import pepdealios.composeapp.generated.resources.manrope_regular
 @Composable
 fun EditShopDetailsScreen(
     shopId: String,
+    userId: String,
     viewModal: EditShopDetailsViewModal = ViewModals.editShopViewModal
 ) {
     val bringIntoViewRequester = remember { BringIntoViewRequester() }
+    val scope = rememberCoroutineScope()
+
+    // Collect ViewModel states efficiently
     val shopDetails by viewModal.shopDetails.collectAsStateWithLifecycle()
-    val uploading by viewModal.shopLoading.collectAsStateWithLifecycle()
+    val isUploaded by viewModal.isUploaded.collectAsStateWithLifecycle()
     val shopServices by viewModal.shopServices.collectAsStateWithLifecycle()
 
-    val shopBoardBackgroundColorName = remember { mutableStateOf(TextFieldValue()) }
+    val backgroundColorCode by viewModal.selectedBackGroundColorCode.collectAsStateWithLifecycle("")
+    val backgroundColorName by viewModal.selectedBackGroundColorName.collectAsStateWithLifecycle("")
+    val fontColorCode by viewModal.selectedFontColorCode.collectAsStateWithLifecycle("")
+    val fontColorName by viewModal.selectedFontColorName.collectAsStateWithLifecycle("")
+    val fontResource by viewModal.selectedFonts.collectAsStateWithLifecycle(null)
+
+    // UI state holders (updated when `shopDetails` changes)
     val shopBoardBackgroundColorCode = remember { mutableStateOf(TextFieldValue()) }
-
-    val aboutShop = remember { mutableStateOf(TextFieldValue()) }
-    val shopBoardFontStyle = remember { mutableStateOf(TextFieldValue()) }
-    var showNumber by remember { mutableStateOf(false) }
-    val shopBoardFontResources = remember { mutableStateOf(TextFieldValue()) }
-
-    val shopBoardFontColorName = remember { mutableStateOf(TextFieldValue()) }
+    val shopBoardBackgroundColorName = remember { mutableStateOf(TextFieldValue()) }
     val shopBoardFontColorCode = remember { mutableStateOf(TextFieldValue()) }
+    val shopBoardFontColorName = remember { mutableStateOf(TextFieldValue()) }
+    val shopBoardFontResources = remember { mutableStateOf(TextFieldValue()) }
+    val aboutShop = remember { mutableStateOf(TextFieldValue()) }
+    var showNumber by remember { mutableStateOf(false) }
 
-    val scope = rememberCoroutineScope()
+    // Fetch shop details on screen load
     LaunchedEffect(shopId) {
         viewModal.fetchShopDetails(shopId)
         viewModal.fetchShopServices(shopId)
     }
 
+    // Update UI state when shop details change
     LaunchedEffect(shopDetails) {
-        shopBoardBackgroundColorCode.value = TextFieldValue(shopDetails.bgColourId ?: "")
-        shopBoardBackgroundColorName.value = TextFieldValue(ColorUtil.colorMap.entries.find { it.value == shopBoardBackgroundColorCode.value.text }?.key?:"Default")
-        shopBoardFontColorCode.value = TextFieldValue(shopDetails.fontColourId)
-        shopBoardFontColorName.value = TextFieldValue(ColorUtil.colorMap.entries.find { it.value == shopBoardFontColorCode.value.text }?.key?:"Default")
         aboutShop.value = TextFieldValue(shopDetails.shopDescription ?: "")
-        shopBoardFontResources.value = TextFieldValue(shopDetails.fontStyleId ?: "")
         showNumber = shopDetails.showNumber == "0"
+    }
+
+    // Update UI state when colors and fonts change
+    LaunchedEffect(
+        backgroundColorCode,
+        backgroundColorName,
+        fontColorCode,
+        fontColorName,
+        fontResource
+    ) {
+        shopBoardBackgroundColorCode.value = TextFieldValue(backgroundColorCode ?: "")
+        shopBoardBackgroundColorName.value = TextFieldValue(backgroundColorName ?: "")
+        shopBoardFontColorCode.value = TextFieldValue(fontColorCode ?: "")
+        shopBoardFontColorName.value = TextFieldValue(fontColorName ?: "")
+        shopBoardFontResources.value = TextFieldValue(fontResource?.first ?: "")
     }
 
     // Use derived state to update when shopServices changes
@@ -115,6 +138,36 @@ fun EditShopDetailsScreen(
             "Bargain" to mutableStateOf(shopServices.bargain == "0")
         )
     }
+
+    // Function to update shop services when user toggles an option
+    fun updateShopServices() {
+        val updatedShopStatus = shopServices.copy(
+            shopStatusId = "",
+            userId = userId,
+            shopId = shopId,
+            cashOnDelivery = if (serviceOptions[0].second.value) "0" else "1",
+            doorStep = if (serviceOptions[1].second.value) "0" else "1",
+            homeDelivery = if (serviceOptions[2].second.value) "0" else "1",
+            liveDemo = if (serviceOptions[3].second.value) "0" else "1",
+            offers = if (serviceOptions[4].second.value) "0" else "1",
+            bargain = if (serviceOptions[5].second.value) "0" else "1",
+            updatedAt = Util.getCurrentTimeStamp(), // Ensure timestamp is updated
+            createdAt = Util.getCurrentTimeStamp()
+        )
+
+        val shopMaster = shopDetails.copy(
+            bgColourId = shopBoardBackgroundColorCode.value.text,
+            fontStyleId = shopBoardFontResources.value.text,
+            fontColourId = shopBoardFontColorCode.value.text,
+            shopDescription = aboutShop.value.text.trim(),
+            showNumber = if (showNumber) "0" else "1",
+            updatedAt = Util.getCurrentTimeStamp()
+        )
+
+
+        viewModal.updateShopDetails(updatedShopStatus,shopMaster)
+    }
+
 
     MaterialTheme {
         Scaffold {
@@ -152,24 +205,31 @@ fun EditShopDetailsScreen(
                     expandedHeight = 50.dp
                 )
                 Box(Modifier.fillMaxSize()) {
-                    Column (modifier = Modifier.fillMaxSize()
-                        .verticalScroll(rememberScrollState()),
-                        horizontalAlignment = Alignment.CenterHorizontally){
+                    Column(
+                        modifier = Modifier.fillMaxSize()
+                            .verticalScroll(rememberScrollState()),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color.fromHex(shopDetails.bgColourId?:""))
+                                .background(Color.fromHex(shopBoardBackgroundColorCode.value.text))
                                 .padding(5.dp)
                         ) {
                             Text(
-                                text = shopDetails.shopName ?: "",
+                                text = shopDetails.shopName?.toNameFormat() ?: "",
                                 style = TextStyle(
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
-                                    fontFamily = FontFamily.Serif,
+                                    fontFamily = FontFamily(
+                                        Font(
+                                            FontUtils.getFontResourceByName(shopBoardFontResources.value.text)
+                                                ?: Res.font.manrope_medium
+                                        )
+                                    ),
                                     lineHeight = 18.sp
                                 ),
-                                color = Color.fromHex(shopDetails.fontColourId),
+                                color = Color.fromHex(shopBoardFontColorCode.value.text),
                                 modifier = Modifier
                                     .fillMaxWidth() // Makes the Text fill the available width
                                     .padding(top = 5.dp),
@@ -184,7 +244,7 @@ fun EditShopDetailsScreen(
                                     fontFamily = FontFamily.Serif,
                                     lineHeight = 12.sp
                                 ),
-                                color = Color.fromHex(shopDetails.fontColourId),
+                                color = Color.fromHex(shopBoardFontColorCode.value.text),
                                 modifier = Modifier
                                     .fillMaxWidth(), // Makes the Text fill the available width
                                 textAlign = TextAlign.Center // Centers the text within the available width
@@ -195,7 +255,7 @@ fun EditShopDetailsScreen(
                             label = "Shop Board BackGround Color",
                             state = shopBoardBackgroundColorName,
                             onClick = {
-                                navController.navigate(Routes.ColorBottomSheet)
+                                navController.navigate(Routes.EditShopColorBottomSheet)
                                 viewModal.updateTheTypeOfColor("shop_board_color")
                             },
                             isEditable = false,
@@ -207,8 +267,9 @@ fun EditShopDetailsScreen(
                         TextFieldWithLabel(
                             label = "Shop Board Font Style",
                             state = shopBoardFontResources,
-                            fontResources = FontUtils.getFontResourceByName(shopBoardFontResources.value.text)?:Res.font.manrope_medium,
-                            onClick = { navController.navigate(Routes.FontBottomSheet) },
+                            fontResources = FontUtils.getFontResourceByName(shopBoardFontResources.value.text)
+                                ?: Res.font.manrope_medium,
+                            onClick = { navController.navigate(Routes.EditShopFontBottomSheet) },
                             isEditable = false
                         )
 
@@ -216,7 +277,7 @@ fun EditShopDetailsScreen(
                             label = "Shop Font Color",
                             state = shopBoardFontColorName,
                             onClick = {
-                                navController.navigate(Routes.ColorBottomSheet)
+                                navController.navigate(Routes.EditShopColorBottomSheet)
                                 viewModal.updateTheTypeOfColor("shop_font_color")
                             },
                             isEditable = false,
@@ -275,13 +336,15 @@ fun EditShopDetailsScreen(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { isExpanded = !isExpanded
+                                    .clickable {
+                                        isExpanded = !isExpanded
                                         if (isExpanded) {
                                             scope.launch {
                                                 delay(200) // Wait for animation
                                                 bringIntoViewRequester.bringIntoView()
                                             }
-                                        }}
+                                        }
+                                    }
                                     .padding(vertical = 10.dp, horizontal = 5.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -312,13 +375,14 @@ fun EditShopDetailsScreen(
                             }
                         }
 
-                        if(uploading){
+                        if (isUploaded) {
                             CircularProgressIndicator()
-                        }else{
-                            Button(modifier = Modifier.fillMaxWidth(), onClick = {
-
-                            }){
-                                Text(text = "Update",fontSize = 20.sp)
+                        } else {
+                            Button(modifier = Modifier.fillMaxWidth().padding(5.dp),
+                                colors = ButtonDefaults.buttonColors(Color.Black), onClick = {
+                                    updateShopServices()
+                                }) {
+                                Text(text = "Update", fontSize = 20.sp)
                             }
                         }
 

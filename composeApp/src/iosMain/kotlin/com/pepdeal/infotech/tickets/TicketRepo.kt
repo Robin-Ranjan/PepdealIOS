@@ -23,7 +23,9 @@ class TicketRepo {
     private val client = HttpClient(Darwin)
 
     fun getTicketForCustomerFlow(userId: String): Flow<ProductTicket> = flow {
-        val customerTickets = fetchCustomerTicket(userId)
+        val customerTickets = fetchCustomerTicket(userId).sortedByDescending {
+            it.updatedAt.toLongOrNull()?: 0L
+        }
 //        val userDetails = fetchUserDetails(userId)
 
         for (ticket in customerTickets) {

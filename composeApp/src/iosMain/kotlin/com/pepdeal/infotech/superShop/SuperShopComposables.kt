@@ -77,9 +77,7 @@ import pepdealios.composeapp.generated.resources.super_shop_positive
 @Composable
 fun SuperShopScreen(userId: String, viewModal: SuperShopViewModal = ViewModals.superShopViewModal) {
 
-    val superShops by viewModal.superShop.map { list ->
-        list.sortedByDescending { it.createdAt.toLongOrNull() ?: 0L }
-    }.collectAsStateWithLifecycle(initialValue = emptyList())
+    val superShops by viewModal.superShop.collectAsStateWithLifecycle(initialValue = emptyList())
 
     val isLoading by viewModal.isLoading.collectAsStateWithLifecycle()
     val columnState = rememberLazyListState()
@@ -96,15 +94,6 @@ fun SuperShopScreen(userId: String, viewModal: SuperShopViewModal = ViewModals.s
     LaunchedEffect(userId) {
         scope.launch {
             viewModal.fetchSuperShop(userId)
-        }
-    }
-
-    // Scroll to top when the list updates
-    LaunchedEffect(superShops) {
-        if (superShops.isNotEmpty()) {
-            scope.launch {
-                columnState.animateScrollToItem(0)
-            }
         }
     }
 
@@ -156,7 +145,7 @@ fun SuperShopScreen(userId: String, viewModal: SuperShopViewModal = ViewModals.s
                             modifier = Modifier
                                 .fillMaxSize()
                                 .nestedScroll(nestedScrollConnection)
-                                .padding(0.dp)
+                                .padding(5.dp)
                                 .pointerInput(Unit) {
                                     detectVerticalDragGestures { change, dragAmount ->
 

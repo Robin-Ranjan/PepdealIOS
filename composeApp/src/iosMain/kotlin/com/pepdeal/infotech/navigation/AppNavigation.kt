@@ -20,7 +20,9 @@ import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.navigation.routes.SubGraph
 import com.pepdeal.infotech.product.ListProductScreen
 import com.pepdeal.infotech.registration.RegisterScreen
+import com.pepdeal.infotech.shop.EditShopColorBottomSheet
 import com.pepdeal.infotech.shop.EditShopDetailsScreen
+import com.pepdeal.infotech.shop.EditShopFontBottomSheet
 import com.pepdeal.infotech.shop.OpenYourShopScreen
 import com.pepdeal.infotech.shop.ShopDetailsWithProductPage
 import com.pepdeal.infotech.superShop.SuperShopScreen
@@ -94,7 +96,8 @@ fun AppNavigation() {
 
             composable<Routes.EditShopDetails> {
                 val shopId = it.toRoute<Routes.EditShopDetails>().shopId
-                EditShopDetailsScreen(shopId)
+                val userId = it.toRoute<Routes.EditShopDetails>().userId
+                EditShopDetailsScreen(shopId,userId)
             }
 
             composable<Routes.PersonalInfoPage> {
@@ -168,6 +171,32 @@ fun AppNavigation() {
                 )
             ) {
                 SubCategoriesProductBottomSheet(onDismiss = {
+                    navController.popBackStack()
+                })
+            }
+
+            dialog(
+                route = Routes.EditShopColorBottomSheet,
+                dialogProperties = DialogProperties(
+                    dismissOnClickOutside = true,
+                    dismissOnBackPress = true,
+                    usePlatformDefaultWidth = true,
+                )
+            ) {
+                EditShopColorBottomSheet(onDismiss = {
+                    navController.popBackStack()
+                })
+            }
+
+            dialog(
+                route = Routes.EditShopFontBottomSheet,
+                dialogProperties = DialogProperties(
+                    dismissOnClickOutside = true,
+                    dismissOnBackPress = true,
+                    usePlatformDefaultWidth = true,
+                )
+            ) {
+                EditShopFontBottomSheet(onDismiss = {
                     navController.popBackStack()
                 })
             }

@@ -1,12 +1,10 @@
 package com.pepdeal.infotech.favourite
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.animation.with
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -56,7 +54,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pepdeal.infotech.FavProductWithImages
-import com.pepdeal.infotech.ProductWithImages
 import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util
 import com.pepdeal.infotech.util.Util.toRupee
@@ -71,28 +68,17 @@ import pepdealios.composeapp.generated.resources.compose_multiplatform
 import pepdealios.composeapp.generated.resources.red_heart
 
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FavoriteProductScreen(viewModal: FavoriteProductViewModal = ViewModals.favoriteProductViewModal) {
 
-    val favProductList by viewModal.favoriteProduct.map { list ->
-        list.sortedByDescending { it.createdAt.toLongOrNull() ?: 0L }
-    }.collectAsStateWithLifecycle(initialValue = emptyList())
+    val favProductList by viewModal.favoriteProduct.collectAsStateWithLifecycle(initialValue = emptyList())
 
     val isLoading by viewModal.isLoading.collectAsStateWithLifecycle()
     val columnState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     LaunchedEffect(Unit) {
         viewModal.getAllFavoriteProduct("-OIyeU1oyShOcB8r4-_8")
-    }
-
-    // Scroll to top when the list updates
-    LaunchedEffect(favProductList) {
-        if (favProductList.isNotEmpty()) {
-            scope.launch {
-                columnState.animateScrollToItem(0)
-            }
-        }
     }
 
     MaterialTheme {

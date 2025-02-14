@@ -39,7 +39,7 @@ sealed class Routes {
     data class ShopDetails(val shopId:String,val userId:String):Routes()
 
     @Serializable
-    data class EditShopDetails(val shopId: String):Routes()
+    data class EditShopDetails(val shopId: String,val userId: String):Routes()
 
     @Serializable
     data class PersonalInfoPage(val userId:String) :Routes()
@@ -49,8 +49,10 @@ sealed class Routes {
 
     companion object {
         const val ColorBottomSheet = "color_bottom_sheet"
+        const val EditShopColorBottomSheet = "edit_shop_color_bottom_sheet"
         const val MultiColorBottomSheet = "multi_color_bottom_sheet"
         const val FontBottomSheet = "font_bottom_sheet"
+        const val EditShopFontBottomSheet = "edit_shop_font_bottom_sheet"
         const val ProductCategoriesBottomSheet = "product_categories_bottom_sheet"
         const val ProductSubCategoriesBottomSheet = "product_subcategories_bottom_sheet"
     }

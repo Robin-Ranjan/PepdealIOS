@@ -63,7 +63,7 @@ fun CustomerTicketScreen(viewModal: TicketViewModal = ViewModals.customerTicketV
     val scope = rememberCoroutineScope()
     LaunchedEffect(Unit) {
         scope.launch {
-            viewModal.getAllTicketProduct("-OG8xKsuNdKstEkDPuAz")
+            viewModal.getAllTicketProduct("-OIyeU1oyShOcB8r4-_8")
         }
     }
 

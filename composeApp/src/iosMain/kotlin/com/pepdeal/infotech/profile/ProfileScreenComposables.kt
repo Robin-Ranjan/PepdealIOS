@@ -225,7 +225,7 @@ fun ProfileScreen() {
                     ProfileMenuItem(
                         text = "Edit Shop Details",
                         icon = Res.drawable.shopping_bag,
-                        onClick = { NavigationProvider.navController.navigate(Routes.EditShopDetails("-OG9iDx7RKUPZ6RHwsIA")) })
+                        onClick = { NavigationProvider.navController.navigate(Routes.EditShopDetails("-OG9iDx7RKUPZ6RHwsIA","-OIyeU1oyShOcB8r4-_8")) })
 
                     ProfileMenuItem(
                         text = "Shop Video",
