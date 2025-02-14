@@ -18,13 +18,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.Json
 
-class TicketRepo {
+class SellerTicketRepo {
     private val json = Json { ignoreUnknownKeys = true }
     private val client = HttpClient(Darwin)
 
-    fun getTicketForCustomerFlow(userId: String): Flow<ProductTicket> = flow {
-        val customerTickets = fetchCustomerTicket(userId)
-//        val userDetails = fetchUserDetails(userId)
+    fun getTicketForSellerFlow(shopId: String): Flow<ProductTicket> = flow {
+        val customerTickets = fetchSellerTicket(shopId)
 
         for (ticket in customerTickets) {
             val product = fetchProductDetails(ticket.productId) ?: continue
@@ -34,19 +33,31 @@ class TicketRepo {
 
                 if (shop?.flag == "0" && shop.isActive == "0") {
                     val image = fetchProductImage(product.productId)
+                    val userDetails = fetchUserDetails(ticket.userId)
+
                     if (image != null) {
-                        emit(ProductTicket(ticket, imageUrl = image.productImages, userDetails = UserMaster(), productName =product.productName , mrp = product.mrp, sellingPrice = product.sellingPrice, onCall = product.onCall))
+                        emit(
+                            ProductTicket(
+                                ticket,
+                                imageUrl = image.productImages,
+                                userDetails = userDetails,
+                                productName = product.productName,
+                                mrp = product.mrp,
+                                sellingPrice = product.sellingPrice,
+                                onCall = product.onCall
+                            )
+                        )
                     }
                 }
             }
         }
     }
 
-    private suspend fun fetchCustomerTicket(userId: String): List<TicketMaster> {
+    private suspend fun fetchSellerTicket(shopId: String): List<TicketMaster> {
         return try {
             val response: HttpResponse = client.get("${FirebaseUtil.BASE_URL}ticket_master.json") {
-                parameter("orderBy", "\"userId\"")
-                parameter("equalTo", "\"$userId\"")
+                parameter("orderBy", "\"shopId\"")
+                parameter("equalTo", "\"$shopId\"")
                 contentType(ContentType.Application.Json)
             }
 

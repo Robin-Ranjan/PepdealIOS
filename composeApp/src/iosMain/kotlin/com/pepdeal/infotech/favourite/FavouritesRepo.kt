@@ -1,27 +1,32 @@
 package com.pepdeal.infotech.favourite
 
+import com.pepdeal.infotech.FavProductWithImages
 import com.pepdeal.infotech.ProductImageMaster
 import com.pepdeal.infotech.ProductMaster
-import com.pepdeal.infotech.ProductWithImages
 import com.pepdeal.infotech.ShopMaster
 import com.pepdeal.infotech.favourite.modal.FavoriteProductMaster
-import com.pepdeal.infotech.product.HttpClientProvider.client
 import com.pepdeal.infotech.util.FirebaseUtil
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.darwin.Darwin
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import io.ktor.client.request.patch
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 class FavouritesRepo {
     private val json = Json { ignoreUnknownKeys = true }
@@ -106,7 +111,7 @@ class FavouritesRepo {
         }
     }
 
-    fun getFavoriteProductsForUserFlow(userId: String): Flow<ProductWithImages> = flow {
+    fun getFavoriteProductsForUserFlow(userId: String): Flow<FavProductWithImages> = flow {
         val favoriteProducts = fetchFavoriteProducts(userId)
 
         for (favorite in favoriteProducts) {
@@ -118,25 +123,27 @@ class FavouritesRepo {
                 if (shop?.flag == "0" && shop.isActive == "0") {
                     val image = fetchProductImage(product.productId)
                     if (image != null) {
-                        emit(ProductWithImages(product, listOf(image)))
+                        emit(FavProductWithImages(product, listOf(image),favorite.createdAt))
                     }
                 }
             }
         }
     }
 
-    suspend fun removeFavoriteItem(productId:String,onDelete:()->Unit){
+    suspend fun removeFavoriteItem(userId: String, productId: String, onDelete: () -> Unit) {
         val client = HttpClient(Darwin)
         try {
-            // 1️⃣ Query Firebase to get items matching productId
-            val queryUrl = "${FirebaseUtil.BASE_URL}favourite_master.json?orderBy=\"productId\"&equalTo=\"$productId\""
+            // 1️⃣ Query Firebase to get all items for the user
+            val queryUrl = "${FirebaseUtil.BASE_URL}favourite_master.json?orderBy=\"userId\"&equalTo=\"$userId\""
             val responseString: String = client.get(queryUrl).body()  // Fetch as String
 
             // 2️⃣ Parse JSON manually
             val responseJson = Json.parseToJsonElement(responseString).jsonObject
 
-            // 3️⃣ Extract favId (Firebase key)
-            val favId = responseJson.keys.firstOrNull()
+            // 3️⃣ Find the correct favId by filtering on productId
+            val favId = responseJson.entries.firstOrNull { (_, jsonElement) ->
+                jsonElement.jsonObject["productId"]?.jsonPrimitive?.content == productId
+            }?.key
 
             if (favId != null) {
                 // 4️⃣ Delete the specific item using favId
@@ -158,5 +165,60 @@ class FavouritesRepo {
             client.close()
         }
     }
+
+
+    suspend fun isFavorite(userId: String, productId: String): Boolean {
+        return try {
+            // Query Firebase to get items matching the productId
+            val queryUrl = "${FirebaseUtil.BASE_URL}favourite_master.json?orderBy=\"userId\"&equalTo=\"$userId\""
+            val responseString: String = client.get(queryUrl).body() // Fetch response as String
+
+            // Parse JSON manually
+            val responseJson = Json.parseToJsonElement(responseString).jsonObject
+
+            // Check if any entry has the matching userId
+            responseJson.values.any { jsonElement ->
+                val favoriteItem = jsonElement.jsonObject
+                favoriteItem["productId"]?.jsonPrimitive?.content == productId
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+
+    suspend fun addFavorite(product: FavoriteProductMaster) {
+        try {
+            val client = HttpClient(Darwin) {
+                install(ContentNegotiation) {
+                    json(Json {
+                        prettyPrint = true
+                        isLenient = true
+                        ignoreUnknownKeys = true
+                    })
+                }
+            }
+
+            val response: HttpResponse = client.post("${FirebaseUtil.BASE_URL}favourite_master.json") {
+                contentType(ContentType.Application.Json)
+                setBody(product)
+            }
+
+            // Extract the unique key (favId) from Firebase response
+            val responseBody = response.body<Map<String, String>>()
+            val favId = responseBody["name"] ?: return // "name" contains the generated key
+
+            // Update the favorite entry with the generated favId
+            client.patch("${FirebaseUtil.BASE_URL}favourite_master/$favId.json") {
+                contentType(ContentType.Application.Json)
+                setBody(mapOf("favId" to favId))
+            }
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
 
 }

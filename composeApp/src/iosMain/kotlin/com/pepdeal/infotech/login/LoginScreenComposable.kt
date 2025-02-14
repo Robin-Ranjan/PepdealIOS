@@ -47,7 +47,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.shop.ShopViewModal
+import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util
 import com.pepdeal.infotech.util.ViewModals
 import kotlinx.coroutines.launch
@@ -59,6 +61,7 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.InternalResourceApi
 import org.jetbrains.compose.resources.readResourceBytes
 import pepdealios.composeapp.generated.resources.Res
+import utils.KottieConstants
 import utils.kottieReadBytes
 
 
@@ -99,7 +102,9 @@ fun LoginScreen(
         }
     }
     LaunchedEffect(loginMessage){
-        snackBar.showSnackbar(loginMessage)
+        if(loginMessage.isNotBlank()){
+            snackBar.showSnackbar(loginMessage)
+        }
     }
 
     val composition = rememberKottieComposition(
@@ -108,6 +113,7 @@ fun LoginScreen(
 
     val animationState by animateKottieCompositionAsState(
         composition = composition,
+        iterations = KottieConstants.IterateForever,
         isPlaying = true
     )
 
@@ -245,7 +251,7 @@ fun LoginScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 5.dp)
-                        .clickable(onClick = onRegisterClick),
+                        .clickable(onClick = { NavigationProvider.navController.navigate(Routes.RegistrationPage) }),
                     color = MaterialTheme.colorScheme.primary,
                     textAlign = TextAlign.Center,
                     fontSize = 15.sp

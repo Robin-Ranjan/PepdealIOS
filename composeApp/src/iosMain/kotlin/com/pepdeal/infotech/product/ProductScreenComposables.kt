@@ -41,6 +41,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -70,8 +71,10 @@ import com.pepdeal.infotech.util.Util.toTwoDecimalPlaces
 import com.pepdeal.infotech.util.ViewModals
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil3.CoilImage
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
@@ -96,7 +99,8 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
 
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    var heartRes = Res.drawable.black_heart
+    // Track favorite states
+    val favoriteStates = remember { mutableStateMapOf<String, Boolean>() }
     LaunchedEffect(Unit) {
         if (productNewList.isEmpty()) {
             coroutineScope.launch {
@@ -111,14 +115,14 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
 
     // Observe search query and filter in the background
     LaunchedEffect(searchQuery, productNewList) {
-//        withContext(Dispatchers.Default) {
-        val filtered = productNewList.filter {
-            it.productName.contains(searchQuery, ignoreCase = true)
+        withContext(Dispatchers.Default) {
+            val filtered = productNewList.filter {
+                it.productName.contains(searchQuery, ignoreCase = true)
+            }
+            withContext(Dispatchers.Main) {
+                filteredProducts = filtered
+            }
         }
-//            withContext(Dispatchers.Main) {
-        filteredProducts = filtered
-//            }
-//        }
     }
 
 
@@ -175,6 +179,21 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
                 ) {
                     items(items = displayedProductList,
                         key = { it.productId }) { product ->
+                        // Determine the heart icon state
+                        val isFavorite = favoriteStates[product.productId] ?: false
+                        val heartIcon =
+                            if (isFavorite) Res.drawable.red_heart else Res.drawable.black_heart
+
+                        // Check favorite status when the product is displayed
+                        LaunchedEffect(product.productId) {
+                            viewModel.checkFavoriteExists(
+                                "-OIyeU1oyShOcB8r4-_8",
+                                product.productId
+                            ) { exists ->
+                                favoriteStates[product.productId] = exists
+                            }
+                        }
+
                         // Shop Card
                         AnimatedVisibility(
                             visible = true, // Replace with your condition if necessary
@@ -183,9 +202,23 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
                             exit = fadeOut(tween(durationMillis = 300)) + slideOutVertically(
                                 targetOffsetY = { it })
                         ) {
-                            ProductCard(product, onLikeClicked = {
-                                heartRes = Res.drawable.red_heart
-                            }, heartRes = painterResource(heartRes))
+
+                            ProductCard(
+                                product,
+                                heartRes = painterResource(heartIcon),
+                                onLikeClicked = {
+                                    val newFavoriteState = !isFavorite
+                                    favoriteStates[product.productId] = newFavoriteState
+
+                                    // Call ViewModel to handle like/unlike logic
+                                    coroutineScope.launch {
+                                        viewModel.toggleFavoriteStatus(
+                                            userId = "-OIyeU1oyShOcB8r4-_8",
+                                            product.productId,
+                                            newFavoriteState
+                                        )
+                                    }
+                                })
                         }
                     }
                 }
@@ -312,6 +345,7 @@ fun ProductCard(
         }
     }
 }
+
 
 @Composable
 fun SearchView(label: String, searchQuery: String, onSearchQueryChanged: (String) -> Unit) {

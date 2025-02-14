@@ -5,6 +5,7 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.with
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -53,6 +55,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pepdeal.infotech.FavProductWithImages
 import com.pepdeal.infotech.ProductWithImages
 import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util
@@ -60,6 +63,7 @@ import com.pepdeal.infotech.util.Util.toRupee
 import com.pepdeal.infotech.util.ViewModals
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil3.CoilImage
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
@@ -69,14 +73,26 @@ import pepdealios.composeapp.generated.resources.red_heart
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
-fun FavoriteProductScreen(viewModal: FavoriteProductViewModal  = ViewModals.favoriteProductViewModal){
+fun FavoriteProductScreen(viewModal: FavoriteProductViewModal = ViewModals.favoriteProductViewModal) {
 
-    val favProductList by viewModal.favoriteProduct.collectAsStateWithLifecycle()
+    val favProductList by viewModal.favoriteProduct.map { list ->
+        list.sortedByDescending { it.createdAt.toLongOrNull() ?: 0L }
+    }.collectAsStateWithLifecycle(initialValue = emptyList())
+
     val isLoading by viewModal.isLoading.collectAsStateWithLifecycle()
-
+    val columnState = rememberLazyListState()
     val scope = rememberCoroutineScope()
-    LaunchedEffect(Unit){
-        viewModal.getAllFavoriteProduct("-OG8xKsuNdKstEkDPuAz")
+    LaunchedEffect(Unit) {
+        viewModal.getAllFavoriteProduct("-OIyeU1oyShOcB8r4-_8")
+    }
+
+    // Scroll to top when the list updates
+    LaunchedEffect(favProductList) {
+        if (favProductList.isNotEmpty()) {
+            scope.launch {
+                columnState.animateScrollToItem(0)
+            }
+        }
     }
 
     MaterialTheme {
@@ -101,7 +117,7 @@ fun FavoriteProductScreen(viewModal: FavoriteProductViewModal  = ViewModals.favo
                                 viewModal.resetProduct()
                                 NavigationProvider.navController.popBackStack()
                             }
-                        ){
+                        ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
@@ -119,30 +135,38 @@ fun FavoriteProductScreen(viewModal: FavoriteProductViewModal  = ViewModals.favo
                     expandedHeight = 50.dp
                 )
 
-                Box(modifier = Modifier.fillMaxSize()){
-                    if(isLoading){
+                Box(modifier = Modifier.fillMaxSize()) {
+                    if (isLoading) {
                         CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                    }else{
-                        LazyColumn(modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color.White)
-                            .padding(5.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally)
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color.White)
+                                .padding(5.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            state = columnState
+                        )
                         {
                             items(items = favProductList,
-                                key = {it.product.productId}){ favProduct->
+                                key = { it.product.productId }) { favProduct ->
                                 var isVisible by remember { mutableStateOf(true) }
                                 AnimatedContent(
                                     targetState = isVisible,
                                     transitionSpec = {
-                                        fadeIn(animationSpec = tween(300)) with fadeOut(animationSpec = tween(300))
+                                        fadeIn(animationSpec = tween(300)) togetherWith fadeOut(
+                                            animationSpec = tween(300)
+                                        )
                                     }
-                                ){ visible->
-                                    if(visible){
-                                        FavoriteProductCard(product = favProduct){ productId ->
+                                ) { visible ->
+                                    if (visible) {
+                                        FavoriteProductCard(product = favProduct) { productId ->
                                             scope.launch {
                                                 isVisible = false
-                                                viewModal.removeFavItem(productId)
+                                                viewModal.removeFavItem(
+                                                    "-OIyeU1oyShOcB8r4-_8",
+                                                    productId
+                                                )
                                             }
                                         }
                                     }
@@ -158,7 +182,7 @@ fun FavoriteProductScreen(viewModal: FavoriteProductViewModal  = ViewModals.favo
 
 @Composable
 fun FavoriteProductCard(
-    product: ProductWithImages,
+    product: FavProductWithImages,
     onDeleteClick: (String) -> Unit
 ) {
     val productDetails = product.product
@@ -247,7 +271,7 @@ fun FavoriteProductCard(
                             fontWeight = FontWeight.Medium
                         )
                         Text(
-                            text = Util.formatDateWithTimestamp(productDetails.createdAt),
+                            text = Util.formatDateWithTimestamp(product.createdAt),
                             fontWeight = FontWeight.Medium
                         )
                     }

@@ -83,3 +83,9 @@ data class ProductImageMaster(
     val updatedAt: String = ""
 )
 
+@Serializable
+data class FavProductWithImages(
+    val product: ProductMaster,
+    val images: List<ProductImageMaster>,
+    val createdAt:String = ""
+)

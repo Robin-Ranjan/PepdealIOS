@@ -6,7 +6,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -18,18 +17,14 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntSize
@@ -42,7 +37,6 @@ import com.attafitamim.krop.core.crop.DefaultAspectRatios
 import com.attafitamim.krop.core.crop.crop
 import com.attafitamim.krop.core.crop.cropperStyle
 import com.attafitamim.krop.core.crop.rememberImageCropper
-import com.attafitamim.krop.core.utils.toImageBitmap
 import com.attafitamim.krop.ui.ImageCropperDialog
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.product.requestPermission
@@ -57,7 +51,6 @@ import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
-import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
 import pepdealios.composeapp.generated.resources.arrow_forward
@@ -66,12 +59,10 @@ import pepdealios.composeapp.generated.resources.baseline_person_24
 import pepdealios.composeapp.generated.resources.baseline_power_settings_new_24
 import pepdealios.composeapp.generated.resources.baseline_video
 import pepdealios.composeapp.generated.resources.black_heart
-import pepdealios.composeapp.generated.resources.manrope_light
 import pepdealios.composeapp.generated.resources.shopping_bag
 import pepdealios.composeapp.generated.resources.super_shop_logo
 import pepdealios.composeapp.generated.resources.support
 import pepdealios.composeapp.generated.resources.tickets
-import platform.UIKit.UIImage
 
 
 @Composable
@@ -80,7 +71,6 @@ fun ProfileScreen() {
     var profileImage = remember { mutableStateOf<ImageBitmap?>(null) }
     val factory = rememberPermissionsControllerFactory()
     val controller = remember(factory) { factory.createPermissionsController() }
-    val coroutineScope: CoroutineScope = rememberCoroutineScope()
 
     val medialPickerFactory = rememberMediaPickerControllerFactory()
     val picker = remember(factory) { medialPickerFactory.createMediaPickerController() }
@@ -148,12 +138,7 @@ fun ProfileScreen() {
                                 elevation = CardDefaults.cardElevation(0.dp),
                                 border = BorderStroke(1.dp, Color.Black)
                             ) {
-//                            Image(
-//                                painter = painterResource(Res.drawable.baseline_person_24),
-//                                contentDescription = "Profile Picture",
-//                                modifier = Modifier.fillMaxSize(),
-//                                contentScale = ContentScale.Crop
-//                            )
+
                                 ProfileImageSelector(
                                     imageState = profileImage,
                                     controller = controller,
@@ -197,7 +182,7 @@ fun ProfileScreen() {
                     ProfileMenuItem(
                         text = "Super Shop",
                         icon = Res.drawable.super_shop_logo,
-                        onClick = { println("Favorites") })
+                        onClick = { NavigationProvider.navController.navigate(Routes.SuperShopPage(userId = "-OIyeU1oyShOcB8r4-_8")) })
                     ProfileMenuItem(
                         text = "Tickets",
                         icon = Res.drawable.tickets,
@@ -213,7 +198,7 @@ fun ProfileScreen() {
                     ProfileMenuItem(
                         text = "Personal Info",
                         icon = Res.drawable.baseline_person_24,
-                        onClick = { })
+                        onClick = { NavigationProvider.navController.navigate(Routes.PersonalInfoPage(userId = "-OIyeU1oyShOcB8r4-_8"))})
                     Text(
                         text = "Seller Page",
                         color = Color.DarkGray,
@@ -235,12 +220,12 @@ fun ProfileScreen() {
                     ProfileMenuItem(
                         text = "Tickets",
                         icon = Res.drawable.tickets,
-                        onClick = { println("Favorites") })
+                        onClick = { NavigationProvider.navController.navigate(Routes.SellerTicketPage) })
 
                     ProfileMenuItem(
                         text = "Edit Shop Details",
                         icon = Res.drawable.shopping_bag,
-                        onClick = { println("Favorites") })
+                        onClick = { NavigationProvider.navController.navigate(Routes.EditShopDetails("-OG9iDx7RKUPZ6RHwsIA")) })
 
                     ProfileMenuItem(
                         text = "Shop Video",

@@ -5,6 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.pepdeal.infotech.categories.ProductCategories
 import com.pepdeal.infotech.categories.SubCategory
 import com.pepdeal.infotech.color.ColorItem
+import com.pepdeal.infotech.favourite.FavouritesRepo
+import com.pepdeal.infotech.favourite.modal.FavoriteProductMaster
+import com.pepdeal.infotech.util.Util
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.buffer
@@ -15,6 +18,7 @@ import kotlinx.coroutines.launch
 
 class ProductViewModal() : ViewModel() {
     private val productRepo = ProductRepo()
+    private val favRepo = FavouritesRepo()
     private val _products =
         MutableStateFlow<List<ShopItems>>(emptyList()) // StateFlow to hold product data
     val products: StateFlow<List<ShopItems>> get() = _products
@@ -36,7 +40,10 @@ class ProductViewModal() : ViewModel() {
             var itemCount = 0 // Track how many items are loaded
 
             try {
-                productRepo.getAllProductsFlowPagination((currentPage * pageSize).toString(), pageSize)
+                productRepo.getAllProductsFlowPagination(
+                    (currentPage * pageSize).toString(),
+                    pageSize
+                )
                     .catch { exception ->
                         println("Caught Exception: $exception")
                     }
@@ -75,30 +82,60 @@ class ProductViewModal() : ViewModel() {
     private val _selectedProductColours = MutableStateFlow<List<ColorItem>?>(null)
     val selectedProductColours: StateFlow<List<ColorItem>?> = _selectedProductColours
 
-    fun updateProductCategories(productCategories:ProductCategories){
+    fun updateProductCategories(productCategories: ProductCategories) {
         _selectedProductCategories.value = productCategories
     }
 
-    fun updateProductSubCategories(productSubCategories:SubCategory){
+    fun updateProductSubCategories(productSubCategories: SubCategory) {
         _selectedProductSubCategories.value = productSubCategories
     }
 
-    fun resetTheProductDetails(){
+    fun resetTheProductDetails() {
         _selectedProductCategories.value = ProductCategories(
             id = 0,
             name = "",
             false
         )
-        _selectedProductSubCategories.value = SubCategory(id = 0, name = "", categoryId = 0, imageUrl = "", isSelected = false)
+        _selectedProductSubCategories.value =
+            SubCategory(id = 0, name = "", categoryId = 0, imageUrl = "", isSelected = false)
         _selectedProductColours.value = emptyList()
     }
 
-    fun resetTheSelectedSubCategories(){
-        _selectedProductSubCategories.value = SubCategory(id = 0, name = "", categoryId = 0, imageUrl = "", isSelected = false)
+    fun resetTheSelectedSubCategories() {
+        _selectedProductSubCategories.value =
+            SubCategory(id = 0, name = "", categoryId = 0, imageUrl = "", isSelected = false)
     }
 
-    fun updateProductColours(colours:List<ColorItem>){
+    fun updateProductColours(colours: List<ColorItem>) {
         _selectedProductColours.value = colours
     }
 
+
+    fun checkFavoriteExists(userId: String, productId: String, callback: (Boolean) -> Unit) {
+        // Query Firebase or local storage to check if product is in favorites
+        viewModelScope.launch {
+            val exists =
+                favRepo.isFavorite(userId, productId) // Implement this function in your repo
+            callback(exists)
+        }
+    }
+
+    fun toggleFavoriteStatus(userId: String, productId: String, isFavorite: Boolean) {
+        viewModelScope.launch {
+            if (isFavorite) {
+                favRepo.addFavorite(
+                    product = FavoriteProductMaster(
+                        favId = "",
+                        productId = productId,
+                        userId = userId,
+                        createdAt = Util.getCurrentTimeStamp(),
+                        updatedAt = Util.getCurrentTimeStamp()
+                    )
+                )
+            } else {
+                favRepo.removeFavoriteItem(userId, productId) {
+                }
+            }
+        }
+    }
 }

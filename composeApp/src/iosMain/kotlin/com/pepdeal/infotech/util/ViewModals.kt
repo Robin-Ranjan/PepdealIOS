@@ -4,8 +4,13 @@ import com.pepdeal.infotech.categories.CategoriesViewModel
 import com.pepdeal.infotech.favourite.FavoriteProductViewModal
 import com.pepdeal.infotech.login.LoginViewModal
 import com.pepdeal.infotech.product.ProductViewModal
+import com.pepdeal.infotech.shop.EditShopDetailsViewModal
+import com.pepdeal.infotech.shop.ShopDetailsViewModal
 import com.pepdeal.infotech.shop.ShopViewModal
+import com.pepdeal.infotech.superShop.SuperShopViewModal
+import com.pepdeal.infotech.tickets.SellerTicketViewModal
 import com.pepdeal.infotech.tickets.TicketViewModal
+import com.pepdeal.infotech.user.PersonalInfoViewModal
 
 object ViewModals {
     val shopViewModel by lazy { ShopViewModal() }
@@ -14,4 +19,9 @@ object ViewModals {
     val loginViewModal by lazy { LoginViewModal() }
     val favoriteProductViewModal by lazy { FavoriteProductViewModal() }
     val customerTicketViewModal by lazy {TicketViewModal()}
+    val sellerTicketViewModal by lazy { SellerTicketViewModal() }
+    val shopDetailsViewModal by lazy { ShopDetailsViewModal() }
+    val editShopViewModal by lazy { EditShopDetailsViewModal() }
+    val personalInfoViewModal by lazy { PersonalInfoViewModal() }
+    val superShopViewModal by lazy { SuperShopViewModal() }
 }

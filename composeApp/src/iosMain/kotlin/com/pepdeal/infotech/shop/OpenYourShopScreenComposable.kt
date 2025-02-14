@@ -62,8 +62,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pepdeal.infotech.color.ColorItem
-import com.pepdeal.infotech.fonts.Fonts
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.util.NavigationProvider.navController
 import com.pepdeal.infotech.util.States
@@ -91,7 +89,7 @@ fun OpenYourShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
     val shopBoardBackgroundColorName = remember { mutableStateOf(TextFieldValue()) }
     val shopBoardBackgroundColorCode = remember { mutableStateOf(TextFieldValue()) }
     val shopBoardFontStyle = remember { mutableStateOf(TextFieldValue()) }
-    val shopBoardFontResources = remember { mutableStateOf<FontResource>(Res.font.manrope_bold) }
+    val shopBoardFontResources = remember { mutableStateOf(Res.font.manrope_bold) }
     val shopBoardFontColorName = remember { mutableStateOf(TextFieldValue()) }
     val shopBoardFontColorCode = remember { mutableStateOf(TextFieldValue()) }
     val longitude = remember { mutableStateOf(TextFieldValue()) }
@@ -104,9 +102,6 @@ fun OpenYourShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
     var uploading by remember { mutableStateOf(false) }
     var showNumber by remember { mutableStateOf(false) }
 
-    val selectedBackGroundColor = remember { mutableStateOf<ColorItem?>(null) }
-    val selectedShopFontColor = remember { mutableStateOf<ColorItem?>(null) }
-    val selectedShopFontStyle = remember { mutableStateOf<Fonts?>(null) }
 
     shopBoardBackgroundColorName.value = TextFieldValue(
         viewModel.selectedBackGroundColorName.collectAsStateWithLifecycle().value ?: ""
@@ -129,11 +124,6 @@ fun OpenYourShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
         shopBoardFontStyle.value = TextFieldValue(fontDetails.first)
         shopBoardFontResources.value = fontDetails.second
     }
-
-    //show dialog
-    var showShopBackgroundColorPopUp by remember { mutableStateOf(false) }
-    var showShopFontColorPopUp by remember { mutableStateOf(false) }
-    var showShopFontStylePopUp by remember { mutableStateOf(false) }
 
     var showShopAddressUI by remember { mutableStateOf(false) }
     val keyboardController = LocalSoftwareKeyboardController.current

@@ -144,14 +144,14 @@ fun CategoryCard(
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 maxItemsInEachRow = 4, // Ensure 4 items per row
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(5.dp),
                 verticalArrangement = Arrangement.spacedBy(5.dp)
             ) {
                 subCategories.chunked(4).forEach { rowItems ->
                     // Wrap subcategories in a row
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)
                     ) {
                         // For each chunk (group of 4 or less) distribute items
                         rowItems.forEach { subCategory ->
@@ -184,7 +184,7 @@ fun SubCategoryItem(
 ) {
     Column(
         modifier = Modifier
-            .padding(8.dp)
+            .padding(5.dp)
             .clickable { onSubCategoryClickListener(subCategory) },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -215,7 +215,7 @@ fun SubCategoryItem(
         TruncatedText(
             text = subCategory.name,
             maxLines = 2,
-            modifier = Modifier.width(60.dp) // ✅ Ensures text fits under the image
+            modifier = Modifier.width(80.dp) // ✅ Ensures text fits under the image
         )
     }
 }

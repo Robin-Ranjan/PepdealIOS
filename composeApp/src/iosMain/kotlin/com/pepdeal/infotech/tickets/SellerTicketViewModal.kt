@@ -6,32 +6,32 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class TicketViewModal :ViewModel() {
+class SellerTicketViewModal():ViewModel() {
+    private val sellerTicketRepo = SellerTicketRepo()
 
-    private val customerTicketRepo = TicketRepo()
-    private val _ticketProduct =
+    private val _sellerTicketProduct =
         MutableStateFlow<List<ProductTicket>>(emptyList())
-    val ticketProduct: StateFlow<List<ProductTicket>> get() = _ticketProduct
+    val sellerTicketProduct: StateFlow<List<ProductTicket>> get() = _sellerTicketProduct
 
     private var currentProductTicketList: MutableList<ProductTicket> = mutableListOf()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> get() = _isLoading
 
-    fun getAllTicketProduct(userId:String){
+    fun getAllSellerTicketProduct(shopId:String){
         _isLoading.value = true
         viewModelScope.launch {
-            customerTicketRepo.getTicketForCustomerFlow(userId)
-                .collect{ ticket ->
+            sellerTicketRepo.getTicketForSellerFlow(shopId)
+                .collect{ ticket->
                     currentProductTicketList.add(ticket)
-                    _ticketProduct.value = currentProductTicketList.toList()
+                    _sellerTicketProduct.value = currentProductTicketList.toList()
                     if(_isLoading.value) _isLoading.value = false
                 }
         }
     }
 
     fun resetTicket(){
-        _ticketProduct.value = emptyList()
+        _sellerTicketProduct.value = emptyList()
         currentProductTicketList = mutableListOf()
     }
 

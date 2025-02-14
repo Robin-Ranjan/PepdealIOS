@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.dialog
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.pepdeal.infotech.categories.CategoriesBottomSheet
 import com.pepdeal.infotech.categories.SubCategoriesProductBottomSheet
 import com.pepdeal.infotech.color.ColorBottomSheet
@@ -19,8 +20,13 @@ import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.navigation.routes.SubGraph
 import com.pepdeal.infotech.product.ListProductScreen
 import com.pepdeal.infotech.registration.RegisterScreen
+import com.pepdeal.infotech.shop.EditShopDetailsScreen
 import com.pepdeal.infotech.shop.OpenYourShopScreen
+import com.pepdeal.infotech.shop.ShopDetailsWithProductPage
+import com.pepdeal.infotech.superShop.SuperShopScreen
 import com.pepdeal.infotech.tickets.CustomerTicketScreen
+import com.pepdeal.infotech.tickets.SellerTicketScreen
+import com.pepdeal.infotech.user.PersonalInfoScreen
 import com.pepdeal.infotech.util.NavigationProvider
 
 
@@ -42,11 +48,11 @@ fun AppNavigation() {
                     onForgotPasswordClick = {
 
                     }, onRegisterClick = {
-                        navController.navigate(Routes.RegistrationPage) {
-                            popUpTo<Routes.LoginPage> {
-                                inclusive = true
-                            }
-                        }
+//                        navController.navigate(Routes.RegistrationPage) {
+//                            popUpTo<Routes.LoginPage> {
+//                                inclusive = true
+//                            }
+//                        }
                     })
             }
 
@@ -74,6 +80,31 @@ fun AppNavigation() {
 
             composable<Routes.CustomerTicketPage> {
                 CustomerTicketScreen()
+            }
+
+            composable<Routes.SellerTicketPage> {
+                SellerTicketScreen()
+            }
+
+            composable<Routes.ShopDetails> { backStackEntry ->
+                val shopId = backStackEntry.toRoute<Routes.ShopDetails>().shopId
+                val userId = backStackEntry.toRoute<Routes.ShopDetails>().userId
+                ShopDetailsWithProductPage(shopId,userId)
+            }
+
+            composable<Routes.EditShopDetails> {
+                val shopId = it.toRoute<Routes.EditShopDetails>().shopId
+                EditShopDetailsScreen(shopId)
+            }
+
+            composable<Routes.PersonalInfoPage> {
+                val userId = it.toRoute<Routes.PersonalInfoPage>().userId
+                PersonalInfoScreen(userId)
+            }
+
+            composable<Routes.SuperShopPage> {
+                val userId = it.toRoute<Routes.SuperShopPage>().userId
+                SuperShopScreen(userId)
             }
 
             dialog(

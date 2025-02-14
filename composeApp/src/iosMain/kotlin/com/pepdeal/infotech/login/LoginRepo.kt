@@ -28,7 +28,7 @@ class LoginRepo {
     ) {
          val client = HttpClient(Darwin)
         try {
-            println("${FirebaseUtil.BASE_URL}user_master.json?orderBy=\"mobileNo\"&equalTo=\"$mobileNo\"")
+//            println("${FirebaseUtil.BASE_URL}user_master.json?orderBy=\"mobileNo\"&equalTo=\"$mobileNo\"")
 //            val response: HttpResponse =
 //                client.get("${FirebaseUtil.BASE_URL}user_master.json?orderBy=\"mobileNo\"&equalTo=\"+919113381241\"") {
 ////                client.get("${FirebaseUtil.BASE_URL}user_master.json?orderBy=\"mobileNo\"&equalTo=\"+919113381241\"") {

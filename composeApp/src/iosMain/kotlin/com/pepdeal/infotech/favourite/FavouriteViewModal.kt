@@ -2,7 +2,7 @@ package com.pepdeal.infotech.favourite
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.pepdeal.infotech.ProductWithImages
+import com.pepdeal.infotech.FavProductWithImages
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -10,10 +10,10 @@ import kotlinx.coroutines.launch
 class FavoriteProductViewModal:ViewModel() {
     private val favRepo = FavouritesRepo()
     private val _favoriteProduct =
-        MutableStateFlow<List<ProductWithImages>>(emptyList())
-    val favoriteProduct: StateFlow<List<ProductWithImages>> get() = _favoriteProduct
+        MutableStateFlow<List<FavProductWithImages>>(emptyList())
+    val favoriteProduct: StateFlow<List<FavProductWithImages>> get() = _favoriteProduct
 
-    private var currentFavoriteList: MutableList<ProductWithImages> = mutableListOf()
+    private var currentFavoriteList: MutableList<FavProductWithImages> = mutableListOf()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> get() = _isLoading
@@ -34,9 +34,9 @@ class FavoriteProductViewModal:ViewModel() {
         currentFavoriteList = mutableListOf()
     }
 
-    fun removeFavItem(productId:String){
+    fun removeFavItem(userId: String,productId:String){
         viewModelScope.launch {
-            favRepo.removeFavoriteItem(productId){
+            favRepo.removeFavoriteItem(userId,productId){
                 _favoriteProduct.value = _favoriteProduct.value.filterNot { it.product.productId == productId }
             }
         }

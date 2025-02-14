@@ -4,7 +4,9 @@ import pepdealios.composeapp.generated.resources.Res
 import org.jetbrains.compose.resources.FontResource
 import pepdealios.composeapp.generated.resources.alkatra_bold
 import pepdealios.composeapp.generated.resources.almendra_display
+import pepdealios.composeapp.generated.resources.manrope
 import pepdealios.composeapp.generated.resources.manrope_bold
+import pepdealios.composeapp.generated.resources.manrope_medium
 import pepdealios.composeapp.generated.resources.open_sans_extrabold
 import pepdealios.composeapp.generated.resources.quicksand_bold
 import pepdealios.composeapp.generated.resources.roboto_condensed_bold
@@ -27,6 +29,11 @@ object FontUtils {
     }
 
     fun getFontResourceByName(fontName: String): FontResource? {
-        return fontMap[fontName]  // This will return null if the font name doesn't exist
+        return try {
+            fontMap[fontName]
+        }catch (e:Exception){
+            println(e.message)
+            Res.font.manrope_medium
+        }
     }
 }

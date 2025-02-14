@@ -32,6 +32,21 @@ sealed class Routes {
     @Serializable
     object CustomerTicketPage:Routes()
 
+    @Serializable
+    object SellerTicketPage:Routes()
+
+    @Serializable
+    data class ShopDetails(val shopId:String,val userId:String):Routes()
+
+    @Serializable
+    data class EditShopDetails(val shopId: String):Routes()
+
+    @Serializable
+    data class PersonalInfoPage(val userId:String) :Routes()
+
+    @Serializable
+    data class SuperShopPage(val userId:String) : Routes()
+
     companion object {
         const val ColorBottomSheet = "color_bottom_sheet"
         const val MultiColorBottomSheet = "multi_color_bottom_sheet"

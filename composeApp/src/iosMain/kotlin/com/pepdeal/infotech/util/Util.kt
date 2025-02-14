@@ -13,6 +13,9 @@ import platform.CoreCrypto.CC_SHA256
 import platform.CoreCrypto.CC_SHA256_DIGEST_LENGTH
 import platform.Foundation.*
 import kotlin.math.round
+import kotlinx.datetime.Clock
+import platform.UIKit.*
+
 
 object Util {
     fun String.toRupee(): String = "₹$this"
@@ -46,7 +49,7 @@ object Util {
     fun String.toDiscountFormat(): String {
         return try {
             "-$this%"
-        }catch (e:Exception){
+        } catch (e: Exception) {
             e.printStackTrace()
             Firebase.crashlytics.recordException(e)
             println("DiscountFormat toDiscountFormat: ${e.message}")
@@ -73,6 +76,7 @@ object Util {
 
     fun Color.Companion.fromHex(hex: String): Color {
         try {
+            if (hex.isBlank() || hex.isEmpty()) return Black
             // Remove the '#' character if it's there
             val cleanedHex = hex.removePrefix("#")
 
@@ -92,10 +96,10 @@ object Util {
 
             // Return the Color object using integer values (0 to 255)
             return Color(r, g, b, a)
-        }catch (e:Exception){
+        } catch (e: Exception) {
             e.printStackTrace()
-            println(e.message)
-            return Color.Unspecified
+            println("${e.message} and $hex")
+            return Black
         }
     }
 
@@ -126,7 +130,11 @@ object Util {
         }
     }
 
-    fun calculateFinalPrice(mrpText: String, discountText: String, productSale: MutableState<TextFieldValue>):String {
+    fun calculateFinalPrice(
+        mrpText: String,
+        discountText: String,
+        productSale: MutableState<TextFieldValue>
+    ): String {
         val price = mrpText.toDoubleOrNull() ?: 0.0
         val discount = discountText.toDoubleOrNull() ?: 0.0
 
@@ -156,17 +164,65 @@ object Util {
 
     fun formatDateWithTimestamp(timeMillis: String): String {
         return try {
-            val timestamp = timeMillis.toDouble() / 1000  // Convert to seconds for NSDate
-            val date = NSDate(timestamp)
+            val timestamp = timeMillis.toDoubleOrNull()?.div(1000) ?: return "" // Safely convert to Double and handle errors
+            val date = NSDate.dateWithTimeIntervalSince1970(timestamp) // Create NSDate from timestamp
 
             val dateFormatter = NSDateFormatter().apply {
                 dateFormat = "dd MMM yyyy"
-                locale = NSLocale.currentLocale
+                locale = NSLocale.currentLocale // Ensure it uses the correct locale
             }
             dateFormatter.stringFromDate(date)
         } catch (e: Exception) {
             e.printStackTrace()
             ""
+        }
+    }
+
+
+    fun getCurrentTimeStamp(): String {
+        return Clock.System.now().toEpochMilliseconds().toString()
+    }
+
+    fun setStatusBarColor(hexColor: String, isDark: Boolean) {
+        val color = UIColor(
+            red = hexColor.substring(1, 3).toInt(16) / 255.0,
+            green = hexColor.substring(3, 5).toInt(16) / 255.0,
+            blue = hexColor.substring(5, 7).toInt(16) / 255.0,
+            alpha = 1.0
+        )
+
+        val window = UIApplication.sharedApplication.keyWindow
+        window?.rootViewController?.view?.backgroundColor = color
+
+        // Change the status bar text color
+        val statusBarStyle = if (isDark) {
+            UIStatusBarStyleDarkContent  // Dark text (for light backgrounds)
+        } else {
+            UIStatusBarStyleLightContent // White text (for dark backgrounds)
+        }
+
+        // ✅ Use a UIWindowScene method to change status bar style dynamically (iOS 13+)
+        if (window != null) {
+            window.overrideUserInterfaceStyle =
+                if (isDark) UIUserInterfaceStyle.UIUserInterfaceStyleLight else UIUserInterfaceStyle.UIUserInterfaceStyleDark
+        }
+    }
+
+    fun openDialer(phoneNo: String) {
+        if (phoneNo != "-1") {
+            // Remove +91 if it exists at the beginning
+            val formattedPhoneNo = phoneNo.replace(Regex("^\\+91"), "")
+
+            val urlString = "tel:$formattedPhoneNo"
+            val url = NSURL(string = urlString)
+
+            if (UIApplication.sharedApplication.canOpenURL(url)) {
+                UIApplication.sharedApplication.openURL(url)
+            } else {
+                println("Invalid URL: $urlString")
+            }
+        } else {
+            println("Something went wrong")
         }
     }
 
