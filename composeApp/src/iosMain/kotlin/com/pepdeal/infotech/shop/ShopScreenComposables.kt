@@ -59,6 +59,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pepdeal.infotech.Objects
 import com.pepdeal.infotech.ProductWithImages
 import com.pepdeal.infotech.ShopWithProducts
 import com.pepdeal.infotech.fonts.FontUtils.getFontResourceByName
@@ -233,7 +234,8 @@ fun ShopCardView(shopWithProduct: ShopWithProducts) {
             Column {
                 // Shop Name (Header)
                 Box(modifier = Modifier
-                    .clickable { NavigationProvider.navController.navigate(Routes.ShopDetails(shopWithProduct.shop.shopId?:"","-OIyeU1oyShOcB8r4-_8"))}) {
+                    .clickable { NavigationProvider.navController.navigate(Routes.ShopDetails(shopWithProduct.shop.shopId?:"",
+                        Objects.UserId))}) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()

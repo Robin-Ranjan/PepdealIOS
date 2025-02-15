@@ -38,6 +38,7 @@ import com.attafitamim.krop.core.crop.crop
 import com.attafitamim.krop.core.crop.cropperStyle
 import com.attafitamim.krop.core.crop.rememberImageCropper
 import com.attafitamim.krop.ui.ImageCropperDialog
+import com.pepdeal.infotech.Objects
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.product.requestPermission
 import com.pepdeal.infotech.util.NavigationProvider
@@ -48,7 +49,6 @@ import dev.icerock.moko.permissions.Permission
 import dev.icerock.moko.permissions.PermissionsController
 import dev.icerock.moko.permissions.compose.BindEffect
 import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
@@ -182,7 +182,7 @@ fun ProfileScreen() {
                     ProfileMenuItem(
                         text = "Super Shop",
                         icon = Res.drawable.super_shop_logo,
-                        onClick = { NavigationProvider.navController.navigate(Routes.SuperShopPage(userId = "-OIyeU1oyShOcB8r4-_8")) })
+                        onClick = { NavigationProvider.navController.navigate(Routes.SuperShopPage(userId = Objects.UserId)) })
                     ProfileMenuItem(
                         text = "Tickets",
                         icon = Res.drawable.tickets,
@@ -198,7 +198,7 @@ fun ProfileScreen() {
                     ProfileMenuItem(
                         text = "Personal Info",
                         icon = Res.drawable.baseline_person_24,
-                        onClick = { NavigationProvider.navController.navigate(Routes.PersonalInfoPage(userId = "-OIyeU1oyShOcB8r4-_8"))})
+                        onClick = { NavigationProvider.navController.navigate(Routes.PersonalInfoPage(userId = Objects.UserId))})
                     Text(
                         text = "Seller Page",
                         color = Color.DarkGray,
@@ -225,7 +225,7 @@ fun ProfileScreen() {
                     ProfileMenuItem(
                         text = "Edit Shop Details",
                         icon = Res.drawable.shopping_bag,
-                        onClick = { NavigationProvider.navController.navigate(Routes.EditShopDetails("-OG9iDx7RKUPZ6RHwsIA","-OIyeU1oyShOcB8r4-_8")) })
+                        onClick = { NavigationProvider.navController.navigate(Routes.EditShopDetails("-OG9iDx7RKUPZ6RHwsIA",Objects.UserId)) })
 
                     ProfileMenuItem(
                         text = "Shop Video",

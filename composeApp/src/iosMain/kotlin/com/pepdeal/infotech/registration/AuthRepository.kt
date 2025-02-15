@@ -1,27 +1,29 @@
 package com.pepdeal.infotech.registration
 
 import UserMaster
-import com.pepdeal.infotech.tickets.TicketMaster
+import com.pepdeal.infotech.ShopMaster
 import com.pepdeal.infotech.util.FirebaseUtil
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.contentType
-import kotlinx.serialization.Serializable
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import io.ktor.client.*
-import io.ktor.client.call.*
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.engine.darwin.Darwin
-import io.ktor.client.plugins.ClientRequestException
-import io.ktor.client.plugins.ServerResponseException
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
-import io.ktor.utils.io.errors.IOException
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.get
+import io.ktor.client.request.parameter
+import io.ktor.client.request.patch
+import io.ktor.client.request.post
+import io.ktor.client.request.put
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
+import io.ktor.http.isSuccess
+import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
-import kotlinx.serialization.SerializationException
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 object AuthRepository {
@@ -157,19 +159,17 @@ object AuthRepository {
     }
 
     suspend fun registerUser(userMaster: UserMaster): Pair<Boolean, String?> {
-        return withContext(Dispatchers.IO){
+        return withContext(Dispatchers.IO) {
             try {
-
                 // Get a unique Firebase-generated ID
                 val keyResponse: HttpResponse = client.post("${FirebaseUtil.BASE_URL}user_master.json") {
                     contentType(ContentType.Application.Json)
                     setBody("{}") // Firebase returns a unique key when we send an empty object
                 }
-                println(keyResponse.bodyAsText())
+
                 val keyJson = keyResponse.body<Map<String, String>>()
                 val userId = keyJson["name"] ?: return@withContext Pair(false, "Error generating user ID.")
 
-                println("userId:- $userId")
                 val newUser = userMaster.copy(userId = userId, fcmToken = "")
 
                 // Register User with the generated Firebase key
@@ -178,13 +178,55 @@ object AuthRepository {
                     setBody(newUser)
                 }
 
-                return@withContext if (registerResponse.status == HttpStatusCode.OK) {
-                    Pair(true, "Registration Successful")
-                } else {
-                    Pair(false, "Registration Failed")
+                if (registerResponse.status != HttpStatusCode.OK) {
+                    return@withContext Pair(false, "Registration Failed")
                 }
 
-            }catch (e:Exception){
+                println("User mobile No:- ${userMaster.mobileNo}")
+
+                // Check if the user is also a shop owner
+//                val shopResponse: HttpResponse = client.get("${FirebaseUtil.BASE_URL}shop_master.json?orderBy=\"shopMobileNo\"&equalTo=\"${userMaster.mobileNo}\""){
+                val shopResponse: HttpResponse = client.get("${FirebaseUtil.BASE_URL}shop_master.json"){
+                    parameter("orderBy", "\"shopMobileNo\"")
+                    parameter("equalTo", "\"${userMaster.mobileNo}\"")
+                    contentType(ContentType.Application.Json)
+                }
+                val shopJson = shopResponse.body<Map<String, ShopMaster>>()
+                println(shopJson)
+
+                if (shopJson.isNotEmpty()) {
+                    val shopEntry = shopJson.entries.first()
+                    val shopId = shopEntry.key
+
+                    println("Updating shop with shopId: $shopId")
+
+                    val shopUpdates = mapOf("userId" to userId)
+
+                    val shopUpdateResponse: HttpResponse = client.patch("${FirebaseUtil.BASE_URL}shop_master/$shopId.json") {
+                        contentType(ContentType.Application.Json)
+                        setBody(shopUpdates)
+                    }
+
+                    if (shopUpdateResponse.status != HttpStatusCode.OK) {
+                        return@withContext Pair(false, "User registered but shop userId update failed.")
+                    }
+                }else{
+                    println("empty json")
+                }
+
+                val userUpdates = mapOf("userStatus" to "1")
+                val updateUserStatusResponse: HttpResponse =client.patch("${FirebaseUtil.BASE_URL}user_master/$userId.json") { // Update specific user node
+                    contentType(ContentType.Application.Json)
+                    setBody(userUpdates)
+                }
+
+
+                if (updateUserStatusResponse.status != HttpStatusCode.OK) {
+                    return@withContext Pair(false, "User registered but userStatus update failed.")
+                }
+
+                Pair(true, "Registration Successful")
+            } catch (e: Exception) {
                 println(e.message)
                 Pair(false, "Something Went Wrong")
             }
