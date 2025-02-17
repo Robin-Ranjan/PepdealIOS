@@ -7,6 +7,7 @@ import com.pepdeal.infotech.product.ProductViewModal
 import com.pepdeal.infotech.shop.EditShopDetailsViewModal
 import com.pepdeal.infotech.shop.ShopDetailsViewModal
 import com.pepdeal.infotech.shop.ShopViewModal
+import com.pepdeal.infotech.shopVideo.ShopVideosViewModal
 import com.pepdeal.infotech.superShop.SuperShopViewModal
 import com.pepdeal.infotech.tickets.SellerTicketViewModal
 import com.pepdeal.infotech.tickets.TicketViewModal
@@ -24,4 +25,5 @@ object ViewModals {
     val editShopViewModal by lazy { EditShopDetailsViewModal() }
     val personalInfoViewModal by lazy { PersonalInfoViewModal() }
     val superShopViewModal by lazy { SuperShopViewModal() }
+    val shopVideosViewModal by lazy { ShopVideosViewModal() }
 }

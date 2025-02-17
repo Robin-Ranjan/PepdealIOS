@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pepdeal.infotech.FavProductWithImages
+import com.pepdeal.infotech.Objects
 import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util
 import com.pepdeal.infotech.util.Util.toRupee
@@ -78,7 +79,7 @@ fun FavoriteProductScreen(viewModal: FavoriteProductViewModal = ViewModals.favor
     val columnState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     LaunchedEffect(Unit) {
-        viewModal.getAllFavoriteProduct("-OIyeU1oyShOcB8r4-_8")
+        viewModal.getAllFavoriteProduct(Objects.UserId)
     }
 
     MaterialTheme {

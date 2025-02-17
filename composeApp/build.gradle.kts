@@ -60,7 +60,10 @@ kotlin {
             implementation("dev.icerock.moko:media:0.10.0")
 
             implementation("com.russhwolf:multiplatform-settings:1.0.0")
-        }
+
+            implementation("network.chaintech:compose-multiplatform-media-player:1.0.31")
+
+    }
 
         iosMain.dependencies {
             implementation("dev.gitlive:firebase-database:2.1.0")
@@ -70,7 +73,6 @@ kotlin {
             //ktor
             implementation("io.ktor:ktor-client-darwin:3.0.3")
 
-            //implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
         }
     }
 }

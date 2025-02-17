@@ -61,10 +61,11 @@ object CategoriesUtil {
         // Electronics
         SubCategory(1, 1, "Mobiles & Accessories", "https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-14-pro.jpg"),
         SubCategory(2, 1, "Computer & Laptop", "https://pngimg.com/uploads/laptop/laptop_PNG101763.png"),
-        SubCategory(3, 1, "Home & Kitchen Appliances", "https://pngimg.com/uploads/photo_camera/photo_camera_PNG7828.png"),
+//        SubCategory(3, 1, "Home & Kitchen Appliances", "https://pngimg.com/uploads/photo_camera/photo_camera_PNG7828.png"),
+        SubCategory(3, 1, "Home & Kitchen Appliances", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FElectronics%2Fcompressed_png-clipart-home-appliance-refrigerator-graphy-cooking-ranges-small-appliance-home-appliances-kitchen-electronics-removebg-preview.png?alt=media&token=048ce61b-91c0-47b9-ac5f-a9526c8d70a6"),
         SubCategory(4, 1, "Tv,Audio & Entertainment", "https://www.freepngimg.com/thumb/tv/22378-2-tv.png"),
-        SubCategory(5, 1, "Gaming & Accessories", "https://images.unsplash.com/photo-1516534775068-ba3e7458af70"),
-        SubCategory(6, 1, "Smart Gadgets & Wearables", "https://images.unsplash.com/photo-1561866173-29f352f1e7b6"),
+        SubCategory(5, 1, "Gaming & Accessories", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FElectronics%2Fcompressed_pngtree-holding-a-controller-png-image_2664577-removebg-preview.png?alt=media&token=7396dd03-b3d4-4910-b03f-6e524fd1645c"),
+        SubCategory(6, 1, "Smart Gadgets & Wearables", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FElectronics%2Fcompressed_pngtree-ai-powered-health-gadgets-improving-diagnostics-accuracy-png-image_14888216.png?alt=media&token=a906b46d-61fe-47af-8b27-ada14f43041d"),
 
 
         // Fashion

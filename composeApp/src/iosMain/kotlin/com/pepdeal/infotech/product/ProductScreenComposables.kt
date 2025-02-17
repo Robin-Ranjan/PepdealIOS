@@ -66,6 +66,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pepdeal.infotech.Objects
 import com.pepdeal.infotech.util.Util.toDiscountFormat
 import com.pepdeal.infotech.util.Util.toTwoDecimalPlaces
 import com.pepdeal.infotech.util.ViewModals
@@ -89,7 +90,7 @@ import pepdealios.composeapp.generated.resources.red_heart
 @Composable
 fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
 
-    var showContent by remember { mutableStateOf(false) }
+//    var showContent by remember { mutableStateOf(false) }
     val listState = rememberLazyGridState()
     val coroutineScope = rememberCoroutineScope()
     val productNewList by viewModel.products.collectAsStateWithLifecycle()
@@ -116,14 +117,19 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
     // Observe search query and filter in the background
     LaunchedEffect(searchQuery, productNewList) {
         withContext(Dispatchers.Default) {
-            val filtered = productNewList.filter {
-                it.productName.contains(searchQuery, ignoreCase = true)
+            val filtered = productNewList.filter { product ->
+                // Split product's searchTags by commas
+                product.searchTag.split(",").any { tag ->
+                    // Check if any tag matches the searchQuery
+                    tag.contains(searchQuery, ignoreCase = true)
+                }
             }
             withContext(Dispatchers.Main) {
                 filteredProducts = filtered
             }
         }
     }
+
 
 
     // Observe scroll position to load more when reaching near the bottom
@@ -187,7 +193,7 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
                         // Check favorite status when the product is displayed
                         LaunchedEffect(product.productId) {
                             viewModel.checkFavoriteExists(
-                                "-OIyeU1oyShOcB8r4-_8",
+                                Objects.UserId,
                                 product.productId
                             ) { exists ->
                                 favoriteStates[product.productId] = exists
@@ -213,7 +219,7 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
                                     // Call ViewModel to handle like/unlike logic
                                     coroutineScope.launch {
                                         viewModel.toggleFavoriteStatus(
-                                            userId = "-OIyeU1oyShOcB8r4-_8",
+                                            userId = Objects.UserId,
                                             product.productId,
                                             newFavoriteState
                                         )

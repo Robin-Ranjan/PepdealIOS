@@ -101,7 +101,7 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
     val latestShopList = rememberUpdatedState(shopListNew)
     LaunchedEffect(Unit) {
         if (latestShopList.value.isEmpty()) {
-            println("products:- loadMore")
+//            println("products:- loadMore")
             scope.launch {
                 viewModel.loadMoreShops()
             }
@@ -115,7 +115,7 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
                 val totalItems = columnState.layoutInfo.totalItemsCount
                 if (totalItems > 0 && lastVisibleIndex >= totalItems - 3 && !isLoading && searchQuery.isEmpty()) {
                     scope.launch {
-                        println("loadMoreShops")
+//                        println("loadMoreShops")
                         viewModel.loadMoreShops()
                     }
                 }

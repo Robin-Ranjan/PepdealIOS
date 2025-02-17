@@ -1,6 +1,5 @@
 package com.pepdeal.infotech.categories
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -19,22 +18,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -43,14 +32,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -62,6 +48,8 @@ import com.pepdeal.infotech.util.Util.toNameFormat
 import com.pepdeal.infotech.util.ViewModals
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil3.CoilImage
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
 import pepdealios.composeapp.generated.resources.compose_multiplatform
@@ -80,13 +68,27 @@ fun CategoriesScreen(viewModel: CategoriesViewModel = ViewModals.categoriesViewM
     val displayedCategories = remember(searchQuery, categories) {
         if (searchQuery.isNotEmpty()) filteredCategories else categories
     }
-    LaunchedEffect(searchQuery, categories){
-        val filtered = categories.filter {
-            it.name.contains(searchQuery, ignoreCase = true)
+
+    LaunchedEffect(searchQuery, categories, subCategoriesMap) {
+        // Perform filtering on a background thread (if necessary)
+        val filtered = withContext(Dispatchers.Default) {
+            categories.mapNotNull { category ->
+                // Check if category name or any subcategory name matches the search query
+                if (category.name.contains(searchQuery, ignoreCase = true) ||
+                    subCategoriesMap[category.id]?.any { subCategory ->
+                        subCategory.name.contains(searchQuery, ignoreCase = true)
+                    } == true) {
+                    category
+                } else {
+                    null // Skip this category if it doesn't match
+                }
+            }
         }
-//            withContext(Dispatchers.Main) {
-        filteredCategories = filtered
+
+        // If no categories matched, return the original categories list
+        filteredCategories = if (filtered.isEmpty()) categories else filtered
     }
+
     MaterialTheme {
         Column(modifier = Modifier.fillMaxSize()
             .background(color = Color.White)
@@ -190,19 +192,19 @@ fun SubCategoryItem(
     ) {
         Card(
             modifier = Modifier.size(60.dp), // ✅ Ensure uniform size
-            shape = CircleShape,
-            elevation = CardDefaults.cardElevation(2.dp),
+            shape = RectangleShape,
+            elevation = CardDefaults.cardElevation(0.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
+//            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
         ) {
             Box(contentAlignment = Alignment.Center) {
                 CoilImage(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .clip(CircleShape), // ✅ Ensure proper scaling inside the circle
+                        .fillMaxSize(),
+//                        .clip(CircleShape), // ✅ Ensure proper scaling inside the circle
                     imageModel = { subCategory.imageUrl },
                     imageOptions = ImageOptions(
-                        contentScale = ContentScale.Crop,
+                        contentScale = ContentScale.Inside,
                         alignment = Alignment.Center
                     ),
                     previewPlaceholder = painterResource(Res.drawable.compose_multiplatform)

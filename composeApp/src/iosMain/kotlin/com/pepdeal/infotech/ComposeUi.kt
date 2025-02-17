@@ -18,21 +18,22 @@ import com.pepdeal.infotech.categories.CategoriesScreen
 import com.pepdeal.infotech.product.ProductScreen
 import com.pepdeal.infotech.profile.ProfileScreen
 import com.pepdeal.infotech.shop.ShopScreen
+import com.pepdeal.infotech.shopVideo.FeedScreen
 
-@Composable
-fun FeedScreen() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("Feed Screen", style = MaterialTheme.typography.headlineSmall)
-    }
-}
+//@Composable
+//fun FeedScreen() {
+//    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+//        Text("Feed Screen", style = MaterialTheme.typography.headlineSmall)
+//    }
+//}
 
 // Bottom Navigation and Pager
 @Composable
 fun MainBottomNavigationWithPager() {
-    var selectedItem by remember { mutableStateOf(4) }
+    var selectedItem by remember { mutableStateOf(0) }
 
     // HorizontalPager for "ViewPager2" equivalent
-    val pagerState = rememberPagerState(initialPage = 4, pageCount = { 5 })
+    val pagerState = rememberPagerState(initialPage = 3, pageCount = { 5 })
 
     LaunchedEffect(pagerState.currentPage) {
         selectedItem = pagerState.currentPage // Update selectedItem when swiping
