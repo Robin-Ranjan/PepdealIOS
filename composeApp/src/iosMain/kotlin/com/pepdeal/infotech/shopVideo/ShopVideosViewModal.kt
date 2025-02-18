@@ -2,7 +2,7 @@ package com.pepdeal.infotech.shopVideo
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.pepdeal.infotech.favourite.modal.FavoriteProductMaster
+import com.pepdeal.infotech.shopVideo.favShopVideo.FavouriteShopVideo
 import com.pepdeal.infotech.util.Util
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

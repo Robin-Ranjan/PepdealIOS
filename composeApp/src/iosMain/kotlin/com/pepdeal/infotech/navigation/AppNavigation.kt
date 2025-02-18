@@ -1,6 +1,6 @@
 package com.pepdeal.infotech.navigation
 
-import MainBottomNavigationWithPager
+import com.pepdeal.infotech.MainBottomNavigationWithPager
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.compose.NavHost
@@ -20,22 +20,31 @@ import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.navigation.routes.SubGraph
 import com.pepdeal.infotech.product.ListProductScreen
 import com.pepdeal.infotech.registration.RegisterScreen
-import com.pepdeal.infotech.shop.EditShopColorBottomSheet
-import com.pepdeal.infotech.shop.EditShopDetailsScreen
-import com.pepdeal.infotech.shop.EditShopFontBottomSheet
+import com.pepdeal.infotech.shop.editShop.EditShopColorBottomSheet
+import com.pepdeal.infotech.shop.editShop.EditShopDetailsScreen
+import com.pepdeal.infotech.shop.editShop.EditShopFontBottomSheet
 import com.pepdeal.infotech.shop.OpenYourShopScreen
-import com.pepdeal.infotech.shop.ShopDetailsWithProductPage
+import com.pepdeal.infotech.shop.shopDetails.ShopDetailsWithProductPage
+import com.pepdeal.infotech.shopVideo.UploadShopVideoScreen
+import com.pepdeal.infotech.shopVideo.enableBackGestureForNavigationController
+import com.pepdeal.infotech.shopVideo.favShopVideo.FavoriteShopVideoScreen
 import com.pepdeal.infotech.superShop.SuperShopScreen
 import com.pepdeal.infotech.tickets.CustomerTicketScreen
 import com.pepdeal.infotech.tickets.SellerTicketScreen
 import com.pepdeal.infotech.user.PersonalInfoScreen
 import com.pepdeal.infotech.util.NavigationProvider
+import kotlin.experimental.ExperimentalNativeApi
 
 
+@OptIn(ExperimentalNativeApi::class)
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
     NavigationProvider.navController = navController
+
+//    if (Platform.OS == OsFamily.IOS) {
+        enableBackGestureForNavigationController()
+//    }
     NavHost(navController = navController, startDestination = SubGraph.MainPage) {
 
         navigation<SubGraph.Auth>(startDestination = Routes.LoginPage) {
@@ -108,6 +117,15 @@ fun AppNavigation() {
             composable<Routes.SuperShopPage> {
                 val userId = it.toRoute<Routes.SuperShopPage>().userId
                 SuperShopScreen(userId)
+            }
+
+            composable<Routes.FavoriteShopVideosPage> {
+                val userId = it.toRoute<Routes.FavoriteShopVideosPage>().userId
+                FavoriteShopVideoScreen(userId)
+            }
+
+            composable<Routes.UploadShopVideoPage> {
+                UploadShopVideoScreen()
             }
 
             dialog(

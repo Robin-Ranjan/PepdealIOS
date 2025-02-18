@@ -1,6 +1,6 @@
 package com.pepdeal.infotech.shopVideo
 
-import com.pepdeal.infotech.ShopMaster
+import com.pepdeal.infotech.shop.modal.ShopMaster
 import kotlinx.serialization.Serializable
 
 @Serializable

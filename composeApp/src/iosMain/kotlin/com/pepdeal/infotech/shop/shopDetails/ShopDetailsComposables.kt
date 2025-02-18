@@ -1,4 +1,4 @@
-package com.pepdeal.infotech.shop
+package com.pepdeal.infotech.shop.shopDetails
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -57,7 +57,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pepdeal.infotech.ProductWithImages
+import com.pepdeal.infotech.shop.modal.ProductWithImages
 import com.pepdeal.infotech.fonts.FontUtils.getFontResourceByName
 import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util

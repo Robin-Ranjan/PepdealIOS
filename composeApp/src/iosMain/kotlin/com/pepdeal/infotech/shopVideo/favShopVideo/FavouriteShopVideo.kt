@@ -1,4 +1,4 @@
-package com.pepdeal.infotech.shopVideo
+package com.pepdeal.infotech.shopVideo.favShopVideo
 
 import kotlinx.serialization.Serializable
 

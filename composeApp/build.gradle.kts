@@ -62,7 +62,7 @@ kotlin {
             implementation("com.russhwolf:multiplatform-settings:1.0.0")
 
             implementation("network.chaintech:compose-multiplatform-media-player:1.0.31")
-
+            implementation("network.chaintech:sdp-ssp-compose-multiplatform:1.0.5")
     }
 
         iosMain.dependencies {

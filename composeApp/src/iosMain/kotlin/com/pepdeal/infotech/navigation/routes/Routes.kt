@@ -2,50 +2,56 @@ package com.pepdeal.infotech.navigation.routes
 
 import kotlinx.serialization.Serializable
 
-sealed class SubGraph{
+sealed class SubGraph {
     @Serializable
-    object Auth:SubGraph()
+    object Auth : SubGraph()
 
     @Serializable
-    object MainPage :SubGraph()
+    object MainPage : SubGraph()
 }
 
 sealed class Routes {
     @Serializable
-    object MainPage :Routes()
+    object MainPage : Routes()
 
     @Serializable
-    object LoginPage :Routes()
+    object LoginPage : Routes()
 
     @Serializable
-    object RegistrationPage:Routes()
+    object RegistrationPage : Routes()
 
     @Serializable
-    object OpenYourShopPage:Routes()
+    object OpenYourShopPage : Routes()
 
     @Serializable
-    object ListProductPage:Routes()
+    object ListProductPage : Routes()
 
     @Serializable
-    object FavouritesPage:Routes()
+    object FavouritesPage : Routes()
 
     @Serializable
-    object CustomerTicketPage:Routes()
+    object CustomerTicketPage : Routes()
 
     @Serializable
-    object SellerTicketPage:Routes()
+    object SellerTicketPage : Routes()
 
     @Serializable
-    data class ShopDetails(val shopId:String,val userId:String):Routes()
+    data class ShopDetails(val shopId: String, val userId: String) : Routes()
 
     @Serializable
-    data class EditShopDetails(val shopId: String,val userId: String):Routes()
+    data class EditShopDetails(val shopId: String, val userId: String) : Routes()
 
     @Serializable
-    data class PersonalInfoPage(val userId:String) :Routes()
+    data class PersonalInfoPage(val userId: String) : Routes()
 
     @Serializable
-    data class SuperShopPage(val userId:String) : Routes()
+    data class SuperShopPage(val userId: String) : Routes()
+
+    @Serializable
+    data class FavoriteShopVideosPage(val userId: String) : Routes()
+
+    @Serializable
+    object UploadShopVideoPage:Routes()
 
     companion object {
         const val ColorBottomSheet = "color_bottom_sheet"

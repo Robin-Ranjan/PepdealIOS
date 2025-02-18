@@ -1,6 +1,6 @@
 package com.pepdeal.infotech.tickets
 
-import UserMaster
+import com.pepdeal.infotech.user.UserMaster
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -21,7 +21,7 @@ data class TicketMaster (
 @Serializable
 data class ProductTicket(
     val ticket: TicketMaster,
-    val userDetails:UserMaster? = null,
+    val userDetails: UserMaster? = null,
     val productName: String,
     val mrp: String,
     val sellingPrice: String,

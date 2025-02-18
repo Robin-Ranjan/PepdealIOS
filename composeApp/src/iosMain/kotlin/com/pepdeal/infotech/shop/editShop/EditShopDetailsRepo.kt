@@ -1,6 +1,7 @@
-package com.pepdeal.infotech.shop
+package com.pepdeal.infotech.shop.editShop
 
-import com.pepdeal.infotech.ShopMaster
+import com.pepdeal.infotech.shop.modal.ShopMaster
+import com.pepdeal.infotech.shop.modal.ShopStatusMaster
 import com.pepdeal.infotech.util.FirebaseUtil
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.darwin.Darwin
@@ -9,7 +10,6 @@ import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
-import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText

@@ -1,7 +1,6 @@
-package com.pepdeal.infotech
+package com.pepdeal.infotech.shop.modal
 
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Serializer
 
 @Serializable
 data class ShopMaster(

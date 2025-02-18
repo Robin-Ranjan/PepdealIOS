@@ -1,10 +1,9 @@
 package com.pepdeal.infotech.superShop
 
-import com.pepdeal.infotech.ProductImageMaster
-import com.pepdeal.infotech.ProductMaster
-import com.pepdeal.infotech.ProductWithImages
-import com.pepdeal.infotech.ShopMaster
-import com.pepdeal.infotech.ShopWithProducts
+import com.pepdeal.infotech.shop.modal.ProductImageMaster
+import com.pepdeal.infotech.shop.modal.ProductMaster
+import com.pepdeal.infotech.shop.modal.ProductWithImages
+import com.pepdeal.infotech.shop.modal.ShopMaster
 import com.pepdeal.infotech.util.FirebaseUtil
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body

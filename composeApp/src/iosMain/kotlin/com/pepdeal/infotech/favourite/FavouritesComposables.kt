@@ -53,7 +53,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pepdeal.infotech.FavProductWithImages
+import com.pepdeal.infotech.shop.modal.FavProductWithImages
 import com.pepdeal.infotech.Objects
 import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util
@@ -61,7 +61,6 @@ import com.pepdeal.infotech.util.Util.toRupee
 import com.pepdeal.infotech.util.ViewModals
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil3.CoilImage
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res

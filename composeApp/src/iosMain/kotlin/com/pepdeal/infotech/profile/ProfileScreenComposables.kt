@@ -16,6 +16,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -41,6 +43,7 @@ import com.attafitamim.krop.ui.ImageCropperDialog
 import com.pepdeal.infotech.Objects
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.product.requestPermission
+import com.pepdeal.infotech.user.PersonalInfoRepo
 import com.pepdeal.infotech.util.NavigationProvider
 import dev.icerock.moko.media.compose.BindMediaPickerEffect
 import dev.icerock.moko.media.compose.rememberMediaPickerControllerFactory
@@ -75,6 +78,13 @@ fun ProfileScreen() {
     val medialPickerFactory = rememberMediaPickerControllerFactory()
     val picker = remember(factory) { medialPickerFactory.createMediaPickerController() }
     val snackBar = remember { SnackbarHostState() }
+
+    LaunchedEffect(profileImage.value){
+        PersonalInfoRepo().updateProfilePicture(Objects.UserId,""){
+
+        }
+    }
+
     MaterialTheme {
         BindEffect(controller)
         BindMediaPickerEffect(picker)
@@ -190,7 +200,7 @@ fun ProfileScreen() {
                     ProfileMenuItem(
                         text = "Saved Shop Video",
                         icon = Res.drawable.super_shop_logo,
-                        onClick = { println("Favorites") })
+                        onClick = { NavigationProvider.navController.navigate(Routes.FavoriteShopVideosPage(Objects.UserId)) })
                     ProfileMenuItem(
                         text = "Open Your Shop",
                         icon = Res.drawable.shopping_bag,
@@ -230,7 +240,7 @@ fun ProfileScreen() {
                     ProfileMenuItem(
                         text = "Shop Video",
                         icon = Res.drawable.baseline_video,
-                        onClick = { println("Favorites") })
+                        onClick = { NavigationProvider.navController.navigate(Routes.UploadShopVideoPage)})
 
                     Text(
                         text = "Support & FAQ",
@@ -340,7 +350,9 @@ fun ProfileImageSelector(
     imageState: MutableState<ImageBitmap?>,
     controller: PermissionsController,
     picker: MediaPickerController,
-    snackBar: SnackbarHostState
+    snackBar: SnackbarHostState,
+    painter: Painter = painterResource(Res.drawable.baseline_person_24),
+    contentScale: ContentScale = ContentScale.Fit
 ) {
     val scope = rememberCoroutineScope()
     val imageCropper = rememberImageCropper()
@@ -399,7 +411,7 @@ fun ProfileImageSelector(
         )
     } else {
         Image(
-            painter = painterResource(Res.drawable.baseline_person_24),
+            painter = painter,
             contentDescription = "Profile Image",
             modifier = Modifier
                 .fillMaxSize()
@@ -429,7 +441,7 @@ fun ProfileImageSelector(
                         )
                     }
                 },
-            contentScale = ContentScale.Fit,
+            contentScale = contentScale,
             alignment = Alignment.Center
         )
     }

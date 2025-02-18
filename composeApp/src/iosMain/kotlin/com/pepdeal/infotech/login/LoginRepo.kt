@@ -1,6 +1,6 @@
 package com.pepdeal.infotech.login
 
-import UserMaster
+import com.pepdeal.infotech.user.UserMaster
 import com.pepdeal.infotech.util.FirebaseUtil
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.darwin.Darwin
@@ -11,9 +11,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
 class LoginRepo {

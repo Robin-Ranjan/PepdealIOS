@@ -1,6 +1,6 @@
 package com.pepdeal.infotech.registration
 
-import UserMaster
+import com.pepdeal.infotech.user.UserMaster
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

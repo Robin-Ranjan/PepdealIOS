@@ -46,6 +46,7 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>To Access the Product and Profile Pic</string>
 	<key>NSAppTransportSecurity</key>

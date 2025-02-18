@@ -1,4 +1,4 @@
-package com.pepdeal.infotech.shop
+package com.pepdeal.infotech.shop.editShop
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

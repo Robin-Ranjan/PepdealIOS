@@ -1,16 +1,19 @@
-package com.pepdeal.infotech
+package com.pepdeal.infotech.shop
 
+import com.pepdeal.infotech.shop.modal.ProductImageMaster
+import com.pepdeal.infotech.shop.modal.ProductMaster
+import com.pepdeal.infotech.shop.modal.ProductWithImages
+import com.pepdeal.infotech.shop.modal.ShopMaster
+import com.pepdeal.infotech.shop.modal.ShopWithProducts
 import com.pepdeal.infotech.util.FirebaseUtil
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.darwin.Darwin
 import io.ktor.client.request.get
-import io.ktor.client.request.parameter
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.awaitClose
@@ -18,7 +21,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlin.experimental.ExperimentalNativeApi
 
@@ -26,7 +28,6 @@ import kotlin.experimental.ExperimentalNativeApi
 class ShopRepo {
 
     val json = Json{ignoreUnknownKeys =true}
-    @OptIn(ExperimentalNativeApi::class)
     fun getActiveShopsFlow(): Flow<ShopWithProducts> = callbackFlow {
         val client = HttpClient(Darwin)
 
@@ -80,8 +81,6 @@ class ShopRepo {
         println("product function")
         try {
             val response: HttpResponse = client.get("${FirebaseUtil.BASE_URL}product_master.json?orderBy=\"shopId\"&equalTo=\"$shopId\"") {
-//                parameter("orderBy", "\"shopId\"")
-//                parameter("equalTo", "\"$shopId\"")
                 contentType(ContentType.Application.Json)
             }
 
@@ -121,8 +120,6 @@ class ShopRepo {
 
         try {
             val response: HttpResponse = client.get("${FirebaseUtil.BASE_URL}product_images_master.json?orderBy=\"productId\"&equalTo=\"$productId\"") {
-//                parameter("orderBy", "\"productId\"")
-//                parameter("equalTo", "\"$productId\"")
                 contentType(ContentType.Application.Json)
             }
 
@@ -150,9 +147,6 @@ class ShopRepo {
         try {
             // Making the HTTP GET request to Firebase Realtime Database
             val response: HttpResponse = client.get("${FirebaseUtil.BASE_URL}product_master.json?orderBy=\"productId\"&equalTo=\"43f034a4-42e2-4c79-85d8-3eb88a9b3658\""){
-//            val response: HttpResponse = client.get("${FirebaseUtil.baseUrl}product_master.json"){
-//                parameter("?orderBy=", "\"productId\"")
-//                parameter("equalTo=", "\"-43f034a4-42e2-4c79-85d8-3eb88a9b3658\"")
                 contentType(ContentType.Application.Json)
             }
 
@@ -278,9 +272,6 @@ class ShopRepo {
             } else {
                 "${FirebaseUtil.BASE_URL}shop_master.json?orderBy=\"shopId\"&limitToFirst=$pageSize"
             }
-//            println("Fetching shops from: $url")
-//            // Filtering by flag == "0"
-//            val filteredUrl = "${url}&orderBy=\"flag\"&equalTo=\"0\""
 
             val response: HttpResponse = client.get(url) {
                 contentType(ContentType.Application.Json)
@@ -292,10 +283,6 @@ class ShopRepo {
                 // Parsing the response JSON into a Map of shopId -> ShopMaster
                 val shopsMap: Map<String, ShopMaster> = json.decodeFromString(responseBody)
 
-                // Apply the filter for 'flag == 0' directly in the code
-//                val shop = shopsMap.values.filter { it.shopName == "SHUBHAM MEDICOS" }
-//                println(shop.forEach { it.shopName })
-//
                 val activeShops = shopsMap.values.filter { it.flag == "0" }
                 println("shops:- ${shopsMap.values}")
                 // Iterate over the filtered shops and emit them

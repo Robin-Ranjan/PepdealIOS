@@ -1,9 +1,7 @@
-package com.pepdeal.infotech.shopVideo
+package com.pepdeal.infotech.shopVideo.favShopVideo
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,32 +11,35 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -49,8 +50,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import chaintech.videoplayer.host.MediaPlayerError
-import chaintech.videoplayer.host.MediaPlayerEvent
 import chaintech.videoplayer.host.MediaPlayerHost
 import chaintech.videoplayer.model.PlayerSpeed
 import chaintech.videoplayer.model.ScreenResize
@@ -58,7 +57,7 @@ import chaintech.videoplayer.model.VideoPlayerConfig
 import chaintech.videoplayer.ui.video.VideoPlayerComposable
 import com.pepdeal.infotech.Objects
 import com.pepdeal.infotech.navigation.routes.Routes
-import com.pepdeal.infotech.product.SearchView
+import com.pepdeal.infotech.shopVideo.ShopVideoWithShopDetail
 import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util.toNameFormat
 import com.pepdeal.infotech.util.ViewModals
@@ -71,109 +70,94 @@ import pepdealios.composeapp.generated.resources.Res
 import pepdealios.composeapp.generated.resources.compose_multiplatform
 import pepdealios.composeapp.generated.resources.manrope_light
 import pepdealios.composeapp.generated.resources.manrope_medium
-import pepdealios.composeapp.generated.resources.pepdeal_logo
-import pepdealios.composeapp.generated.resources.super_shop_logo
 import pepdealios.composeapp.generated.resources.super_shop_positive
-import kotlin.math.abs
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FeedScreen(viewModal: ShopVideosViewModal = ViewModals.shopVideosViewModal) {
+fun FavoriteShopVideoScreen(
+    userId: String,
+    viewModal: FavoriteShopVideoViewModal = ViewModals.favoriteShopVideoViewModal
+) {
 
     val keyboardController = LocalSoftwareKeyboardController.current
-    var searchQuery by remember { mutableStateOf("") }
-    val shopVideosList by viewModal.shopVideos.collectAsStateWithLifecycle()
+    val shopVideos by viewModal.shopVideos.collectAsStateWithLifecycle(initialValue = emptyList())
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
-    // Track favorite states
-    val saveShopSates = remember { mutableStateMapOf<String, Boolean>() }
     var currentlyPlayingIndex by remember { mutableStateOf(-1) }
 
-    LaunchedEffect(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset) {
-        val visibleItems = listState.layoutInfo.visibleItemsInfo
-        val centerIndex = visibleItems.minByOrNull { abs(it.offset) }?.index ?: -1
-        currentlyPlayingIndex = centerIndex
+    LaunchedEffect(Unit) {
+        viewModal.fetchShopVideos(userId)
     }
 
-
     MaterialTheme {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(color = Color.White)
-                .padding(horizontal = 3.dp, vertical = 3.dp)
-                .pointerInput(Unit) {
-                    detectTapGestures(onTap = {
-                        keyboardController?.hide()
-                    })
-                }
-        ) {
-            Column {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                ) {
-                    Image(
-                        painter = painterResource(Res.drawable.pepdeal_logo),
-                        contentDescription = "Your image description",
-                        modifier = Modifier
-                            .width(130.dp)
-                            .height(28.dp)
-                            .padding(start = 5.dp),
-                        contentScale = ContentScale.Fit // Adjust based on your needs (e.g., FillBounds, Fit)
-                    )
-                }
-
-                SearchView("Search Shop", searchQuery) {
-                    searchQuery = it
-                }
-
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(0.dp)
-                        .pointerInput(Unit) {
-                            detectVerticalDragGestures { change, dragAmount ->
-
+        Scaffold {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White)
+            ) {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = "Favourite Products",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            lineHeight = 18.sp
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = {
+                                viewModal.resetProduct()
+                                NavigationProvider.navController.popBackStack()
                             }
-                        },
-                    state = listState
-                ) {
-                    itemsIndexed(shopVideosList) { index, shopVideo ->
-                        val isPlaying = index == currentlyPlayingIndex
-                        val isSaveVideo = saveShopSates[shopVideo.shopVideosMaster.shopId] ?: false
-                        val saveVideoIcon =
-                            if (isSaveVideo) Res.drawable.super_shop_positive else Res.drawable.super_shop_logo
-
-                        LaunchedEffect(shopVideo.shopVideosMaster.shopId) {
-                            viewModal.checkSaveShopExists(
-                                Objects.UserId,
-                                shopVideo.shopVideosMaster.shopId
-                            ) {
-                                println("${shopVideo.shopsMaster.shopName} $it")
-                                saveShopSates[shopVideo.shopVideosMaster.shopId] = it
-                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color.Black
+                            )
                         }
-                        FeedCard(shopVideo = shopVideo,
-                            superShopRes = painterResource(saveVideoIcon),
-                            isPlaying = isPlaying,
-                            onSaveVideoClicked = {
-                                val newSavedVideoState = !isSaveVideo
-                                saveShopSates[shopVideo.shopVideosMaster.shopId] =
-                                    newSavedVideoState
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.White,  // Background color
+                        titleContentColor = Color.Black,  // Title color
+                        navigationIconContentColor = Color.Black,  // Back button color
+                        actionIconContentColor = Color.Unspecified
+                    ),
+                    modifier = Modifier.shadow(4.dp),
+                    expandedHeight = 50.dp
+                )
 
-                                // Call ViewModel to handle like/unlike logic
-                                coroutineScope.launch {
-                                    viewModal.toggleSaveShopStatus(
-                                        userId = Objects.UserId,
-                                        shopId = shopVideo.shopVideosMaster.shopId,
-                                        shopVideoId = shopVideo.shopVideosMaster.shopVideoId,
-                                        newSavedVideoState
-                                    )
+                Box(modifier = Modifier.fillMaxSize()) {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(0.dp)
+                            .pointerInput(Unit) {
+                                detectVerticalDragGestures { change, dragAmount ->
+
                                 }
                             },
-                            onVideoClicked = {
-                                currentlyPlayingIndex = index
-                            })
+                        state = listState
+                    ) {
+                        itemsIndexed(items = shopVideos) { index, shopVideo ->
+                            val isPlaying = index == currentlyPlayingIndex
+
+                            FavoriteShopVideCard(shopVideo,
+                                isPlaying = isPlaying,
+                                onSaveVideoClicked = {
+                                    coroutineScope.launch {
+                                        viewModal.removeFavVideo(
+                                            userId,
+                                            shopVideo.shopVideosMaster.shopId
+                                        )
+                                    }
+                                },
+                                onVideoClicked = {
+                                    currentlyPlayingIndex = index
+                                })
+                        }
                     }
                 }
             }
@@ -182,9 +166,8 @@ fun FeedScreen(viewModal: ShopVideosViewModal = ViewModals.shopVideosViewModal) 
 }
 
 @Composable
-fun FeedCard(
+fun FavoriteShopVideCard(
     shopVideo: ShopVideoWithShopDetail,
-    superShopRes: Painter,
     isPlaying: Boolean,
     onSaveVideoClicked: () -> Unit,
     onVideoClicked: () -> Unit
@@ -200,7 +183,7 @@ fun FeedCard(
             isLooping = true,
             isFullScreen = false,
 
-        )
+            )
     }
 
     LaunchedEffect(isPlaying) {
@@ -245,9 +228,7 @@ fun FeedCard(
                         playerConfig = VideoPlayerConfig(
                             isSeekBarVisible = false,
                             isDurationVisible = true,
-                            isScreenLockEnabled = false,
-                            isScreenResizeEnabled = false,
-                            isFullScreenEnabled = false
+                            isScreenLockEnabled = false
                         )
                     )
                 } else {
@@ -312,7 +293,7 @@ fun FeedCard(
                     modifier = Modifier.size(48.dp)
                 ) {
                     Icon(
-                        painter = superShopRes,
+                        painter = painterResource(Res.drawable.super_shop_positive),
                         contentDescription = "Save Video",
                     )
                 }
@@ -320,53 +301,3 @@ fun FeedCard(
         }
     }
 }
-
-
-// Handle events
-//playerHost.onEvent = { event ->
-//    when (event) {
-//        is MediaPlayerEvent.MuteChange -> {
-//            println("Mute status changed: ${event.isMuted}")
-//        }
-//
-//        is MediaPlayerEvent.PauseChange -> {
-//            println("Pause status changed: ${event.isPaused}")
-//        }
-//
-//        is MediaPlayerEvent.BufferChange -> {
-//            println("Buffering status: ${event.isBuffering}")
-//        }
-//
-//        is MediaPlayerEvent.CurrentTimeChange -> {
-//            println("Current playback time: ${event.currentTime}s")
-//        }
-//
-//        is MediaPlayerEvent.TotalTimeChange -> {
-//            println("Video duration updated: ${event.totalTime}s")
-//        }
-//
-//        MediaPlayerEvent.MediaEnd -> {
-//            println("Video playback ended")
-//        }
-//    }
-//}
-//
-//playerHost.onError = { error ->
-//    when (error) {
-//        is MediaPlayerError.VlcNotFound -> {
-//            println("Error: VLC library not found. Please ensure VLC is installed.")
-//        }
-//
-//        is MediaPlayerError.InitializationError -> {
-//            println("Initialization Error: ${error.details}")
-//        }
-//
-//        is MediaPlayerError.PlaybackError -> {
-//            println("Playback Error: ${error.details}")
-//        }
-//
-//        is MediaPlayerError.ResourceError -> {
-//            println("Resource Error: ${error.details}")
-//        }
-//    }
-//}

@@ -1,10 +1,11 @@
-package com.pepdeal.infotech.shop
+package com.pepdeal.infotech.shop.editShop
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.pepdeal.infotech.ShopMaster
-import com.pepdeal.infotech.fonts.FontUtils
+import com.pepdeal.infotech.shop.modal.ShopMaster
 import com.pepdeal.infotech.fonts.FontUtils.fontMap
+import com.pepdeal.infotech.shop.shopDetails.ShopDetailsRepo
+import com.pepdeal.infotech.shop.modal.ShopStatusMaster
 import com.pepdeal.infotech.util.ColorUtil
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -99,7 +100,7 @@ class EditShopDetailsViewModal() : ViewModel() {
         }
     }
 
-    fun updateShopDetails(shopStatusMaster: ShopStatusMaster,shopMaster: ShopMaster) {
+    fun updateShopDetails(shopStatusMaster: ShopStatusMaster, shopMaster: ShopMaster) {
         _isUploaded.value = true
         viewModelScope.launch {
             val status = repo.insertOrUpdateShopServices(shopStatusMaster)

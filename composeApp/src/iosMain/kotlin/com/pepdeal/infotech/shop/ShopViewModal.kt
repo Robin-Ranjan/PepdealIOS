@@ -2,8 +2,7 @@ package com.pepdeal.infotech.shop
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.pepdeal.infotech.ShopRepo
-import com.pepdeal.infotech.ShopWithProducts
+import com.pepdeal.infotech.shop.modal.ShopWithProducts
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

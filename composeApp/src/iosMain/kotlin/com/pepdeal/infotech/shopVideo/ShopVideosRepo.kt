@@ -1,7 +1,7 @@
 package com.pepdeal.infotech.shopVideo
 
-import com.pepdeal.infotech.ShopMaster
-import com.pepdeal.infotech.favourite.modal.FavoriteProductMaster
+import com.pepdeal.infotech.shop.modal.ShopMaster
+import com.pepdeal.infotech.shopVideo.favShopVideo.FavouriteShopVideo
 import com.pepdeal.infotech.util.FirebaseUtil
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body

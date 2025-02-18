@@ -60,8 +60,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pepdeal.infotech.Objects
-import com.pepdeal.infotech.ProductWithImages
-import com.pepdeal.infotech.ShopWithProducts
+import com.pepdeal.infotech.shop.modal.ProductWithImages
+import com.pepdeal.infotech.shop.modal.ShopWithProducts
 import com.pepdeal.infotech.fonts.FontUtils.getFontResourceByName
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.product.SearchView

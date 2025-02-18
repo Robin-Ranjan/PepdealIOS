@@ -1,7 +1,7 @@
 package com.pepdeal.infotech.superShop
 
-import com.pepdeal.infotech.ProductWithImages
-import com.pepdeal.infotech.ShopMaster
+import com.pepdeal.infotech.shop.modal.ProductWithImages
+import com.pepdeal.infotech.shop.modal.ShopMaster
 import kotlinx.serialization.Serializable
 
 @Serializable

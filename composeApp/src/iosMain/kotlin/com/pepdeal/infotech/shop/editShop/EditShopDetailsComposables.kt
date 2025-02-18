@@ -1,4 +1,4 @@
-package com.pepdeal.infotech.shop
+package com.pepdeal.infotech.shop.editShop
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -54,10 +54,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pepdeal.infotech.ShopMaster
 import com.pepdeal.infotech.fonts.FontUtils
 import com.pepdeal.infotech.navigation.routes.Routes
-import com.pepdeal.infotech.util.ColorUtil
+import com.pepdeal.infotech.shop.TextFieldWithLabel
 import com.pepdeal.infotech.util.NavigationProvider.navController
 import com.pepdeal.infotech.util.Util
 import com.pepdeal.infotech.util.Util.fromHex

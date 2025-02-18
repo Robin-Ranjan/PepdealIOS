@@ -1,4 +1,4 @@
-
+package com.pepdeal.infotech.user
 import kotlinx.serialization.Serializable
 
 

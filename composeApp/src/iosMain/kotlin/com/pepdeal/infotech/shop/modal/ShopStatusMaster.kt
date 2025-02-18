@@ -1,4 +1,4 @@
-package com.pepdeal.infotech.shop
+package com.pepdeal.infotech.shop.modal
 
 import kotlinx.serialization.Serializable
 

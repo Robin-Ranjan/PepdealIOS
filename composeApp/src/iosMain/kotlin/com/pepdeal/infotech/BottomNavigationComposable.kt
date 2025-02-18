@@ -1,4 +1,6 @@
-import androidx.compose.foundation.layout.*
+package com.pepdeal.infotech
+
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
@@ -7,10 +9,20 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemColors
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
@@ -20,14 +32,7 @@ import com.pepdeal.infotech.profile.ProfileScreen
 import com.pepdeal.infotech.shop.ShopScreen
 import com.pepdeal.infotech.shopVideo.FeedScreen
 
-//@Composable
-//fun FeedScreen() {
-//    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-//        Text("Feed Screen", style = MaterialTheme.typography.headlineSmall)
-//    }
-//}
 
-// Bottom Navigation and Pager
 @Composable
 fun MainBottomNavigationWithPager() {
     var selectedItem by remember { mutableStateOf(0) }
