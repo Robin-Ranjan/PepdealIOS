@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -116,11 +117,12 @@ fun ShopDetailsWithProductPage(
     }
 
     MaterialTheme {
-        Scaffold {
+        Scaffold(
+            contentWindowInsets = WindowInsets(0)
+        ) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .navigationBarsPadding()
                     .background(Color.White)
             ) {
                 if (shopLoading) {
@@ -134,7 +136,6 @@ fun ShopDetailsWithProductPage(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .navigationBarsPadding()
                             .background(Color.White)
                     ) {
 

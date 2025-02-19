@@ -259,7 +259,7 @@ fun FavoriteShopVideCard(
                             NavigationProvider.navController.navigate(
                                 Routes.ShopDetails(
                                     shopVideo.shopsMaster.shopId ?: "",
-                                    Objects.UserId
+                                    Objects.USER_ID
                                 )
                             )
                         }

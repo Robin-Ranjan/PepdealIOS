@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pepdeal.infotech.fonts.FontItemCard
 import com.pepdeal.infotech.fonts.FontUtils
+import com.pepdeal.infotech.product.ListProductViewModal
 import com.pepdeal.infotech.product.ProductViewModal
 import com.pepdeal.infotech.util.CategoriesUtil
 import com.pepdeal.infotech.util.NavigationProvider
@@ -50,7 +51,7 @@ import pepdealios.composeapp.generated.resources.manrope_bold
 @Composable
 fun CategoriesBottomSheet(
     onDismiss: () -> Unit,
-    viewModal: ProductViewModal = ViewModals.productViewModal
+    viewModal: ListProductViewModal = ViewModals.listProductViewModal
 ) {
     ModalBottomSheet(
         modifier = Modifier.fillMaxHeight()

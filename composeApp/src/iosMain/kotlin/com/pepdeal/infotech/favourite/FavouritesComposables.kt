@@ -78,7 +78,7 @@ fun FavoriteProductScreen(viewModal: FavoriteProductViewModal = ViewModals.favor
     val columnState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     LaunchedEffect(Unit) {
-        viewModal.getAllFavoriteProduct(Objects.UserId)
+        viewModal.getAllFavoriteProduct(Objects.USER_ID)
     }
 
     MaterialTheme {

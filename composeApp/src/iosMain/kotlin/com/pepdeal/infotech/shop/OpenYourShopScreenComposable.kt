@@ -32,6 +32,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -39,11 +41,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -62,12 +66,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pepdeal.infotech.Objects
 import com.pepdeal.infotech.navigation.routes.Routes
+import com.pepdeal.infotech.shop.modal.ShopMaster
 import com.pepdeal.infotech.util.NavigationProvider.navController
 import com.pepdeal.infotech.util.States
 import com.pepdeal.infotech.util.Util
 import com.pepdeal.infotech.util.Util.fromHex
 import com.pepdeal.infotech.util.ViewModals
+import kotlinx.coroutines.flow.collectLatest
+import network.chaintech.sdpcomposemultiplatform.ssp
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.FontResource
 import pepdealios.composeapp.generated.resources.Res
@@ -77,7 +85,7 @@ import pepdealios.composeapp.generated.resources.manrope_medium
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OpenYourShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
+fun OpenYourShopScreen(viewModel: OpenYourShopViewModal = ViewModals.openYOurShopViewModal) {
     val shopName = remember { mutableStateOf(TextFieldValue()) }
     val shopAddress = remember { mutableStateOf(TextFieldValue()) }
     val signBoardAddress = remember { mutableStateOf(TextFieldValue()) }
@@ -97,9 +105,6 @@ fun OpenYourShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
     val aboutShop = remember { mutableStateOf(TextFieldValue()) }
     // Error message state
     var errorMessage by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
-    var isComposing by remember { mutableStateOf(false) }
-    var uploading by remember { mutableStateOf(false) }
     var showNumber by remember { mutableStateOf(false) }
 
 
@@ -119,7 +124,7 @@ fun OpenYourShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
     )
 
     val fontDetails = viewModel.selectedFonts.collectAsStateWithLifecycle().value
-    val snackBar = remember { SnackbarHostState() }
+
     if (fontDetails != null) {
         shopBoardFontStyle.value = TextFieldValue(fontDetails.first)
         shopBoardFontResources.value = fontDetails.second
@@ -128,231 +133,297 @@ fun OpenYourShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
     var showShopAddressUI by remember { mutableStateOf(false) }
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    MaterialTheme {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White)
-        ) {
+    // Observe response state from ViewModel
+    val registerShopResponse by viewModel.registerShopResponse.collectAsStateWithLifecycle()
+    val isUploading by viewModel.isUploading.collectAsStateWithLifecycle()
 
-            // Top App Bar with Back Button
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Shop Details",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        lineHeight = 20.sp
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.Black
-                        )
+    val snackBarHostState = remember { SnackbarHostState() }
+
+
+    LaunchedEffect(Unit) {
+        snapshotFlow { registerShopResponse }
+            .collectLatest { response ->
+                response?.let {
+                    if (it.first) {
+                        snackBarHostState.showSnackbar("Shop Registered Successfully")
+                        viewModel.reset()
+                        navController.popBackStack()
+                    } else {
+                        println(it.second)
+                        snackBarHostState.showSnackbar(it.second)
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,  // Background color
-                    titleContentColor = Color.Black,  // Title color
-                    navigationIconContentColor = Color.Black,  // Back button color
-                    actionIconContentColor = Color.Unspecified
-                ),
-                modifier = Modifier.shadow(4.dp) // Adds elevation shadow
-            )
+                }
+            }
+    }
 
+
+    MaterialTheme {
+        Scaffold(
+            snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(
+                            "Shop Details",
+                            fontSize = 20.ssp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = {
+                            viewModel.reset()
+                            navController.popBackStack()
+                        }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color.Black
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.White,  // Background color
+                        titleContentColor = Color.Black,  // Title color
+                        navigationIconContentColor = Color.Black,  // Back button color
+                        actionIconContentColor = Color.Unspecified
+                    )
+                )
+            }
+        ) { paddingValues ->
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxSize()
                     .background(Color.White)
-                    .verticalScroll(
-                        state = rememberScrollState(),
-                        flingBehavior = ScrollableDefaults.flingBehavior()
-                    )
-                    .pointerInput(Unit) {
-                        detectTapGestures(onTap = {
-                            keyboardController?.hide()
-                        })
-                    }
-                    .padding(start = 10.dp, end = 10.dp, bottom = 10.dp, top = 0.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(paddingValues)
             ) {
-                Text(
-                    text = "Note: When adding shop make sure you will be in your shop as we are relocating your shop to serve you better.",
-                    color = Color.Red,
-                    textAlign = TextAlign.Center,
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 10.dp),
-                    fontSize = 15.sp,
-                    lineHeight = 15.sp
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "Add Shop",
-                    fontSize = 25.sp,
-                    lineHeight = 25.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                TextFieldWithLabel(label = "Shop Name", state = shopName)
-
-                TextFieldWithLabel(
-                    label = "Shop Address",
-                    maxLines = 3,
-                    state = shopAddress,
-                    onClick = {
-                        showShopAddressUI = true
-                    })
-
-                TextFieldWithLabel(label = "Shop Address For Sign Board", state = signBoardAddress)
-
-                AutoCompleteTextField(States.states.toList(), state = shopState, "Enter Your State")
-
-                TextFieldWithLabel(label = "Shop City", state = shopCity)
-
-
-                TextFieldWithLabel(label = "Shop Area", state = shopArea)
-
-                TextFieldWithLabel(
-                    label = "Shop Phone Number",
-                    state = shopPhoneNumber,
-                    maxLength = 10,
-                    inputType = KeyboardType.Number
-                )
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp, horizontal = 8.dp)
-                        .border(
-                            width = 0.5.dp,
-                            color = Color.Black,
-                            shape = RoundedCornerShape(2.dp)
-                        ), // Optional padding for better spacing
-                    verticalAlignment = Alignment.CenterVertically // Aligns content vertically
+                        .background(Color.White)
+                        .verticalScroll(
+                            state = rememberScrollState(),
+                            flingBehavior = ScrollableDefaults.flingBehavior()
+                        )
+                        .pointerInput(Unit) {
+                            detectTapGestures(onTap = {
+                                keyboardController?.hide()
+                            })
+                        }
+                        .padding(start = 10.dp, end = 10.dp, bottom = 10.dp, top = 0.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Show Number",
-                        modifier = Modifier.weight(1f)
-                            .padding(start = 5.dp), // Makes the text take available space
-                        color = Color.Black,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                    Switch(
-                        checked = showNumber,
-                        onCheckedChange = { showNumber = it },
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = Color.Yellow,
-                            checkedTrackColor = Color.DarkGray
-                        ),
-                        modifier = Modifier.padding(end = 5.dp)
-                    )
-                }
-
-                Text(
-                    text = "Note:- you want search by multiple tags then add search tags separated by (comma)..",
-                    fontSize = 12.sp,
-                    color = Color.Gray,
-                    modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
-                        .fillMaxWidth(),
-                    textAlign = TextAlign.Start
-                )
-
-                TextFieldWithLabel(label = "Search Tag", maxLines = 5, state = searchTag)
-
-                TextFieldWithLabel(
-                    label = "Shop Board Font Style",
-                    state = shopBoardFontStyle,
-                    fontResources = shopBoardFontResources.value,
-                    onClick = { navController.navigate(Routes.FontBottomSheet) },
-                    isEditable = false
-                )
-
-                TextFieldWithLabel(
-                    label = "shop Board BackGround Color",
-                    state = shopBoardBackgroundColorName,
-                    onClick = {
-                        navController.navigate(Routes.ColorBottomSheet)
-                        viewModel.updateTheTypeOfColor("shop_board_color")
-                    },
-                    isEditable = false,
-                    color = if(shopBoardBackgroundColorName.value.text.isNotEmpty()) Color.fromHex(shopBoardBackgroundColorCode.value.text) else Color.Black
-                )
-
-                TextFieldWithLabel(
-                    label = "shop Font Color",
-                    state = shopBoardFontColorName,
-                    onClick = {
-                        navController.navigate(Routes.ColorBottomSheet)
-                        viewModel.updateTheTypeOfColor("shop_font_color")
-                    },
-                    isEditable = false,
-                    color = if(shopBoardFontColorName.value.text.isNotEmpty()) Color.fromHex(shopBoardFontColorCode.value.text) else Color.Black
-                )
-
-                TextFieldWithLabel(
-                    label = "About Shop",
-                    maxLines = 10,
-                    state = aboutShop,
-                    minLines = 3
-                )
-
-
-                if (uploading) {
-                    CircularProgressIndicator()
-                } else {
-                    Button(
-                        onClick = {
-                            uploading = true
-                            errorMessage = ""
-                            try {
-                                Util.validateShopAndSubmit(
-                                    fields = mapOf(
-                                        "Shop Name" to shopName.value.text,
-                                        "Shop Address" to shopAddress.value.text,
-                                        "Shop Address For Sign Board" to signBoardAddress.value.text,
-                                        "Shop State" to shopState.value.text,
-                                        "Shop City" to shopCity.value.text,
-                                        "Shop Area" to shopArea.value.text,
-                                        "Shop Phone Number" to shopPhoneNumber.value.text,
-                                        "Search Tag" to searchTag.value.text,
-                                        "Shop Board Background" to shopBoardBackgroundColorCode.value.text,
-                                        "Shop Board Font Colour" to shopBoardFontColorName.value.text,
-                                        "Shop Board Font Style" to shopBoardFontStyle.value.text,
-                                        "About Shop" to aboutShop.value.text,
-                                        "Longitude" to longitude.value.text,
-                                        "Latitude" to latitude.value.text
-                                    ),
-                                    setError = { error ->
-                                        errorMessage = error
-                                    },
-                                    status = { status ->
-                                        isLoading = false
-                                    }
-                                )
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                                errorMessage = "An unexpected error occurred. Please try again."
-                            }
-                        },
+                        text = "Note: When adding shop make sure you will be in your shop as we are relocating your shop to serve you better.",
+                        color = Color.Red,
+                        textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Black,
-                            contentColor = Color.White
-                        )
+                            .padding(horizontal = 10.dp),
+                        fontSize = 15.sp,
+                        lineHeight = 15.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "Add Shop",
+                        fontSize = 25.sp,
+                        lineHeight = 25.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    TextFieldWithLabel(label = "Shop Name", state = shopName)
+
+                    TextFieldWithLabel(
+                        label = "Shop Address",
+                        maxLines = 3,
+                        state = shopAddress,
+                        onClick = {
+                            showShopAddressUI = true
+                        })
+
+                    TextFieldWithLabel(
+                        label = "Shop Address For Sign Board",
+                        state = signBoardAddress
+                    )
+
+                    AutoCompleteTextField(
+                        States.states.toList(),
+                        state = shopState,
+                        "Enter Your State"
+                    )
+
+                    TextFieldWithLabel(label = "Shop City", state = shopCity)
+
+
+                    TextFieldWithLabel(label = "Shop Area", state = shopArea)
+
+                    TextFieldWithLabel(
+                        label = "Shop Phone Number",
+                        state = shopPhoneNumber,
+                        maxLength = 10,
+                        inputType = KeyboardType.Number
+                    )
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp, horizontal = 8.dp)
+                            .border(
+                                width = 0.5.dp,
+                                color = Color.Black,
+                                shape = RoundedCornerShape(2.dp)
+                            ), // Optional padding for better spacing
+                        verticalAlignment = Alignment.CenterVertically // Aligns content vertically
                     ) {
-                        Text(text = "Upload", fontSize = 20.sp)
+                        Text(
+                            text = "Show Number",
+                            modifier = Modifier.weight(1f)
+                                .padding(start = 5.dp), // Makes the text take available space
+                            color = Color.Black,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Switch(
+                            checked = showNumber,
+                            onCheckedChange = { showNumber = it },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.Yellow,
+                                checkedTrackColor = Color.DarkGray
+                            ),
+                            modifier = Modifier.padding(end = 5.dp)
+                        )
                     }
 
+                    Text(
+                        text = "Note:- you want search by multiple tags then add search tags separated by (comma)..",
+                        fontSize = 12.sp,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
+                            .fillMaxWidth(),
+                        textAlign = TextAlign.Start
+                    )
+
+                    TextFieldWithLabel(label = "Search Tag", maxLines = 5, state = searchTag)
+
+                    TextFieldWithLabel(
+                        label = "Shop Board Font Style",
+                        state = shopBoardFontStyle,
+                        fontResources = shopBoardFontResources.value,
+                        onClick = { navController.navigate(Routes.FontBottomSheet) },
+                        isEditable = false
+                    )
+
+                    TextFieldWithLabel(
+                        label = "shop Board BackGround Color",
+                        state = shopBoardBackgroundColorName,
+                        onClick = {
+                            navController.navigate(Routes.ColorBottomSheet)
+                            viewModel.updateTheTypeOfColor("shop_board_color")
+                        },
+                        isEditable = false,
+                        color = if (shopBoardBackgroundColorName.value.text.isNotEmpty()) Color.fromHex(
+                            shopBoardBackgroundColorCode.value.text
+                        ) else Color.Black
+                    )
+
+                    TextFieldWithLabel(
+                        label = "shop Font Color",
+                        state = shopBoardFontColorName,
+                        onClick = {
+                            navController.navigate(Routes.ColorBottomSheet)
+                            viewModel.updateTheTypeOfColor("shop_font_color")
+                        },
+                        isEditable = false,
+                        color = if (shopBoardFontColorName.value.text.isNotEmpty()) Color.fromHex(
+                            shopBoardFontColorCode.value.text
+                        ) else Color.Black
+                    )
+
+                    TextFieldWithLabel(
+                        label = "About Shop",
+                        maxLines = 10,
+                        state = aboutShop,
+                        minLines = 3
+                    )
+
+
+                    if (isUploading) {
+                        CircularProgressIndicator()
+                    } else {
+                        Button(
+                            onClick = {
+                                errorMessage = ""
+                                try {
+                                    Util.validateShopAndSubmit(
+                                        fields = mapOf(
+                                            "Shop Name" to shopName.value.text,
+                                            "Shop Address" to shopAddress.value.text,
+                                            "Shop Address For Sign Board" to signBoardAddress.value.text,
+                                            "Shop State" to shopState.value.text,
+                                            "Shop City" to shopCity.value.text,
+                                            "Shop Area" to shopArea.value.text,
+                                            "Shop Phone Number" to shopPhoneNumber.value.text,
+                                            "Search Tag" to searchTag.value.text,
+                                            "Shop Board Background" to shopBoardBackgroundColorCode.value.text,
+                                            "Shop Board Font Colour" to shopBoardFontColorName.value.text,
+                                            "Shop Board Font Style" to shopBoardFontStyle.value.text,
+                                            "About Shop" to aboutShop.value.text,
+                                            "Longitude" to longitude.value.text,
+                                            "Latitude" to latitude.value.text
+                                        ),
+                                        setError = { error ->
+                                            errorMessage = error
+                                        },
+                                        status = { status ->
+                                            viewModel.registerShop(
+                                                shopMaster = ShopMaster(
+                                                    shopId = "",
+                                                    userId = Objects.USER_ID,
+                                                    shopName = shopName.value.text,
+                                                    shopMobileNo = "+91${shopPhoneNumber.value.text}",
+                                                    shopAddress = shopAddress.value.text,
+                                                    shopAddress2 = signBoardAddress.value.text,
+                                                    shopArea = shopArea.value.text,
+                                                    city = shopCity.value.text,
+                                                    state = shopState.value.text,
+                                                    shopDescription = aboutShop.value.text,
+                                                    bgColourId = shopBoardBackgroundColorCode.value.text,
+                                                    fontSizeId = "",
+                                                    fontStyleId = shopBoardFontStyle.value.text,
+                                                    fontColourId = shopBoardFontColorCode.value.text,
+                                                    isActive = "1",
+                                                    flag = "1",
+                                                    latitude = "",
+                                                    longitude = "",
+                                                    shopStatus = "",
+                                                    searchTag = searchTag.value.text,
+                                                    isVerified = "1",
+                                                    createdAt = Util.getCurrentTimeStamp(),
+                                                    updatedAt = Util.getCurrentTimeStamp(),
+                                                    showNumber = if (showNumber) "0" else "1"
+                                                )
+                                            )
+                                        }
+                                    )
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                    errorMessage = "An unexpected error occurred. Please try again."
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Black,
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Text(text = "Upload", fontSize = 20.sp)
+                        }
+
+                    }
                 }
             }
         }
@@ -363,7 +434,7 @@ fun OpenYourShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
 fun TextFieldWithLabel(
     label: String,
     maxLines: Int = 1,
-    fontResources:FontResource =Res.font.manrope_medium,
+    fontResources: FontResource = Res.font.manrope_medium,
     state: MutableState<TextFieldValue>,
     isEditable: Boolean = true,
     maxLength: Int = Int.MAX_VALUE,
@@ -371,7 +442,7 @@ fun TextFieldWithLabel(
     minLines: Int = 1,
     modifier: Modifier = Modifier.fillMaxWidth(),
     onValueChange: (TextFieldValue) -> Unit = {},
-    color:Color = Color.Black,
+    color: Color = Color.Black,
     onClick: () -> Unit = {}
 ) {
 
@@ -394,7 +465,12 @@ fun TextFieldWithLabel(
             .background(Color.White, MaterialTheme.shapes.small)
             .padding(8.dp)
             .clickable { onClick() },
-        textStyle = TextStyle(color = color, fontSize = 15.sp, fontFamily = FontFamily(Font(fontResources)), lineHeight = 15.sp),
+        textStyle = TextStyle(
+            color = color,
+            fontSize = 15.sp,
+            fontFamily = FontFamily(Font(fontResources)),
+            lineHeight = 15.sp
+        ),
         enabled = isEditable,
         maxLines = maxLines,
         minLines = minLines,

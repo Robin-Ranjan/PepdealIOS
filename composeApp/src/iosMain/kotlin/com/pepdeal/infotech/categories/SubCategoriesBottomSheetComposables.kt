@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pepdeal.infotech.fonts.FontItemCard
 import com.pepdeal.infotech.fonts.FontUtils
+import com.pepdeal.infotech.product.ListProductViewModal
 import com.pepdeal.infotech.product.ProductViewModal
 import com.pepdeal.infotech.util.CategoriesUtil
 import com.pepdeal.infotech.util.NavigationProvider
@@ -55,7 +56,7 @@ import pepdealios.composeapp.generated.resources.manrope_bold
 @Composable
 fun SubCategoriesProductBottomSheet(
     onDismiss: () -> Unit,
-    viewModal: ProductViewModal = ViewModals.productViewModal
+    viewModal: ListProductViewModal = ViewModals.listProductViewModal
 ){
     var subCategoryToSelect by remember { mutableStateOf<List<SubCategory>>(emptyList()) }
 
@@ -105,8 +106,8 @@ fun SubCategoriesProductBottomSheet(
             LazyColumn {
                 items(items = subCategoryToSelect,
                     key = { it.id }) { category ->
-                    SubCategoriesItemCard(category) { _subCategories, ->
-                        viewModal.updateProductSubCategories(_subCategories)
+                    SubCategoriesItemCard(category) { subCategories, ->
+                        viewModal.updateProductSubCategories(subCategories)
                         NavigationProvider.navController.popBackStack()
                     }
                 }

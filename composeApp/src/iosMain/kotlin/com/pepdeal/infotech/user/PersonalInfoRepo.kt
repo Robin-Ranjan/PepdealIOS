@@ -1,5 +1,6 @@
 package com.pepdeal.infotech.user
 
+import com.pepdeal.infotech.UserProfilePicMaster
 import com.pepdeal.infotech.util.FirebaseUtil
 import com.pepdeal.infotech.util.Util
 import io.ktor.client.HttpClient
@@ -50,10 +51,11 @@ class PersonalInfoRepo {
                 "updatedAt" to Util.getCurrentTimeStamp()
             )
 
-            val response: HttpResponse = httpClient.patch("${FirebaseUtil.BASE_URL}user_master/$userId.json") {
-                contentType(ContentType.Application.Json)
-                setBody(requestBody)
-            }
+            val response: HttpResponse =
+                httpClient.patch("${FirebaseUtil.BASE_URL}user_master/$userId.json") {
+                    contentType(ContentType.Application.Json)
+                    setBody(requestBody)
+                }
 
             response.status.isSuccess()
         } catch (e: Exception) {
@@ -89,24 +91,26 @@ class PersonalInfoRepo {
         onComplete: (Boolean) -> Unit
     ) {
 //        val client = HttpClient() // Ktor HttpClient
-        val databaseUrl = "https://your-firebase-db-url.firebaseio.com/users.json" // Your Firebase DB URL
+        val databaseUrl =
+            "https://your-firebase-db-url.firebaseio.com/users.json" // Your Firebase DB URL
         val storageUrl = "https://your-firebase-storage-url.com" // Your Firebase Storage URL
 
         return withContext(Dispatchers.IO) {
             try {
                 // Retrieve current user profile data from Firebase Realtime Database
-                val snapshot:HttpResponse = client.get("${FirebaseUtil.BASE_URL}user_profile_pic_master.json"){
-                    parameter("orderBy", "\"userId\"")
-                    parameter("equalTo", "\"$userId\"")
-                    contentType(ContentType.Application.Json)
-                } // GET request for user data
+                val snapshot: HttpResponse =
+                    client.get("${FirebaseUtil.BASE_URL}user_profile_pic_master.json") {
+                        parameter("orderBy", "\"userId\"")
+                        parameter("equalTo", "\"$userId\"")
+                        contentType(ContentType.Application.Json)
+                    } // GET request for user data
 
                 val oldProfilePicUrl = snapshot.bodyAsText()
 
-                    // Delete old profile picture if exists
-                    if (oldProfilePicUrl.isNotEmpty()) {
-                        deleteOldProfilePicture(oldProfilePicUrl, client, storageUrl)
-                    }
+                // Delete old profile picture if exists
+                if (oldProfilePicUrl.isNotEmpty()) {
+                    deleteOldProfilePicture(oldProfilePicUrl, client, storageUrl)
+                }
 
                 // Upload new profile picture and get the URL
 //                val newProfilePicUrl = uploadProfilePicture(userId, imageUri, client, storageUrl)
@@ -146,7 +150,8 @@ class PersonalInfoRepo {
     ) {
         try {
             if (profilePicUrl.isNotEmpty()) {
-                val deleteUrl = "$storageUrl/$profilePicUrl" // Construct delete URL from the old profile picture URL
+                val deleteUrl =
+                    "$storageUrl/$profilePicUrl" // Construct delete URL from the old profile picture URL
                 val response = client.delete(deleteUrl) {
                     // Optionally pass authorization tokens if needed
                 }
@@ -191,5 +196,44 @@ class PersonalInfoRepo {
 //        }
 //        return "" // Return empty string if upload fails
 //    }
+
+
+    suspend fun fetchUserProfilePic(userId: String): UserProfilePicMaster? {
+        return try {
+            val response: HttpResponse = client.get("${FirebaseUtil.BASE_URL}user_profile_pic_master.json") {
+                parameter("orderBy", "\"userId\"")
+                parameter("equalTo", "\"$userId\"")
+                contentType(ContentType.Application.Json)
+            }
+
+            if (response.status == HttpStatusCode.OK) {
+                val responseBody = response.bodyAsText()
+                println("Response: $responseBody") // Debugging Log
+
+                if (responseBody.isEmpty() || responseBody == "{}") {
+                    println("No profile picture found for userId: $userId")
+                    return null
+                }
+
+                val result: Map<String, UserProfilePicMaster> = json.decodeFromString(responseBody)
+                val profilePic = result.values.firstOrNull() // Get the first value in the map
+
+                if (profilePic == null) {
+                    println("Parsed response is empty for userId: $userId")
+                }
+
+                profilePic
+            } else {
+                println("Failed to fetch profile picture: ${response.status}")
+                println("Response Body: ${response.bodyAsText()}")
+                null
+            }
+        } catch (e: Exception) {
+            println("Error fetching profile picture: ${e.message}")
+            e.printStackTrace()
+            null
+        }
+    }
+
 
 }

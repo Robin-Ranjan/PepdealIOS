@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -49,8 +48,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import chaintech.videoplayer.host.MediaPlayerError
-import chaintech.videoplayer.host.MediaPlayerEvent
 import chaintech.videoplayer.host.MediaPlayerHost
 import chaintech.videoplayer.model.PlayerSpeed
 import chaintech.videoplayer.model.ScreenResize
@@ -146,7 +143,7 @@ fun FeedScreen(viewModal: ShopVideosViewModal = ViewModals.shopVideosViewModal) 
 
                         LaunchedEffect(shopVideo.shopVideosMaster.shopId) {
                             viewModal.checkSaveShopExists(
-                                Objects.UserId,
+                                Objects.USER_ID,
                                 shopVideo.shopVideosMaster.shopId
                             ) {
                                 println("${shopVideo.shopsMaster.shopName} $it")
@@ -164,7 +161,7 @@ fun FeedScreen(viewModal: ShopVideosViewModal = ViewModals.shopVideosViewModal) 
                                 // Call ViewModel to handle like/unlike logic
                                 coroutineScope.launch {
                                     viewModal.toggleSaveShopStatus(
-                                        userId = Objects.UserId,
+                                        userId = Objects.USER_ID,
                                         shopId = shopVideo.shopVideosMaster.shopId,
                                         shopVideoId = shopVideo.shopVideosMaster.shopVideoId,
                                         newSavedVideoState
@@ -278,7 +275,7 @@ fun FeedCard(
                             NavigationProvider.navController.navigate(
                                 Routes.ShopDetails(
                                     shopVideo.shopsMaster.shopId ?: "",
-                                    Objects.UserId
+                                    Objects.USER_ID
                                 )
                             )
                         }

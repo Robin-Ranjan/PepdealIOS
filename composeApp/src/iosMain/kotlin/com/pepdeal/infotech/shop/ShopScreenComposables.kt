@@ -235,7 +235,7 @@ fun ShopCardView(shopWithProduct: ShopWithProducts) {
                 // Shop Name (Header)
                 Box(modifier = Modifier
                     .clickable { NavigationProvider.navController.navigate(Routes.ShopDetails(shopWithProduct.shop.shopId?:"",
-                        Objects.UserId))}) {
+                        Objects.USER_ID))}) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()

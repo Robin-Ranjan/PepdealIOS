@@ -39,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pepdeal.infotech.color.ColorItemCard
+import com.pepdeal.infotech.shop.OpenYourShopViewModal
 import com.pepdeal.infotech.shop.ShopViewModal
 import com.pepdeal.infotech.util.ColorUtil
 import com.pepdeal.infotech.util.NavigationProvider
@@ -54,7 +55,7 @@ import pepdealios.composeapp.generated.resources.Res
 @Composable
 fun FontBottomSheet(
     onDismiss: () -> Unit,
-    viewModal: ShopViewModal = ViewModals.shopViewModel
+    viewModal: OpenYourShopViewModal = ViewModals.openYOurShopViewModal
 ) {
 
     ModalBottomSheet(

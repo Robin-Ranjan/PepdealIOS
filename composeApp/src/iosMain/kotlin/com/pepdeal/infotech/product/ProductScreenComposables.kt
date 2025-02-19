@@ -193,7 +193,7 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
                         // Check favorite status when the product is displayed
                         LaunchedEffect(product.productId) {
                             viewModel.checkFavoriteExists(
-                                Objects.UserId,
+                                Objects.USER_ID,
                                 product.productId
                             ) { exists ->
                                 favoriteStates[product.productId] = exists
@@ -219,7 +219,7 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
                                     // Call ViewModel to handle like/unlike logic
                                     coroutineScope.launch {
                                         viewModel.toggleFavoriteStatus(
-                                            userId = Objects.UserId,
+                                            userId = Objects.USER_ID,
                                             product.productId,
                                             newFavoriteState
                                         )

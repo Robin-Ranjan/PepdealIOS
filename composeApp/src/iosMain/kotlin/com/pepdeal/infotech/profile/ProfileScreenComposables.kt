@@ -1,28 +1,44 @@
 package com.pepdeal.infotech.profile
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.Painter
@@ -33,6 +49,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.attafitamim.krop.core.crop.CropError
 import com.attafitamim.krop.core.crop.CropResult
 import com.attafitamim.krop.core.crop.DefaultAspectRatios
@@ -41,10 +58,13 @@ import com.attafitamim.krop.core.crop.cropperStyle
 import com.attafitamim.krop.core.crop.rememberImageCropper
 import com.attafitamim.krop.ui.ImageCropperDialog
 import com.pepdeal.infotech.Objects
+import com.pepdeal.infotech.ProfileScreenViewModal
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.product.requestPermission
-import com.pepdeal.infotech.user.PersonalInfoRepo
 import com.pepdeal.infotech.util.NavigationProvider
+import com.pepdeal.infotech.util.ViewModals
+import com.skydoves.landscapist.ImageOptions
+import com.skydoves.landscapist.coil3.CoilImage
 import dev.icerock.moko.media.compose.BindMediaPickerEffect
 import dev.icerock.moko.media.compose.rememberMediaPickerControllerFactory
 import dev.icerock.moko.media.picker.MediaPickerController
@@ -62,6 +82,7 @@ import pepdealios.composeapp.generated.resources.baseline_person_24
 import pepdealios.composeapp.generated.resources.baseline_power_settings_new_24
 import pepdealios.composeapp.generated.resources.baseline_video
 import pepdealios.composeapp.generated.resources.black_heart
+import pepdealios.composeapp.generated.resources.compose_multiplatform
 import pepdealios.composeapp.generated.resources.shopping_bag
 import pepdealios.composeapp.generated.resources.super_shop_logo
 import pepdealios.composeapp.generated.resources.support
@@ -69,9 +90,10 @@ import pepdealios.composeapp.generated.resources.tickets
 
 
 @Composable
-fun ProfileScreen() {
+fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenViewModal) {
     val scrollState = rememberScrollState()
     var profileImage = remember { mutableStateOf<ImageBitmap?>(null) }
+    val profileImageUrl by viewModal.userProfilePicMaster.collectAsStateWithLifecycle()
     val factory = rememberPermissionsControllerFactory()
     val controller = remember(factory) { factory.createPermissionsController() }
 
@@ -79,9 +101,10 @@ fun ProfileScreen() {
     val picker = remember(factory) { medialPickerFactory.createMediaPickerController() }
     val snackBar = remember { SnackbarHostState() }
 
-    LaunchedEffect(profileImage.value){
-        PersonalInfoRepo().updateProfilePicture(Objects.UserId,""){
-
+    LaunchedEffect(profileImageUrl) {
+        if (profileImageUrl?.profilePicUrl.isNullOrEmpty()) {
+            println("Fetching profile picture")
+            viewModal.fetchUserProfilePic(Objects.USER_ID)
         }
     }
 
@@ -153,7 +176,8 @@ fun ProfileScreen() {
                                     imageState = profileImage,
                                     controller = controller,
                                     picker = picker,
-                                    snackBar = snackBar
+                                    snackBar = snackBar,
+                                    imageUrl = profileImageUrl?.profilePicUrl?:""
                                 )
                             }
 
@@ -192,7 +216,13 @@ fun ProfileScreen() {
                     ProfileMenuItem(
                         text = "Super Shop",
                         icon = Res.drawable.super_shop_logo,
-                        onClick = { NavigationProvider.navController.navigate(Routes.SuperShopPage(userId = Objects.UserId)) })
+                        onClick = {
+                            NavigationProvider.navController.navigate(
+                                Routes.SuperShopPage(
+                                    userId = Objects.USER_ID
+                                )
+                            )
+                        })
                     ProfileMenuItem(
                         text = "Tickets",
                         icon = Res.drawable.tickets,
@@ -200,7 +230,13 @@ fun ProfileScreen() {
                     ProfileMenuItem(
                         text = "Saved Shop Video",
                         icon = Res.drawable.super_shop_logo,
-                        onClick = { NavigationProvider.navController.navigate(Routes.FavoriteShopVideosPage(Objects.UserId)) })
+                        onClick = {
+                            NavigationProvider.navController.navigate(
+                                Routes.FavoriteShopVideosPage(
+                                    Objects.USER_ID
+                                )
+                            )
+                        })
                     ProfileMenuItem(
                         text = "Open Your Shop",
                         icon = Res.drawable.shopping_bag,
@@ -208,7 +244,13 @@ fun ProfileScreen() {
                     ProfileMenuItem(
                         text = "Personal Info",
                         icon = Res.drawable.baseline_person_24,
-                        onClick = { NavigationProvider.navController.navigate(Routes.PersonalInfoPage(userId = Objects.UserId))})
+                        onClick = {
+                            NavigationProvider.navController.navigate(
+                                Routes.PersonalInfoPage(
+                                    userId = Objects.USER_ID
+                                )
+                            )
+                        })
                     Text(
                         text = "Seller Page",
                         color = Color.DarkGray,
@@ -235,12 +277,19 @@ fun ProfileScreen() {
                     ProfileMenuItem(
                         text = "Edit Shop Details",
                         icon = Res.drawable.shopping_bag,
-                        onClick = { NavigationProvider.navController.navigate(Routes.EditShopDetails("-OG9iDx7RKUPZ6RHwsIA",Objects.UserId)) })
+                        onClick = {
+                            NavigationProvider.navController.navigate(
+                                Routes.EditShopDetails(
+                                    "-OG9iDx7RKUPZ6RHwsIA",
+                                    Objects.USER_ID
+                                )
+                            )
+                        })
 
                     ProfileMenuItem(
                         text = "Shop Video",
                         icon = Res.drawable.baseline_video,
-                        onClick = { NavigationProvider.navController.navigate(Routes.UploadShopVideoPage)})
+                        onClick = { NavigationProvider.navController.navigate(Routes.UploadShopVideoPage) })
 
                     Text(
                         text = "Support & FAQ",
@@ -352,7 +401,8 @@ fun ProfileImageSelector(
     picker: MediaPickerController,
     snackBar: SnackbarHostState,
     painter: Painter = painterResource(Res.drawable.baseline_person_24),
-    contentScale: ContentScale = ContentScale.Fit
+    contentScale: ContentScale = ContentScale.Fit,
+    imageUrl: String = ""
 ) {
     val scope = rememberCoroutineScope()
     val imageCropper = rememberImageCropper()
@@ -408,6 +458,45 @@ fun ProfileImageSelector(
                 },
             contentScale = ContentScale.Fit,
             alignment = Alignment.Center
+        )
+    } else if (imageUrl.isNotEmpty()) {
+        CoilImage(
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable {
+                    scope.launch {
+                        requestPermission(
+                            controller,
+                            permission = Permission.GALLERY,
+                            snackBar,
+                            picker,
+                            imageState = { imageBitMap ->
+                                scope.launch {
+                                    imageBitMap.let {
+                                        val result = imageCropper.crop(
+                                            maxResultSize = IntSize(1200, 1200),
+                                            bmp = imageBitMap
+                                        ) // Suspends until user accepts or cancels cropping
+                                        val croppedBitmap = when (result) {
+                                            CropResult.Cancelled -> null
+                                            is CropError -> null
+                                            is CropResult.Success -> result.bitmap
+                                        }
+                                        croppedBitmap?.let { imageState.value = it }
+                                    }
+                                }
+                            }
+                        )
+                    }
+                }
+                .clip(RoundedCornerShape(2.dp))
+                .border(width = 1.dp, color = Color.Gray),
+            imageModel = { imageUrl },
+            imageOptions = ImageOptions(
+                contentScale = ContentScale.Crop,
+                alignment = Alignment.Center
+            ),
+            previewPlaceholder = painterResource(Res.drawable.compose_multiplatform),
         )
     } else {
         Image(

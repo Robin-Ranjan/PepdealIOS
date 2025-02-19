@@ -40,10 +40,12 @@ import com.attafitamim.krop.core.crop.crop
 import com.attafitamim.krop.core.crop.cropperStyle
 import com.attafitamim.krop.core.crop.rememberImageCropper
 import com.attafitamim.krop.ui.ImageCropperDialog
+import com.pepdeal.infotech.Objects
 import com.pepdeal.infotech.categories.SubCategory
 import com.pepdeal.infotech.color.ColorItem
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.shop.TextFieldWithLabel
+import com.pepdeal.infotech.shop.modal.ProductMaster
 import com.pepdeal.infotech.util.CategoriesUtil
 import com.pepdeal.infotech.util.NavigationProvider.navController
 import com.pepdeal.infotech.util.Util
@@ -66,14 +68,17 @@ import dev.icerock.moko.permissions.compose.BindEffect
 import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import network.chaintech.sdpcomposemultiplatform.sdp
+import network.chaintech.sdpcomposemultiplatform.ssp
 import org.jetbrains.compose.resources.Font
 import pepdealios.composeapp.generated.resources.Res
 import pepdealios.composeapp.generated.resources.manrope_light
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ListProductScreen(viewModal: ProductViewModal = ViewModals.productViewModal) {
+fun ListProductScreen(viewModal: ListProductViewModal = ViewModals.listProductViewModal) {
     val factory = rememberPermissionsControllerFactory()
     val controller = remember(factory) { factory.createPermissionsController() }
     val coroutineScope: CoroutineScope = rememberCoroutineScope()
@@ -94,29 +99,30 @@ fun ListProductScreen(viewModal: ProductViewModal = ViewModals.productViewModal)
     val productColors = remember { mutableStateOf(TextFieldValue()) }
     val productMrp = remember { mutableStateOf(TextFieldValue()) }
     val productDiscount = remember { mutableStateOf(TextFieldValue()) }
-    val productSale = remember { mutableStateOf(TextFieldValue()) }
+    var productSale = remember { mutableStateOf(TextFieldValue()) }
+    val productColourCode = remember { mutableStateOf("") }
+//    var uploading by remember { mutableStateOf(false) }
 
-    // Error message state
-    var errorMessage by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
-    var isComposing by remember { mutableStateOf(false) }
-    var uploading by remember { mutableStateOf(false) }
-
-    var selectedProductColour = remember { mutableStateOf<List<ColorItem>>(emptyList()) }
+//    var selectedProductColour = remember { mutableStateOf<List<ColorItem>>(emptyList()) }
     val selectedProductColours =
         viewModal.selectedProductColours.collectAsStateWithLifecycle().value?.toMutableList()
 
     val productColorsName = selectedProductColours?.joinToString(",") { it.name.toNameFormat() }
+    val productColorsCode = selectedProductColours?.joinToString(",") { it.hexCode }
     productColors.value = TextFieldValue(productColorsName ?: "")
 
     var imageBitmap1 = remember { mutableStateOf<ImageBitmap?>(null) }
     var imageBitmap2 = remember { mutableStateOf<ImageBitmap?>(null) }
     var imageBitmap3 = remember { mutableStateOf<ImageBitmap?>(null) }
 
-
+    val imageFileList = listOf(imageBitmap1.value, imageBitmap2.value, imageBitmap3.value)
     var subCategoryToSelect by remember { mutableStateOf<List<SubCategory>>(emptyList()) }
 
     var showProductPrices by remember { mutableStateOf(false) }
+
+    // Observe response state from ViewModel
+    val registerProductResponse by viewModal.registerProductResponse.collectAsStateWithLifecycle()
+    val isUploading by viewModal.isUploading.collectAsStateWithLifecycle()
 
     productCategory.value = TextFieldValue(
         viewModal.selectedProductCategories.collectAsStateWithLifecycle().value?.name ?: ""
@@ -143,6 +149,29 @@ fun ListProductScreen(viewModal: ProductViewModal = ViewModals.productViewModal)
         }
     }
 
+    LaunchedEffect(Unit) {
+        snapshotFlow { registerProductResponse }
+            .collectLatest { response ->
+                response?.let {
+                    if (it.first) {
+                        snackBar.showSnackbar("Product Registered Successfully")
+                        viewModal.reset()
+                        navController.popBackStack()
+                    } else {
+                        println(it.second)
+                        snackBar.showSnackbar(it.second)
+                    }
+                }
+            }
+    }
+
+//    LaunchedEffect(selectedProductColours){
+//        if(selectedProductColours!=null){
+//            productColourCode.value = selectedProductColours
+//        }
+//    }
+
+
     MaterialTheme {
         BindEffect(controller)
         BindMediaPickerEffect(picker)
@@ -158,26 +187,20 @@ fun ListProductScreen(viewModal: ProductViewModal = ViewModals.productViewModal)
                         contentColor = Color.Black,
                         content = { Text(text = data.visuals.message) })
                 })
-            }
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.White)
-            ) {
+            },
+            topBar = {
                 // Top App Bar with Back Button
                 TopAppBar(
                     title = {
                         Text(
-                            text = "Product Details",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            lineHeight = 18.sp
+                            "Product Details",
+                            fontSize = 20.ssp,
+                            lineHeight = 20.ssp,
+                            fontWeight = FontWeight.Bold
                         )
                     },
                     navigationIcon = {
-                        IconButton(onClick = {
-                            viewModal.resetTheProductDetails()
+                        IconButton(onClick = {  //viewModel.reset()
                             navController.popBackStack()
                         }) {
                             Icon(
@@ -192,17 +215,23 @@ fun ListProductScreen(viewModal: ProductViewModal = ViewModals.productViewModal)
                         titleContentColor = Color.Black,  // Title color
                         navigationIconContentColor = Color.Black,  // Back button color
                         actionIconContentColor = Color.Unspecified
-                    ),
-                    modifier = Modifier.shadow(4.dp),
-                    expandedHeight = 50.dp
+                    )
                 )
+            }
+        ) { paddingValue ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White)
+                    .padding(paddingValue)
+            ) {
 
                 Box(Modifier.fillMaxSize()) {
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(Color.White)
-                            .padding(10.dp),
+                            .padding(10.sdp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
 
@@ -341,7 +370,11 @@ fun ListProductScreen(viewModal: ProductViewModal = ViewModals.productViewModal)
                                                 productMrp.value.text,
                                                 productDiscount.value.text,
                                                 productSale
-                                            )
+                                            ) {
+                                                coroutineScope.launch {
+                                                    snackBar.showSnackbar("Discount Cant be more than 100%")
+                                                }
+                                            }
                                         }
                                     )
                                     Spacer(modifier = Modifier.height(3.dp))
@@ -354,7 +387,11 @@ fun ListProductScreen(viewModal: ProductViewModal = ViewModals.productViewModal)
                                                 productMrp.value.text,
                                                 productDiscount.value.text,
                                                 productSale
-                                            )
+                                            ) {
+                                                coroutineScope.launch {
+                                                    snackBar.showSnackbar("Discount Cant be more than 100%")
+                                                }
+                                            }
                                         }
                                     )
                                     Spacer(modifier = Modifier.height(3.dp))
@@ -420,12 +457,12 @@ fun ListProductScreen(viewModal: ProductViewModal = ViewModals.productViewModal)
                         }
 
                         item {
-                            if (uploading) {
+                            if (isUploading) {
                                 CircularProgressIndicator()
                             } else {
                                 Button(
                                     onClick = {
-                                        uploading = true
+//                                        uploading = true
 //                            CoroutineScope(Dispatchers.IO).launch {
                                         try {
                                             Util.validateShopAndSubmit(
@@ -465,22 +502,57 @@ fun ListProductScreen(viewModal: ProductViewModal = ViewModals.productViewModal)
                                                     // Add image-related fields
                                                     put(
                                                         "Product Image 1",
-                                                        if (imageBitmap1 == null) "" else "Have image"
+                                                        if (imageBitmap1.value == null) "" else "Have image"
                                                     )
                                                     put(
                                                         "Product Image 2",
-                                                        if (imageBitmap2 == null) "" else "Have image"
+                                                        if (imageBitmap2.value == null) "" else "Have image"
                                                     )
                                                     put(
                                                         "Product Image 3",
-                                                        if (imageBitmap3 == null) "" else "Have image"
+                                                        if (imageBitmap3.value == null) "" else "Have image"
                                                     )
                                                 },
                                                 setError = { error ->
-//                                                    snackBar.showSnackbar(error)
+                                                    coroutineScope.launch {
+                                                        snackBar.showSnackbar(error)
+                                                    }
                                                 },
                                                 status = { status ->
-
+                                                    if (status) {
+//                                                        if (selectedProductColours != null) {
+                                                            viewModal.registerProduct(
+                                                                shopId = Objects.SHOP_ID,
+                                                                productMaster = ProductMaster(
+                                                                    productId = "",
+                                                                    userId = Objects.USER_ID,
+                                                                    shopId = Objects.SHOP_ID,
+                                                                    productName = productName.value.text,
+                                                                    brandId = "",
+                                                                    brandName = brandName.value.text,
+                                                                    categoryId = productCategory.value.text,
+                                                                    subCategoryId = productSubCategory.value.text,
+                                                                    description = productDescription.value.text,
+                                                                    description2 = productDescription2.value.text,
+                                                                    specification = productSpecification.value.text,
+                                                                    warranty = productWarranty.value.text,
+                                                                    sizeId = productSize.value.text,
+                                                                    sizeName = "",
+                                                                    color = productColorsCode?:"",
+                                                                    searchTag = searchTag.value.text,
+                                                                    onCall = if(showProductPrices) "0" else "1",
+                                                                    mrp = productMrp.value.text,
+                                                                    discountMrp = productDiscount.value.text,
+                                                                    sellingPrice = productSale.value.text,
+                                                                    isActive = "1",
+                                                                    flag = "1",
+                                                                    createdAt = Util.getCurrentTimeStamp(),
+                                                                    updatedAt = Util.getCurrentTimeStamp()
+                                                                ),
+                                                                uriList = imageFileList.filterNotNull().toMutableList()
+                                                            )
+//                                                        }
+                                                    }
                                                 }
                                             )
                                         } catch (e: Exception) {

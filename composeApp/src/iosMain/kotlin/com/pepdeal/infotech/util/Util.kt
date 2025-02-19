@@ -133,19 +133,24 @@ object Util {
     fun calculateFinalPrice(
         mrpText: String,
         discountText: String,
-        productSale: MutableState<TextFieldValue>
-    ): String {
+        productSale: MutableState<TextFieldValue>,
+        onCallBack: () -> Unit
+    ) {
         val price = mrpText.toDoubleOrNull() ?: 0.0
         val discount = discountText.toDoubleOrNull() ?: 0.0
 
-        if (discount > 100) return "0.00" // Reset if discount is greater than 100
+        if (discount > 100) {
+            productSale.value = TextFieldValue("0.00")
+            onCallBack()
+            return
+        } // Reset if discount is greater than 100
 
         val finalPrice = price - (price * discount / 100)
 
         // Round to 2 decimal places
         val roundedFinalPrice = (round(finalPrice * 100) / 100).toString()
 
-        return roundedFinalPrice
+        productSale.value = TextFieldValue(roundedFinalPrice)
     }
 
     @OptIn(ExperimentalForeignApi::class)
