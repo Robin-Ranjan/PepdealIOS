@@ -2,8 +2,11 @@ package com.pepdeal.infotech.product
 
 import androidx.compose.ui.graphics.ImageBitmap
 import com.pepdeal.infotech.FirebaseUploadResponse
+import com.pepdeal.infotech.Rough
+import com.pepdeal.infotech.shop.modal.ProductImageMaster
 import com.pepdeal.infotech.shop.modal.ProductMaster
 import com.pepdeal.infotech.util.FirebaseUtil
+import com.pepdeal.infotech.util.Util
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.darwin.Darwin
@@ -27,6 +30,8 @@ import kotlinx.cinterop.readBytes
 import kotlinx.cinterop.refTo
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import platform.CoreGraphics.CGBitmapContextCreate
 import platform.CoreGraphics.CGBitmapContextCreateImage
 import platform.CoreGraphics.CGColorSpaceCreateDeviceRGB
@@ -152,6 +157,15 @@ class ListProductRepo {
                     if (downloadUrl != null) {
                         println("✅ Image $index uploaded successfully")
                         println(downloadUrl)
+
+                        val productImage = ProductImageMaster(
+                            id = "",
+                            productId = productId,
+                            productImages = downloadUrl,
+                            createdAt = Util.getCurrentTimeStamp(),
+                            updatedAt = Util.getCurrentTimeStamp()
+                        )
+                        createNewProductImageId(productImage)
                         true
                     } else {
                         println("❌ Error uploading image $index: Response is null")
@@ -195,7 +209,6 @@ class ListProductRepo {
             // Check for a successful HTTP status code (200-299)
             if (response.status.isSuccess()) {
                 val responseText = response.bodyAsText()
-                println("Upload successful: $responseText")
                 return getDownloadUrl(responseText, productId, imageName)
             } else {
                 println("Upload failed with status ${response.status.value}: ${response.bodyAsText()}")
@@ -234,6 +247,57 @@ class ListProductRepo {
         }
     }
 
+    private suspend fun createNewProductImageId(productImage :ProductImageMaster) {
+        // Construct the endpoint URL for the product_image_master node.
+//        val url = "$databaseUrl/product_image_master.json"
+//        val client = HttpClient(Darwin)
+        try {
+            // Send an empty JSON object ("{}") to create a new child.
+            val keyResponse: HttpResponse = client.post("${FirebaseUtil.BASE_URL}product_images_master.json") {
+                contentType(ContentType.Application.Json)
+                setBody("{}")
+            }
+
+            if (keyResponse.status.isSuccess()) {
+                val keyJson = keyResponse.body<Map<String, String>>()
+                val id = keyJson["name"] ?: run {
+//                    onComplete(false, "Error while generating product ID.")
+//                    return
+                }
+
+                val productImageWIthId = productImage.copy(id = id.toString())
+
+                val registerResponse: HttpResponse =
+                    client.put("${FirebaseUtil.BASE_URL}product_images_master/$id.json") {
+                        contentType(ContentType.Application.Json)
+                        setBody(json.encodeToString(productImageWIthId))
+                    }
+
+                if (registerResponse.status == HttpStatusCode.OK) {
+//                    println("product registration successful")
+//                    onComplete(true, "Product registration successful.")
+                    // Step 4: Upload Images
+//                    uploadImagesToFirebase(productId, uriList) { uploadSuccess, message ->
+//                        if (uploadSuccess) {
+//                            onComplete(true, "Product registered successfully.")
+//                        } else {
+//                            onComplete(false, message)
+//                        }
+//                    }
+                } else {
+//                    onComplete(false, "Product registration failed.")
+                }
+
+            } else {
+                println("Error creating new id: ${keyResponse.status.value} - ${keyResponse.bodyAsText()}")
+
+            }
+        } catch (e: Exception) {
+            println("Exception in createNewProductImageId: ${e.message}")
+            e.printStackTrace()
+        }
+    }
+
     private fun UIImage.toNSData(): NSData? {
         return UIImageJPEGRepresentation(this, 0.8)
     }
@@ -261,7 +325,6 @@ class ListProductRepo {
             space = colorSpace,
             bitmapInfo = CGImageAlphaInfo.kCGImageAlphaPremultipliedLast.value
         )
-
         val cgImage = CGBitmapContextCreateImage(context)
         return cgImage?.let { UIImage.imageWithCGImage(it) }
     }
