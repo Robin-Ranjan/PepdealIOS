@@ -1,9 +1,7 @@
 package com.pepdeal.infotech.product
 
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asSkiaBitmap
-import androidx.compose.ui.graphics.toPixelMap
-import coil3.Uri
+import com.pepdeal.infotech.FirebaseUploadResponse
 import com.pepdeal.infotech.shop.modal.ProductMaster
 import com.pepdeal.infotech.util.FirebaseUtil
 import io.ktor.client.HttpClient
@@ -11,6 +9,7 @@ import io.ktor.client.call.body
 import io.ktor.client.engine.darwin.Darwin
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.put
@@ -21,25 +20,18 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.http.encodeURLPath
-import io.ktor.http.headers
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.readBytes
+import kotlinx.cinterop.refTo
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import platform.darwin.dispatch_group_create
-import platform.darwin.dispatch_group_enter
-import platform.Foundation.*
-import platform.darwin.*
-import kotlinx.coroutines.*
-import kotlinx.cinterop.*
-import org.jetbrains.skia.Image
-import org.jetbrains.skia.Bitmap
-import org.jetbrains.skia.EncodedImageFormat
-import platform.CoreGraphics.CGSizeMake
-import platform.UIKit.UIGraphicsBeginImageContext
-import platform.UIKit.UIGraphicsEndImageContext
-import platform.UIKit.UIGraphicsGetImageFromCurrentImageContext
+import platform.CoreGraphics.CGBitmapContextCreate
+import platform.CoreGraphics.CGBitmapContextCreateImage
+import platform.CoreGraphics.CGColorSpaceCreateDeviceRGB
+import platform.CoreGraphics.CGImageAlphaInfo
+import platform.Foundation.NSData
 import platform.UIKit.UIImage
 import platform.UIKit.UIImageJPEGRepresentation
 
@@ -80,7 +72,6 @@ class ListProductRepo {
                     return
                 }
             }
-
             // Step 2: Generate a Product ID (Firebase push().key equivalent)
             val keyResponse: HttpResponse =
                 client.post("${FirebaseUtil.BASE_URL}product_master.json") {
@@ -120,16 +111,12 @@ class ListProductRepo {
                         onComplete(true, "Product registered successfully.")
                     } else {
                         onComplete(false, message)
-//                        Log.d("addProductInTheShop", "Product registered unsuccessfully.")
                     }
                 }
             } else {
                 onComplete(false, "Product registration failed.")
-//                Log.d("addProductInTheShop", "Product registration failed.")
             }
         } catch (e: Exception) {
-//            FirebaseCrashlytics.getInstance().recordException(e)
-//            Log.d("addProductInTheShop", "Error: ${e.message}")
             onComplete(false, "Error registering product: ${e.message}")
         }
     }
@@ -139,65 +126,117 @@ class ListProductRepo {
         images: List<ImageBitmap>,
         onComplete: (Boolean, String) -> Unit
     ) {
-        val client = HttpClient(Darwin) // Use Darwin for iOS
-        val bucketName = "pepdeal-1251f.appspot.com"
+        val bucket = "pepdeal-1251f.appspot.com"
+        val baseFileName = "product/${productId}/image"
 
-        try {
-            coroutineScope {
-                val uploadTasks = images.mapIndexed { index, imageBitmap ->
-                    async {
-                        val sanitizedProductId = productId.removePrefix("-")
-                        val fileName = "product/$sanitizedProductId/image_$index.jpg"
-                        val encodedPath = fileName.encodeURLPath()
-                        val uploadUrl = "https://firebasestorage.googleapis.com/upload/storage/v0/b/$bucketName/o?uploadType=media&name=$encodedPath&location=asia-south1"
+        // For each image, perform the upload.
+        val results = images.mapIndexed { index, imageBitmap ->
+            try {
+                val nsData = imageBitmap.toUIImage()?.toNSData()
+                if (nsData == null || nsData.length.toInt() == 0) {
+                    println("Error: Conversion failed for image $index")
+                    false
+                } else {
+                    val imageData = nsData.toByteArray()
+                    val fileName = "$baseFileName$index.jpg"
+                    val imageName = "image$index"
 
-                        println("Starting upload for image $index...")
-                        println("Upload URL: $uploadUrl")
-
-                        val imageData = imageBitmap.toJpegNSData()?.toByteArray()
-                        if (imageData == null || imageData.isEmpty()) {
-                            println("Error: Failed to convert ImageBitmap to NSData for image $index")
-                            return@async false
-                        }
-
-                        try {
-                            val response: HttpResponse = client.post(uploadUrl) {
-                                headers {
-                                    append(HttpHeaders.ContentType, "image/jpeg")
-                                }
-                                setBody(imageData)
-                            }
-
-                            println("Response for image $index: ${response.status}")
-                            val responseBody = response.bodyAsText()
-                            println("Response Body for image $index: $responseBody")
-
-                            response.status == HttpStatusCode.OK
-                        } catch (e: Exception) {
-                            println("Error uploading image $index: ${e.message}")
-                            false
-                        }
+                    val downloadUrl = uploadImageUsingKtor(
+                        productId,
+                        bucket,
+                        fileName,
+                        imageData,
+                        "image/jpeg",
+                        imageName
+                    )
+                    if (downloadUrl != null) {
+                        println("✅ Image $index uploaded successfully")
+                        println(downloadUrl)
+                        true
+                    } else {
+                        println("❌ Error uploading image $index: Response is null")
+                        false
                     }
                 }
-
-                val results = uploadTasks.awaitAll() // Wait for all uploads to complete
-                if (results.all { it }) {
-                    println("✅ All images uploaded successfully!")
-                    onComplete(true, "All images uploaded successfully!")
-                } else {
-                    println("❌ Some images failed to upload.")
-                    onComplete(false, "Some images failed to upload.")
-                }
+            } catch (e: Exception) {
+                println("❌ Exception uploading image $index: ${e.message}")
+                e.printStackTrace()
+                false
             }
-        } catch (e: Exception) {
-            println("❌ Error during image upload: ${e.message}")
-            onComplete(false, "Error: ${e.message}")
-        } finally {
-            client.close()
-            println("🔄 HTTP client closed.")
+        }
+
+        if (results.all { it }) {
+            onComplete(true, "All images uploaded successfully!")
+        } else {
+            onComplete(false, "Some images failed to upload.")
         }
     }
 
+    // This function uploads the image data to Firebase Storage using REST API.
+    private suspend fun uploadImageUsingKtor(
+        productId: String,
+        bucket: String,
+        fileName: String,
+        imageData: ByteArray,
+        contentType: String = "image/jpeg",
+        imageName: String
+    ): String? {
+        val client = HttpClient(Darwin)
+        // Construct the upload URL:
+        val url =
+            "https://firebasestorage.googleapis.com/v0/b/$bucket/o?uploadType=media&name=${fileName}"
+        try {
+            // Perform a POST request with the image data as the body.
+            val response: HttpResponse = client.post(url) {
+                header(HttpHeaders.ContentType, contentType)
+                // Use the raw ByteArray as the request body.
+                setBody(imageData)
+            }
+            // Check for a successful HTTP status code (200-299)
+            if (response.status.isSuccess()) {
+                val responseText = response.bodyAsText()
+                println("Upload successful: $responseText")
+                return getDownloadUrl(responseText, productId, imageName)
+            } else {
+                println("Upload failed with status ${response.status.value}: ${response.bodyAsText()}")
+                return null
+            }
+        } catch (e: Exception) {
+            println("Exception during upload: ${e.message}")
+            e.printStackTrace()
+            return null
+        } finally {
+            client.close()
+        }
+    }
+
+    private fun getDownloadUrl(
+        responseJson: String,
+        productId: String,
+        imageName: String
+    ): String? {
+        val json = Json { ignoreUnknownKeys = true }
+        try {
+            val uploadResponse =
+                json.decodeFromString(FirebaseUploadResponse.serializer(), responseJson)
+            val token = uploadResponse.downloadTokens
+            if (token.isNullOrEmpty()) {
+                println("No download token available in the response")
+                return null
+            }
+            val imageUrl =
+                "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/product%2F$productId%2F$imageName.jpg?alt=media&token=${uploadResponse.downloadTokens}"
+            return imageUrl
+        } catch (e: Exception) {
+            println("Error parsing upload response: ${e.message}")
+            e.printStackTrace()
+            return null
+        }
+    }
+
+    private fun UIImage.toNSData(): NSData? {
+        return UIImageJPEGRepresentation(this, 0.8)
+    }
 
     @OptIn(ExperimentalForeignApi::class)
     fun NSData.toByteArray(): ByteArray {
@@ -205,15 +244,25 @@ class ListProductRepo {
     }
 
     @OptIn(ExperimentalForeignApi::class)
-    fun ImageBitmap.toJpegNSData(): NSData? {
-        UIGraphicsBeginImageContext(
-            size = CGSizeMake(
-                this.width.toDouble(),
-                this.height.toDouble()
-            )
+    fun ImageBitmap.toUIImage(): UIImage? {
+        val width = this.width
+        val height = this.height
+        val buffer = IntArray(width * height)
+
+        this.readPixels(buffer)
+
+        val colorSpace = CGColorSpaceCreateDeviceRGB()
+        val context = CGBitmapContextCreate(
+            data = buffer.refTo(0),
+            width = width.toULong(),
+            height = height.toULong(),
+            bitsPerComponent = 8u,
+            bytesPerRow = (4 * width).toULong(),
+            space = colorSpace,
+            bitmapInfo = CGImageAlphaInfo.kCGImageAlphaPremultipliedLast.value
         )
-        val uiImage = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-        return uiImage?.let { UIImageJPEGRepresentation(it, 1.0) }
+
+        val cgImage = CGBitmapContextCreateImage(context)
+        return cgImage?.let { UIImage.imageWithCGImage(it) }
     }
 }
