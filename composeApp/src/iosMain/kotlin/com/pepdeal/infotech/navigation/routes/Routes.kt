@@ -27,6 +27,9 @@ sealed class Routes {
     object ListProductPage : Routes()
 
     @Serializable
+    data class UpdateProductPage(val productId:String) : Routes()
+
+    @Serializable
     object FavouritesPage : Routes()
 
     @Serializable

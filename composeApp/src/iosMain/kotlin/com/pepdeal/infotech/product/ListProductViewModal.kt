@@ -3,11 +3,9 @@ package com.pepdeal.infotech.product
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import coil3.Uri
 import com.pepdeal.infotech.categories.ProductCategories
 import com.pepdeal.infotech.categories.SubCategory
 import com.pepdeal.infotech.color.ColorItem
-import com.pepdeal.infotech.shop.modal.ProductMaster
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -29,13 +27,17 @@ class ListProductViewModal() : ViewModel() {
         _isUploading.value = true
         println(uriList.size)
         viewModelScope.launch {
-            repo.addProductInTheShop(shopId, productMaster, uriList) { status , message ->
-                _registerProductResponse.value = Pair(status,message)
+            repo.addProductInTheShop(shopId, productMaster, uriList) { status, message ->
+                _registerProductResponse.value = Pair(status, message)
                 _isUploading.value = false
             }
         }
     }
-    fun reset(){
+
+    fun reset() {
+        _selectedProductCategories.value = null
+        _selectedProductSubCategories.value = null
+        _selectedProductColours.value = emptyList()
         _registerProductResponse.value = null
         _isUploading.value = false
     }
@@ -55,12 +57,6 @@ class ListProductViewModal() : ViewModel() {
 
     fun updateProductSubCategories(productSubCategories: SubCategory) {
         _selectedProductSubCategories.value = productSubCategories
-    }
-
-    fun resetTheProductDetails() {
-        _selectedProductCategories.value = null
-        _selectedProductSubCategories.value = null
-        _selectedProductColours.value = emptyList()
     }
 
     fun resetTheSelectedSubCategories() {

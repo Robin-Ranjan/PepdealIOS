@@ -1,8 +1,9 @@
 package com.pepdeal.infotech.shop.shopDetails
 
-import com.pepdeal.infotech.shop.modal.ProductImageMaster
-import com.pepdeal.infotech.shop.modal.ProductMaster
-import com.pepdeal.infotech.shop.modal.ProductWithImages
+
+import com.pepdeal.infotech.product.ProductImageMaster
+import com.pepdeal.infotech.product.ProductMaster
+import com.pepdeal.infotech.product.ProductWithImages
 import com.pepdeal.infotech.shop.modal.ShopMaster
 import com.pepdeal.infotech.superShop.SuperShopMaster
 import com.pepdeal.infotech.util.FirebaseUtil

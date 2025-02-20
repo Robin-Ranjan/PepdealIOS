@@ -166,7 +166,8 @@ fun OpenYourShopScreen(viewModel: OpenYourShopViewModal = ViewModals.openYOurSho
                         Text(
                             "Shop Details",
                             fontSize = 20.ssp,
-                            fontWeight = FontWeight.Bold
+                            lineHeight = 20.ssp,
+                            fontFamily = FontFamily(Font(Res.font.manrope_bold)),
                         )
                     },
                     navigationIcon = {

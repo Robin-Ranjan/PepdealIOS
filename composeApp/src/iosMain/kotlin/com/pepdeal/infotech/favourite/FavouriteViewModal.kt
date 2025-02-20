@@ -2,7 +2,7 @@ package com.pepdeal.infotech.favourite
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.pepdeal.infotech.shop.modal.FavProductWithImages
+import com.pepdeal.infotech.product.FavProductWithImages
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch

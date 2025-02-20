@@ -1,7 +1,6 @@
 package com.pepdeal.infotech.product
 
-import com.pepdeal.infotech.shop.modal.ProductImageMaster
-import com.pepdeal.infotech.shop.modal.ProductMaster
+
 import com.pepdeal.infotech.shop.modal.ShopMaster
 import com.pepdeal.infotech.util.FirebaseUtil
 import io.ktor.client.HttpClient

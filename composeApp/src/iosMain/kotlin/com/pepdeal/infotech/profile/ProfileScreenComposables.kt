@@ -7,6 +7,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -407,13 +408,13 @@ fun ProfileImageSelector(
     val scope = rememberCoroutineScope()
     val imageCropper = rememberImageCropper()
 
-    val cropState = imageCropper.cropState
-    if (cropState != null) {
+    // Show cropping dialog if cropping is active.
+    imageCropper.cropState?.let { cropState ->
         ImageCropperDialog(
             state = cropState,
             dialogProperties = DialogProperties(
                 dismissOnBackPress = true,
-                dismissOnClickOutside = false,
+                dismissOnClickOutside = false
             ),
             style = cropperStyle(
                 backgroundColor = Color.Yellow,
@@ -423,115 +424,84 @@ fun ProfileImageSelector(
         )
     }
 
-    // Use ImageBitmap if available, otherwise fallback to Painter
-    if (imageState.value != null) {
-        Image(
-            bitmap = imageState.value!!,
-            contentDescription = "Profile Image",
-            modifier = Modifier
-                .fillMaxSize()
-                .clickable {
+    // Consolidated click handler: Request permission, pick image, crop it, and update imageState.
+    val onImageClick = {
+        scope.launch {
+            requestPermission(
+                controller = controller,
+                permission = Permission.GALLERY,
+                snackBarHostState = snackBar,
+                picker = picker,
+                imageState = { newImage ->
                     scope.launch {
-                        requestPermission(
-                            controller,
-                            permission = Permission.GALLERY,
-                            snackBar,
-                            picker,
-                            imageState = { imageBitMap ->
-                                scope.launch {
-                                    imageBitMap.let {
-                                        val result = imageCropper.crop(
-                                            maxResultSize = IntSize(1200, 1200),
-                                            bmp = imageBitMap
-                                        ) // Suspends until user accepts or cancels cropping
-                                        val croppedBitmap = when (result) {
-                                            CropResult.Cancelled -> null
-                                            is CropError -> null
-                                            is CropResult.Success -> result.bitmap
-                                        }
-                                        croppedBitmap?.let { imageState.value = it }
-                                    }
-                                }
+                        newImage.let { image ->
+                            // Launch cropper with desired max size.
+                            val result = imageCropper.crop(
+                                maxResultSize = IntSize(1200, 1200),
+                                bmp = image
+                            )
+                            val croppedBitmap = when (result) {
+                                CropResult.Cancelled -> null
+                                is CropError -> null
+                                is CropResult.Success -> result.bitmap
                             }
-                        )
-                    }
-                },
-            contentScale = ContentScale.Fit,
-            alignment = Alignment.Center
-        )
-    } else if (imageUrl.isNotEmpty()) {
-        CoilImage(
-            modifier = Modifier
-                .fillMaxSize()
-                .clickable {
-                    scope.launch {
-                        requestPermission(
-                            controller,
-                            permission = Permission.GALLERY,
-                            snackBar,
-                            picker,
-                            imageState = { imageBitMap ->
-                                scope.launch {
-                                    imageBitMap.let {
-                                        val result = imageCropper.crop(
-                                            maxResultSize = IntSize(1200, 1200),
-                                            bmp = imageBitMap
-                                        ) // Suspends until user accepts or cancels cropping
-                                        val croppedBitmap = when (result) {
-                                            CropResult.Cancelled -> null
-                                            is CropError -> null
-                                            is CropResult.Success -> result.bitmap
-                                        }
-                                        croppedBitmap?.let { imageState.value = it }
-                                    }
-                                }
+                            croppedBitmap?.let {
+                                imageState.value = it
                             }
-                        )
+                        }
                     }
                 }
-                .clip(RoundedCornerShape(2.dp))
-                .border(width = 1.dp, color = Color.Gray),
-            imageModel = { imageUrl },
-            imageOptions = ImageOptions(
-                contentScale = ContentScale.Crop,
-                alignment = Alignment.Center
-            ),
-            previewPlaceholder = painterResource(Res.drawable.compose_multiplatform),
-        )
-    } else {
-        Image(
-            painter = painter,
-            contentDescription = "Profile Image",
-            modifier = Modifier
-                .fillMaxSize()
-                .clickable {
-                    scope.launch {
-                        requestPermission(
-                            controller,
-                            permission = Permission.GALLERY,
-                            snackBar,
-                            picker,
-                            imageState = { imageBitMap ->
-                                scope.launch {
-                                    imageBitMap.let {
-                                        val result = imageCropper.crop(
-                                            maxResultSize = IntSize(1200, 1200),
-                                            bmp = imageBitMap
-                                        ) // Suspends until user accepts or cancels cropping
-                                        val croppedBitmap = when (result) {
-                                            CropResult.Cancelled -> null
-                                            is CropError -> null
-                                            is CropResult.Success -> result.bitmap
-                                        }
-                                        croppedBitmap?.let { imageState.value = it }
-                                    }
-                                }
-                            }
-                        )
-                    }
-                },
-            contentScale = contentScale,
-            alignment = Alignment.Center
-        )
+            )
+        }
+    }
+
+    // Helper composable: Determines which image to display based on state and imageUrl.
+    @Composable
+    fun DisplayImage() {
+        when {
+            imageState.value != null -> {
+                Image(
+                    bitmap = imageState.value!!,
+                    contentDescription = "Profile Image",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Fit,
+                    alignment = Alignment.Center
+                )
+            }
+            imageUrl.isNotEmpty() -> {
+                CoilImage(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(2.dp))
+                        .border(width = 1.dp, color = Color.Gray),
+                    imageModel = { imageUrl },
+                    imageOptions = ImageOptions(
+                        contentScale = ContentScale.Crop,
+                        alignment = Alignment.Center
+                    ),
+                    previewPlaceholder = painterResource(Res.drawable.compose_multiplatform),
+                )
+            }
+            else -> {
+                Image(
+                    painter = painter,
+                    contentDescription = "Profile Image",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = contentScale,
+                    alignment = Alignment.Center
+                )
+            }
+        }
+    }
+
+    // A Box wrapping the image display that applies the same onClick action regardless of content.
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clickable { onImageClick() }
+    ) {
+        DisplayImage()
     }
 }
+
+

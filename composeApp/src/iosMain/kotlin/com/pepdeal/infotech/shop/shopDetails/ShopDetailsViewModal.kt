@@ -2,11 +2,11 @@ package com.pepdeal.infotech.shop.shopDetails
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.pepdeal.infotech.shop.modal.ProductWithImages
 import com.pepdeal.infotech.shop.modal.ShopMaster
 import com.pepdeal.infotech.superShop.SuperShopMaster
 import com.pepdeal.infotech.favourite.FavouritesRepo
 import com.pepdeal.infotech.favourite.modal.FavoriteProductMaster
+import com.pepdeal.infotech.product.ProductWithImages
 import com.pepdeal.infotech.util.Util
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

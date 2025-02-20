@@ -19,6 +19,7 @@ import com.pepdeal.infotech.login.LoginScreen
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.navigation.routes.SubGraph
 import com.pepdeal.infotech.product.ListProductScreen
+import com.pepdeal.infotech.product.UpdateProductScreen
 import com.pepdeal.infotech.registration.RegisterScreen
 import com.pepdeal.infotech.shop.editShop.EditShopColorBottomSheet
 import com.pepdeal.infotech.shop.editShop.EditShopDetailsScreen
@@ -126,6 +127,11 @@ fun AppNavigation() {
 
             composable<Routes.UploadShopVideoPage> {
                 UploadShopVideoScreen()
+            }
+
+            composable<Routes.UpdateProductPage> {
+                val productId = it.toRoute<Routes.UpdateProductPage>().productId
+                UpdateProductScreen(productId)
             }
 
             dialog(
