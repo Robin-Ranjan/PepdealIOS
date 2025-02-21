@@ -263,12 +263,12 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                     ProfileMenuItem(
                         text = "List Product",
                         icon = Res.drawable.shopping_bag,
-                        onClick = { NavigationProvider.navController.navigate(Routes.ListProductPage) })
+                        onClick = { NavigationProvider.navController.navigate(Routes.AddNewProductPage) })
 
                     ProfileMenuItem(
                         text = "Update Listing",
                         icon = Res.drawable.shopping_bag,
-                        onClick = { NavigationProvider.navController.navigate(Routes.UpdateProductPage(Objects.PRODUCT_ID)) })
+                        onClick = { NavigationProvider.navController.navigate(Routes.ListAllProductPage(Objects.SHOP_ID)) })
 
                     ProfileMenuItem(
                         text = "Tickets",

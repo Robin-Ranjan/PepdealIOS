@@ -10,8 +10,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class ListProductViewModal() : ViewModel() {
-    private val repo = ListProductRepo()
+class AddNewProductViewModal() : ViewModel() {
+    private val repo = AddNewProductRepo()
 
     private val _registerProductResponse = MutableStateFlow<Pair<Boolean, String>?>(null)
     val registerProductResponse: StateFlow<Pair<Boolean, String>?> = _registerProductResponse

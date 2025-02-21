@@ -18,7 +18,8 @@ import com.pepdeal.infotech.fonts.FontBottomSheet
 import com.pepdeal.infotech.login.LoginScreen
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.navigation.routes.SubGraph
-import com.pepdeal.infotech.product.ListProductScreen
+import com.pepdeal.infotech.product.AddNewProductScreen
+import com.pepdeal.infotech.product.ListAllProductScreen
 import com.pepdeal.infotech.product.UpdateProductScreen
 import com.pepdeal.infotech.registration.RegisterScreen
 import com.pepdeal.infotech.shop.editShop.EditShopColorBottomSheet
@@ -37,7 +38,6 @@ import com.pepdeal.infotech.util.NavigationProvider
 import kotlin.experimental.ExperimentalNativeApi
 
 
-@OptIn(ExperimentalNativeApi::class)
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
@@ -82,8 +82,8 @@ fun AppNavigation() {
                 OpenYourShopScreen()
             }
 
-            composable<Routes.ListProductPage> {
-                ListProductScreen()
+            composable<Routes.AddNewProductPage> {
+                AddNewProductScreen()
             }
 
             composable<Routes.FavouritesPage> {
@@ -132,6 +132,11 @@ fun AppNavigation() {
             composable<Routes.UpdateProductPage> {
                 val productId = it.toRoute<Routes.UpdateProductPage>().productId
                 UpdateProductScreen(productId)
+            }
+
+            composable<Routes.ListAllProductPage> {
+                val shopId = it.toRoute<Routes.ListAllProductPage>().shopId
+                ListAllProductScreen(shopId)
             }
 
             dialog(

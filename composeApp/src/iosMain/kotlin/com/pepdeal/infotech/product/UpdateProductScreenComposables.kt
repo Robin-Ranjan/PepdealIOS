@@ -1,8 +1,11 @@
 package com.pepdeal.infotech.product
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,8 +15,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
@@ -23,10 +31,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -35,6 +45,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,10 +53,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
@@ -53,12 +67,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pepdeal.infotech.color.ColorItem
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.shop.TextFieldWithLabel
+import com.pepdeal.infotech.util.ColorUtil.colorMap
 import com.pepdeal.infotech.util.NavigationProvider.navController
 import com.pepdeal.infotech.util.Util
 import com.pepdeal.infotech.util.Util.calculateFinalPrice
 import com.pepdeal.infotech.util.ViewModals
+import com.skydoves.landscapist.ImageOptions
+import com.skydoves.landscapist.coil3.CoilImage
 import dev.icerock.moko.media.compose.BindMediaPickerEffect
 import dev.icerock.moko.media.compose.rememberMediaPickerControllerFactory
 import dev.icerock.moko.permissions.compose.BindEffect
@@ -68,12 +86,19 @@ import kotlinx.coroutines.launch
 import network.chaintech.sdpcomposemultiplatform.sdp
 import network.chaintech.sdpcomposemultiplatform.ssp
 import org.jetbrains.compose.resources.Font
+import org.jetbrains.compose.resources.FontResource
+import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
+import pepdealios.composeapp.generated.resources.compose_multiplatform
 import pepdealios.composeapp.generated.resources.manrope_bold
+import pepdealios.composeapp.generated.resources.manrope_medium
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UpdateProductScreen(productId:String,viewModal: UpdateProductViewModal = ViewModals.updateProductViewModal){
+fun UpdateProductScreen(
+    productId: String,
+    viewModal: UpdateProductViewModal = ViewModals.updateProductViewModal
+) {
 
     val factory = rememberPermissionsControllerFactory()
     val controller = remember(factory) { factory.createPermissionsController() }
@@ -97,6 +122,8 @@ fun UpdateProductScreen(productId:String,viewModal: UpdateProductViewModal = Vie
     val productDiscount = remember { mutableStateOf(TextFieldValue()) }
     val productSale = remember { mutableStateOf(TextFieldValue()) }
     var showProductPrices by remember { mutableStateOf(false) }
+    var productCategoryText by remember { mutableStateOf("") }
+    val selectedProductColour = remember { mutableStateOf<List<ColorItem>>(emptyList()) }
 
     val imageBitmap1 = remember { mutableStateOf<ImageBitmap?>(null) }
     val imageBitmap2 = remember { mutableStateOf<ImageBitmap?>(null) }
@@ -106,10 +133,47 @@ fun UpdateProductScreen(productId:String,viewModal: UpdateProductViewModal = Vie
     val keyboardController = LocalSoftwareKeyboardController.current
 
     var isUploading by remember { mutableStateOf(false) }
+    var isImageUpdated by remember { mutableStateOf(false) }
 
-    LaunchedEffect(productId){
+    val productImages by viewModal.productImages.collectAsStateWithLifecycle()
+    val productDetails by viewModal.productDetails.collectAsStateWithLifecycle()
+
+    LaunchedEffect(productId) {
         viewModal.fetchProductDetails(productId)
         viewModal.fetchProductImages(productId)
+    }
+
+    LaunchedEffect(productDetails) {
+        productName.value = TextFieldValue(productDetails.productName)
+        brandName.value = TextFieldValue(productDetails.brandName)
+        productCategory.value = TextFieldValue(productDetails.categoryId)
+        productSubCategory.value = TextFieldValue(productDetails.subCategoryId)
+        searchTag.value = TextFieldValue(productDetails.searchTag)
+        productDescription.value = TextFieldValue(productDetails.description)
+        productDescription2.value = TextFieldValue(productDetails.description2)
+        productSpecification.value = TextFieldValue(productDetails.specification)
+        productWarranty.value = TextFieldValue(productDetails.warranty)
+        productSize.value = TextFieldValue(productDetails.sizeName)
+        productMrp.value = TextFieldValue(productDetails.mrp)
+        productDiscount.value = TextFieldValue(productDetails.discountMrp)
+        productSale.value = TextFieldValue(productDetails.sellingPrice)
+        showProductPrices = productDetails.onCall == "0"
+        productCategoryText = productDetails.categoryId
+        // Convert the colorMap into a list of ColorItems for easier filtering
+        val colorList = colorMap.map { ColorItem(name = it.key, hexCode = it.value) }
+
+        // Convert to list of hex codes
+        val hexCodeList = productDetails.color.split(",").map { it.trim() } ?: emptyList()
+
+        // Map hex codes to their names using the colorList
+        val matchedColors = colorList.filter { it.hexCode in hexCodeList }
+
+        // Log the matched colors for debugging
+        println("Matched Colors: $matchedColors")
+
+        // Update the UI state with the matched colors
+        selectedProductColour.value = matchedColors
+        productColors.value = TextFieldValue(matchedColors.joinToString(", ") { it.name })
     }
 
     MaterialTheme {
@@ -141,7 +205,7 @@ fun UpdateProductScreen(productId:String,viewModal: UpdateProductViewModal = Vie
                     },
                     navigationIcon = {
                         IconButton(onClick = {
-//                            viewModal.reset()
+                            viewModal.reset()
                             navController.popBackStack()
                         }) {
                             Icon(
@@ -297,7 +361,7 @@ fun UpdateProductScreen(productId:String,viewModal: UpdateProductViewModal = Vie
                         }
 
                         item {
-                            Spacer(modifier = Modifier.height(8.dp))
+//                            Spacer(modifier = Modifier.height(8.dp))
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -354,7 +418,7 @@ fun UpdateProductScreen(productId:String,viewModal: UpdateProductViewModal = Vie
 
 
                         item {
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(10.dp))
                             // Display images
                             Row(
                                 modifier = Modifier
@@ -363,43 +427,48 @@ fun UpdateProductScreen(productId:String,viewModal: UpdateProductViewModal = Vie
                                 horizontalArrangement = Arrangement.SpaceEvenly,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-//                    //first image
-                                ImageSelector(
-                                    imageState = imageBitmap1,
-                                    controller,
-                                    picker,
-//                        onImageSelected = { file ->
-//                            imageFile1 = file
-//                            imageBitmap1 = loadImage(file)
-//                        },
-                                    snackBar = snackBar
-                                )
-                                Spacer(modifier = Modifier.height(16.dp))
-//
-//                    //second image
-                                ImageSelector(
-                                    imageState = imageBitmap2,
-                                    controller,
-                                    picker,
-//                        onImageSelected = { file ->
-//                            imageFile2 = file
-//                            imageBitmap2 = loadImage(file)
-//                        },
-                                    snackBar = snackBar
-                                )
-                                Spacer(modifier = Modifier.height(16.dp))
-//
-//                    // 3rd image
-                                ImageSelector(
-                                    imageState = imageBitmap3,
-                                    controller,
-                                    picker,
-//                        onImageSelected = { file ->
-//                            imageFile3 = file
-//                            imageBitmap3 = loadImage(file)
-//                        },
-                                    snackBar = snackBar
-                                )
+                                if (!isImageUpdated) {
+                                    productImages.forEach {
+                                        CoilImage(
+                                            modifier = Modifier
+                                                .size(120.dp)
+                                                .clip(RoundedCornerShape(2.dp))
+                                                .border(width = 1.dp, color = Color.Gray),
+                                            imageModel = { it.productImages },
+                                            imageOptions = ImageOptions(
+                                                contentScale = ContentScale.Crop,
+                                                alignment = Alignment.Center
+                                            ),
+                                            previewPlaceholder = painterResource(Res.drawable.compose_multiplatform)
+                                        )
+                                    }
+                                } else {
+                                    //first image
+                                    ImageSelector(
+                                        imageState = imageBitmap1,
+                                        controller,
+                                        picker,
+                                        snackBar = snackBar
+                                    )
+                                    Spacer(modifier = Modifier.height(10.dp))
+
+                                    //second image
+                                    ImageSelector(
+                                        imageState = imageBitmap2,
+                                        controller,
+                                        picker,
+                                        snackBar = snackBar
+                                    )
+                                    Spacer(modifier = Modifier.height(10.dp))
+
+                                    // 3rd image
+                                    ImageSelector(
+                                        imageState = imageBitmap3,
+                                        controller,
+                                        picker,
+                                        snackBar = snackBar
+                                    )
+                                }
                             }
                         }
 
@@ -410,7 +479,6 @@ fun UpdateProductScreen(productId:String,viewModal: UpdateProductViewModal = Vie
                                 Button(
                                     onClick = {
                                         isUploading = true
-//                            CoroutineScope(Dispatchers.IO).launch {
                                         try {
                                             Util.validateShopAndSubmit(
                                                 fields = buildMap {
@@ -447,28 +515,31 @@ fun UpdateProductScreen(productId:String,viewModal: UpdateProductViewModal = Vie
                                                     }
 
                                                     // Add image-related fields
-                                                    put(
-                                                        "Product Image 1",
-                                                        if (imageBitmap1.value == null) "" else "Have image"
-                                                    )
-                                                    put(
-                                                        "Product Image 2",
-                                                        if (imageBitmap2.value == null) "" else "Have image"
-                                                    )
-                                                    put(
-                                                        "Product Image 3",
-                                                        if (imageBitmap3.value == null) "" else "Have image"
-                                                    )
+                                                    if (isImageUpdated) {
+                                                        put(
+                                                            "Product Image 1",
+                                                            if (imageBitmap1.value == null) "" else "Have image"
+                                                        )
+                                                        put(
+                                                            "Product Image 2",
+                                                            if (imageBitmap2.value == null) "" else "Have image"
+                                                        )
+                                                        put(
+                                                            "Product Image 3",
+                                                            if (imageBitmap3.value == null) "" else "Have image"
+                                                        )
+                                                    }
                                                 },
                                                 setError = { error ->
                                                     println("error:- $error")
-                                                    if(error.isNotEmpty() && error.isNotBlank()){
+                                                    if (error.isNotEmpty() && error.isNotBlank()) {
                                                         coroutineScope.launch {
                                                             snackBar.showSnackbar(error)
                                                         }
                                                     }
                                                 },
                                                 status = { status ->
+                                                    isUploading = false
                                                     if (status) {
 //                                                        if (selectedProductColours != null) {
 //                                                        viewModal.registerProduct(
@@ -523,5 +594,157 @@ fun UpdateProductScreen(productId:String,viewModal: UpdateProductViewModal = Vie
                 }
             }
         }
+    }
+}
+
+@Composable
+fun TextFieldWithChips(
+    state: MutableState<TextFieldValue>,
+    label: String,
+    modifier: Modifier = Modifier.fillMaxWidth()
+) {
+    Column(modifier = modifier) {
+        OutlinedTextField(
+            value = state.value,
+            onValueChange = { newText -> state.value = newText },
+            label = { Text(text = label) }
+        )
+        // Place additional UI elements below the text field.
+        if (state.value.text.isNotEmpty()) {
+            ColorChips(colorCodes = state.value.text,
+                colorMap)
+        }
+    }
+}
+
+
+//@Composable
+//fun TextFieldWithLabelAndColorChips(
+//    label: String,
+//    maxLines: Int = 1,
+//    fontResources: FontResource = Res.font.manrope_medium,
+//    state: MutableState<TextFieldValue>,
+//    isEditable: Boolean = true,
+//    maxLength: Int = Int.MAX_VALUE,
+//    inputType: KeyboardType = KeyboardType.Text,
+//    minLines: Int = 1,
+//    modifier: Modifier = Modifier.fillMaxWidth(),
+//    onValueChange: (TextFieldValue) -> Unit = {},
+//    color: Color = Color.Black,
+//    onClick: () -> Unit = {}
+//) {
+//    // A predefined map of color codes to names.
+//    val colorNameMap = mapOf(
+//        "FF0000" to "Red",
+//        "00FF00" to "Green",
+//        "0000FF" to "Blue"
+//        // Add additional mappings as needed.
+//    )
+//
+//    OutlinedTextField(
+//        value = state.value,
+//        label = { Text(text = label, color = Color.Gray) },
+//        onValueChange = { newText ->
+//            if (inputType == KeyboardType.Number) {
+//                if (newText.text.all { it.isDigit() } && newText.text.length <= maxLength) {
+//                    state.value = newText
+//                }
+//            } else {
+//                if (newText.text.length <= maxLength) {
+//                    state.value = newText
+//                }
+//            }
+//            onValueChange(newText)
+//        },
+//        modifier = modifier
+//            .background(Color.White, MaterialTheme.shapes.small)
+//            .clickable { onClick() }
+//            .padding(8.dp),
+//        textStyle = TextStyle(
+//            color = color,
+//            fontSize = 15.sp,
+//            fontFamily = FontFamily(Font(fontResources)),
+//            lineHeight = 15.sp
+//        ),
+//        enabled = isEditable,
+//        maxLines = maxLines,
+//        minLines = minLines,
+//        keyboardOptions = KeyboardOptions.Default.copy(
+//            keyboardType = inputType
+//        ),
+//        decorationBox = { innerTextField ->
+//            Column {
+//                innerTextField()
+//                if (state.value.text.isNotEmpty()) {
+//                    ColorChips(
+//                        colorCodes = state.value.text,
+//                        colorNameMap = colorNameMap
+//                    )
+//                }
+//            }
+//        }
+//    )
+//}
+
+// Helper composable to display a row of color chips.
+@Composable
+fun ColorChips(
+    colorCodes: String,
+    colorNameMap: Map<String, String>
+) {
+    // Split the string into individual codes, trimming whitespace.
+    val colorList = colorCodes.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+
+    Row(
+        modifier = Modifier
+            .horizontalScroll(rememberScrollState())
+            .padding(top = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        colorList.forEach { code ->
+            // Look up the name; use "Unknown" if not found.
+            val colorName = colorNameMap[code] ?: "Unknown"
+            val color = parseColor(code)
+            ColorChip(color = color, name = colorName)
+        }
+    }
+}
+
+// A simple chip composable showing a colored circle and a label.
+@Composable
+fun ColorChip(color: Color, name: String) {
+    Surface(
+        shape = MaterialTheme.shapes.small,
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+        ) {
+            // A small circle filled with the specified color.
+            Box(
+                modifier = Modifier
+                    .size(16.dp)
+                    .background(color = color, shape = CircleShape)
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(text = name, style = MaterialTheme.typography.bodySmall)
+        }
+    }
+}
+
+// Helper function to parse a hex string into a Color.
+fun parseColor(hex: String): Color {
+    return try {
+        // If the hex code is 6 characters, add full alpha.
+        val colorInt = if (hex.length == 6) {
+            (0xFF shl 24) or hex.toLong(16).toInt()
+        } else {
+            hex.toLong(16).toInt()
+        }
+        Color(colorInt)
+    } catch (e: Exception) {
+        Color.Gray // Fallback color if parsing fails.
     }
 }

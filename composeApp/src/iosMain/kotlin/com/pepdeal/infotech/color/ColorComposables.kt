@@ -40,8 +40,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pepdeal.infotech.product.ListProductViewModal
-import com.pepdeal.infotech.product.ProductViewModal
+import com.pepdeal.infotech.product.AddNewProductViewModal
 import com.pepdeal.infotech.shop.OpenYourShopViewModal
 import com.pepdeal.infotech.util.ColorUtil
 import com.pepdeal.infotech.util.NavigationProvider
@@ -151,7 +150,7 @@ fun ColorItemCard(colorName: String, colorCode: String, onColorClick: (String, S
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MultipleColorBottomSheet(
-    viewModal: ListProductViewModal = ViewModals.listProductViewModal,
+    viewModal: AddNewProductViewModal = ViewModals.addNewProductViewModal,
     onDismiss: () -> Unit
 ) {
 

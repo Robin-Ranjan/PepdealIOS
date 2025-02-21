@@ -106,7 +106,7 @@ import pepdealios.composeapp.generated.resources.manrope_light
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ListProductScreen(viewModal: ListProductViewModal = ViewModals.listProductViewModal) {
+fun AddNewProductScreen(viewModal: AddNewProductViewModal = ViewModals.addNewProductViewModal) {
     val factory = rememberPermissionsControllerFactory()
     val controller = remember(factory) { factory.createPermissionsController() }
     val coroutineScope: CoroutineScope = rememberCoroutineScope()
@@ -231,9 +231,9 @@ fun ListProductScreen(viewModal: ListProductViewModal = ViewModals.listProductVi
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.White,  // Background color
-                        titleContentColor = Color.Black,  // Title color
-                        navigationIconContentColor = Color.Black,  // Back button color
+                        containerColor = Color.White,
+                        titleContentColor = Color.Black,
+                        navigationIconContentColor = Color.Black,
                         actionIconContentColor = Color.Unspecified
                     ),
                     expandedHeight = 50.sdp
@@ -447,10 +447,6 @@ fun ListProductScreen(viewModal: ListProductViewModal = ViewModals.listProductVi
                                     imageState = imageBitmap1,
                                     controller,
                                     picker,
-//                        onImageSelected = { file ->
-//                            imageFile1 = file
-//                            imageBitmap1 = loadImage(file)
-//                        },
                                     snackBar = snackBar
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
@@ -460,10 +456,6 @@ fun ListProductScreen(viewModal: ListProductViewModal = ViewModals.listProductVi
                                     imageState = imageBitmap2,
                                     controller,
                                     picker,
-//                        onImageSelected = { file ->
-//                            imageFile2 = file
-//                            imageBitmap2 = loadImage(file)
-//                        },
                                     snackBar = snackBar
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
@@ -473,10 +465,6 @@ fun ListProductScreen(viewModal: ListProductViewModal = ViewModals.listProductVi
                                     imageState = imageBitmap3,
                                     controller,
                                     picker,
-//                        onImageSelected = { file ->
-//                            imageFile3 = file
-//                            imageBitmap3 = loadImage(file)
-//                        },
                                     snackBar = snackBar
                                 )
                             }

@@ -43,6 +43,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -65,7 +66,10 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pepdeal.infotech.DataStore
 import com.pepdeal.infotech.Objects
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.shop.modal.ShopMaster
@@ -107,6 +111,16 @@ fun OpenYourShopScreen(viewModel: OpenYourShopViewModal = ViewModals.openYOurSho
     var errorMessage by remember { mutableStateOf("") }
     var showNumber by remember { mutableStateOf(false) }
 
+    //data preferences
+    val dataStore = DataStore.dataStore
+    val myKey = stringPreferencesKey("userId")
+    val preferencesFlow = dataStore.data
+    val preferences by preferencesFlow.collectAsState(initial = emptyPreferences())
+    val currentValue = preferences[myKey]?:"-1"
+
+    if(currentValue!="-1"){
+        println(currentValue)
+    }
 
     shopBoardBackgroundColorName.value = TextFieldValue(
         viewModel.selectedBackGroundColorName.collectAsStateWithLifecycle().value ?: ""
@@ -464,8 +478,8 @@ fun TextFieldWithLabel(
         },
         modifier = modifier
             .background(Color.White, MaterialTheme.shapes.small)
-            .padding(8.dp)
-            .clickable { onClick() },
+            .clickable { onClick() }
+            .padding(8.dp),
         textStyle = TextStyle(
             color = color,
             fontSize = 15.sp,

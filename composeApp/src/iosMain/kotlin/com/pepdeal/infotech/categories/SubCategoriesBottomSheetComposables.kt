@@ -39,16 +39,12 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.pepdeal.infotech.fonts.FontItemCard
-import com.pepdeal.infotech.fonts.FontUtils
-import com.pepdeal.infotech.product.ListProductViewModal
-import com.pepdeal.infotech.product.ProductViewModal
+import com.pepdeal.infotech.product.AddNewProductViewModal
 import com.pepdeal.infotech.util.CategoriesUtil
 import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util.toNameFormat
 import com.pepdeal.infotech.util.ViewModals
 import org.jetbrains.compose.resources.Font
-import org.jetbrains.compose.resources.FontResource
 import pepdealios.composeapp.generated.resources.Res
 import pepdealios.composeapp.generated.resources.manrope_bold
 
@@ -56,7 +52,7 @@ import pepdealios.composeapp.generated.resources.manrope_bold
 @Composable
 fun SubCategoriesProductBottomSheet(
     onDismiss: () -> Unit,
-    viewModal: ListProductViewModal = ViewModals.listProductViewModal
+    viewModal: AddNewProductViewModal = ViewModals.addNewProductViewModal
 ){
     var subCategoryToSelect by remember { mutableStateOf<List<SubCategory>>(emptyList()) }
 

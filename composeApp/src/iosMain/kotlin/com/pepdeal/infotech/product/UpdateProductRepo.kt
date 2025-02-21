@@ -25,11 +25,11 @@ class UpdateProductRepo {
     }
 
     suspend fun fetchProductDetails(productId: String): ProductMaster? {
-        var productDetails: ProductMaster? = null
+        val productDetails: ProductMaster?
         try {
-            val response: HttpResponse = client.get("${FirebaseUtil.BASE_URL}product_master.json") {
-                parameter("orderBy", "productId")
-                parameter("equalTo", productId)
+            val response: HttpResponse = client.get("${FirebaseUtil.BASE_URL}product_master.json?orderBy=\"productId\"&equalTo=\"$productId\"") {
+//                parameter("orderBy", "productId")
+//                parameter("equalTo", productId)
                 contentType(ContentType.Application.Json)
             }
 

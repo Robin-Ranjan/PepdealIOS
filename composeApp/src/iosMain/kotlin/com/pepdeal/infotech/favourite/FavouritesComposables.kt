@@ -150,7 +150,7 @@ fun FavoriteProductScreen(viewModal: FavoriteProductViewModal = ViewModals.favor
                                             scope.launch {
                                                 isVisible = false
                                                 viewModal.removeFavItem(
-                                                    "-OIyeU1oyShOcB8r4-_8",
+                                                    Objects.USER_ID,
                                                     productId
                                                 )
                                             }

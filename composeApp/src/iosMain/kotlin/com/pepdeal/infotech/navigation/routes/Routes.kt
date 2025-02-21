@@ -24,7 +24,7 @@ sealed class Routes {
     object OpenYourShopPage : Routes()
 
     @Serializable
-    object ListProductPage : Routes()
+    object AddNewProductPage : Routes()
 
     @Serializable
     data class UpdateProductPage(val productId:String) : Routes()
@@ -55,6 +55,9 @@ sealed class Routes {
 
     @Serializable
     object UploadShopVideoPage:Routes()
+
+    @Serializable
+    data class ListAllProductPage(val shopId:String) :Routes()
 
     companion object {
         const val ColorBottomSheet = "color_bottom_sheet"

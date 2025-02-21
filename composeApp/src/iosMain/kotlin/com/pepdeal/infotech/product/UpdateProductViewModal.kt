@@ -3,6 +3,7 @@ package com.pepdeal.infotech.product
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pepdeal.infotech.shop.modal.ShopMaster
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,6 +16,7 @@ class UpdateProductViewModal():ViewModel() {
 
     private val _productImages = MutableStateFlow<List<ProductImageMaster>>(emptyList())
     val productImages : StateFlow<List<ProductImageMaster>> get() = _productImages.asStateFlow()
+
 
     private val _productLoading = MutableStateFlow(false)
     val productLoading : StateFlow<Boolean> get() = _productLoading.asStateFlow()
@@ -40,5 +42,11 @@ class UpdateProductViewModal():ViewModel() {
             _productImages.value = productImages
             println(_productImages.value)
         }
+    }
+
+    fun reset(){
+        _productDetails.value = ProductMaster()
+        _productLoading.value = false
+        _productImages.value = emptyList()
     }
 }

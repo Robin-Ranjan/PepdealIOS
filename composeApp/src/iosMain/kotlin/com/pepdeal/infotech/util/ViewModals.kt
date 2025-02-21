@@ -4,7 +4,8 @@ import com.pepdeal.infotech.ProfileScreenViewModal
 import com.pepdeal.infotech.categories.CategoriesViewModel
 import com.pepdeal.infotech.favourite.FavoriteProductViewModal
 import com.pepdeal.infotech.login.LoginViewModal
-import com.pepdeal.infotech.product.ListProductViewModal
+import com.pepdeal.infotech.product.AddNewProductViewModal
+import com.pepdeal.infotech.product.ListAllProductViewModal
 import com.pepdeal.infotech.product.ProductViewModal
 import com.pepdeal.infotech.product.UpdateProductViewModal
 import com.pepdeal.infotech.shop.OpenYourShopViewModal
@@ -34,6 +35,7 @@ object ViewModals {
     val favoriteShopVideoViewModal by lazy { FavoriteShopVideoViewModal() }
     val profileScreenViewModal by lazy { ProfileScreenViewModal() }
     val openYOurShopViewModal by lazy { OpenYourShopViewModal() }
-    val listProductViewModal by lazy { ListProductViewModal() }
+    val addNewProductViewModal by lazy { AddNewProductViewModal() }
     val updateProductViewModal by lazy { UpdateProductViewModal() }
+    val listAllProductViewModal by lazy { ListAllProductViewModal() }
 }

@@ -141,6 +141,8 @@ class FavouritesRepo {
             // 2️⃣ Parse JSON manually
             val responseJson = Json.parseToJsonElement(responseString).jsonObject
 
+            println(responseJson)
+
             // 3️⃣ Find the correct favId by filtering on productId
             val favId = responseJson.entries.firstOrNull { (_, jsonElement) ->
                 jsonElement.jsonObject["productId"]?.jsonPrimitive?.content == productId

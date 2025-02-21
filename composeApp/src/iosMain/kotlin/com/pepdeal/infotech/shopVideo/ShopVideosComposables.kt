@@ -57,6 +57,7 @@ import com.pepdeal.infotech.Objects
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.product.SearchView
 import com.pepdeal.infotech.util.NavigationProvider
+import com.pepdeal.infotech.util.Util.fromHex
 import com.pepdeal.infotech.util.Util.toNameFormat
 import com.pepdeal.infotech.util.ViewModals
 import com.skydoves.landscapist.ImageOptions
@@ -191,7 +192,7 @@ fun FeedCard(
     val playerHost = remember {
         MediaPlayerHost(
             isPaused = true,
-            isMuted = true,
+            isMuted = false,
             initialSpeed = PlayerSpeed.X1,
             initialVideoFitMode = ScreenResize.FILL,
             isLooping = true,
@@ -214,7 +215,7 @@ fun FeedCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 5.dp),
+            .padding(),
         shape = RoundedCornerShape(0.dp),
         elevation = CardDefaults.cardElevation(1.dp),
         colors = CardDefaults.cardColors(Color.White)
@@ -268,6 +269,7 @@ fun FeedCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .background(Color.fromHex("#F2F2F2"))
             ) {
                 Column(
                     modifier = Modifier.weight(1f)

@@ -36,7 +36,7 @@ import platform.UIKit.UIImage
 import platform.UIKit.UIImageJPEGRepresentation
 
 
-class ListProductRepo {
+class AddNewProductRepo {
     private val json = Json { ignoreUnknownKeys = true }
     private val client = HttpClient(Darwin) {
         install(ContentNegotiation) {
