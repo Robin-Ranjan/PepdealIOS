@@ -65,7 +65,7 @@ import utils.KottieConstants
 import utils.kottieReadBytes
 
 
-@OptIn(ExperimentalResourceApi::class, InternalResourceApi::class)
+@OptIn(ExperimentalResourceApi::class)
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModal = ViewModals.loginViewModal,
@@ -98,6 +98,7 @@ fun LoginScreen(
 
     LaunchedEffect(isLoading){
         if(loginStatus){
+            viewModel.reset()
             onLoginClick()
         }
     }

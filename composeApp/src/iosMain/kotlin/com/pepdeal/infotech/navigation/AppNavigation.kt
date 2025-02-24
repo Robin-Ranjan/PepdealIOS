@@ -91,7 +91,8 @@ fun AppNavigation() {
             }
 
             composable<Routes.CustomerTicketPage> {
-                CustomerTicketScreen()
+                val userId = it.toRoute<Routes.CustomerTicketPage>().userId
+                CustomerTicketScreen(userId)
             }
 
             composable<Routes.SellerTicketPage> {

@@ -33,6 +33,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,6 +51,9 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.emptyPreferences
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.attafitamim.krop.core.crop.CropError
 import com.attafitamim.krop.core.crop.CropResult
@@ -58,11 +62,14 @@ import com.attafitamim.krop.core.crop.crop
 import com.attafitamim.krop.core.crop.cropperStyle
 import com.attafitamim.krop.core.crop.rememberImageCropper
 import com.attafitamim.krop.ui.ImageCropperDialog
+import com.pepdeal.infotech.DataStore
 import com.pepdeal.infotech.Objects
+import com.pepdeal.infotech.PreferencesKeys
 import com.pepdeal.infotech.ProfileScreenViewModal
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.product.requestPermission
 import com.pepdeal.infotech.util.NavigationProvider
+import com.pepdeal.infotech.util.Util.toNameFormat
 import com.pepdeal.infotech.util.ViewModals
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil3.CoilImage
@@ -73,6 +80,7 @@ import dev.icerock.moko.permissions.Permission
 import dev.icerock.moko.permissions.PermissionsController
 import dev.icerock.moko.permissions.compose.BindEffect
 import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
@@ -92,8 +100,23 @@ import pepdealios.composeapp.generated.resources.tickets
 
 @Composable
 fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenViewModal) {
+    val datastore = DataStore.dataStore
+    val preferences by datastore.data.collectAsState(initial = emptyPreferences())
+
+    val currentUserId by datastore.data.map { it[PreferencesKeys.USERID_KEY] ?: "-1" }
+        .collectAsState(initial = "-1")
+
+    val userStatus by datastore.data.map { it[PreferencesKeys.USER_STATUS] ?: "-1" }
+        .collectAsState(initial = "-1")
+
+    val userName by datastore.data.map { it[PreferencesKeys.USER_NAME] ?: "-1" }
+        .collectAsState(initial = "-1")
+    val userPhone by datastore.data.map { it[PreferencesKeys.MOBILE_NO] ?:"-1" }
+        .collectAsState(initial = "-1")
+
+    val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
-    var profileImage = remember { mutableStateOf<ImageBitmap?>(null) }
+    val profileImage = remember { mutableStateOf<ImageBitmap?>(null) }
     val profileImageUrl by viewModal.userProfilePicMaster.collectAsStateWithLifecycle()
     val factory = rememberPermissionsControllerFactory()
     val controller = remember(factory) { factory.createPermissionsController() }
@@ -102,10 +125,10 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
     val picker = remember(factory) { medialPickerFactory.createMediaPickerController() }
     val snackBar = remember { SnackbarHostState() }
 
-    LaunchedEffect(profileImageUrl) {
-        if (profileImageUrl?.profilePicUrl.isNullOrEmpty()) {
+    LaunchedEffect(profileImageUrl, currentUserId) {
+        if (profileImageUrl?.profilePicUrl.isNullOrEmpty() && currentUserId != "-1") {
             println("Fetching profile picture")
-            viewModal.fetchUserProfilePic(Objects.USER_ID)
+            viewModal.fetchUserProfilePic(currentUserId)
         }
     }
 
@@ -178,25 +201,27 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                                     controller = controller,
                                     picker = picker,
                                     snackBar = snackBar,
-                                    imageUrl = profileImageUrl?.profilePicUrl?:""
+                                    imageUrl = profileImageUrl?.profilePicUrl ?: ""
                                 )
                             }
 
                             Spacer(modifier = Modifier.height(8.dp))
 
-                            Text(
-                                text = "Username",
-                                fontSize = 15.sp,
-                                color = Color.Black,
-                                lineHeight = 15.sp
-                            )
+                            if(userName!= "-1" && userPhone != "-1"){
+                                Text(
+                                    text = userName.toNameFormat(),
+                                    fontSize = 15.sp,
+                                    color = Color.Black,
+                                    lineHeight = 15.sp
+                                )
 
-                            Text(
-                                text = "+123 456 7890",
-                                fontSize = 11.sp,
-                                color = Color.Black,
-                                lineHeight = 15.sp
-                            )
+                                Text(
+                                    text = userPhone,
+                                    fontSize = 11.sp,
+                                    color = Color.Black,
+                                    lineHeight = 15.sp
+                                )
+                            }
                         }
                     }
 
@@ -220,35 +245,49 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                         onClick = {
                             NavigationProvider.navController.navigate(
                                 Routes.SuperShopPage(
-                                    userId = Objects.USER_ID
+                                    userId = currentUserId
                                 )
                             )
                         })
                     ProfileMenuItem(
                         text = "Tickets",
                         icon = Res.drawable.tickets,
-                        onClick = { NavigationProvider.navController.navigate(Routes.CustomerTicketPage) })
+                        onClick = {
+                            NavigationProvider.navController.navigate(
+                                Routes.CustomerTicketPage(
+                                    currentUserId
+                                )
+                            )
+                        })
                     ProfileMenuItem(
                         text = "Saved Shop Video",
                         icon = Res.drawable.super_shop_logo,
                         onClick = {
                             NavigationProvider.navController.navigate(
                                 Routes.FavoriteShopVideosPage(
-                                    Objects.USER_ID
+                                    currentUserId
                                 )
                             )
                         })
-                    ProfileMenuItem(
-                        text = "Open Your Shop",
-                        icon = Res.drawable.shopping_bag,
-                        onClick = { NavigationProvider.navController.navigate(Routes.OpenYourShopPage) })
+                    if (userStatus == "1") {
+                        ProfileMenuItem(
+                            text = "Your Shop",
+                            icon = Res.drawable.shopping_bag,
+                            onClick = { NavigationProvider.navController.navigate(Routes.OpenYourShopPage) })
+                    } else {
+                        ProfileMenuItem(
+                            text = "Open Your Shop",
+                            icon = Res.drawable.shopping_bag,
+                            onClick = { NavigationProvider.navController.navigate(Routes.OpenYourShopPage) })
+                    }
+
                     ProfileMenuItem(
                         text = "Personal Info",
                         icon = Res.drawable.baseline_person_24,
                         onClick = {
                             NavigationProvider.navController.navigate(
                                 Routes.PersonalInfoPage(
-                                    userId = Objects.USER_ID
+                                    userId = currentUserId
                                 )
                             )
                         })
@@ -268,7 +307,13 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                     ProfileMenuItem(
                         text = "Update Listing",
                         icon = Res.drawable.shopping_bag,
-                        onClick = { NavigationProvider.navController.navigate(Routes.ListAllProductPage(Objects.SHOP_ID)) })
+                        onClick = {
+                            NavigationProvider.navController.navigate(
+                                Routes.ListAllProductPage(
+                                    Objects.SHOP_ID
+                                )
+                            )
+                        })
 
                     ProfileMenuItem(
                         text = "Tickets",
@@ -282,7 +327,7 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                             NavigationProvider.navController.navigate(
                                 Routes.EditShopDetails(
                                     "-OG9iDx7RKUPZ6RHwsIA",
-                                    Objects.USER_ID
+                                    currentUserId
                                 )
                             )
                         })
@@ -313,10 +358,25 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                         icon = Res.drawable.support,
                         onClick = { println("Favorites") })
                     // Logout Card
-                    LogoutCard {
-                        if (it) NavigationProvider.navController.navigate(Routes.LoginPage)
-                    }
-
+                    LogoutCard(
+                        userId = currentUserId,
+                        onClick = {
+                            NavigationProvider.navController.navigate(Routes.LoginPage) {
+                                popUpTo(Routes.MainPage) {
+                                    inclusive = true
+                                } // Clears MainPage and navigates fresh to Login
+                            }
+                        },
+                        onLogout = {
+                            scope.launch {
+                                datastore.edit { it.clear() } // Clear stored user session
+                            }
+                            viewModal.reset()
+//                            NavigationProvider.navController.navigate(Routes.LoginPage) {
+//                                popUpTo(Routes.MainPage) { inclusive = true }
+//                            }
+                        }
+                    )
                 }
             }
         }
@@ -360,33 +420,35 @@ fun ProfileMenuItem(text: String, icon: DrawableResource, onClick: () -> Unit = 
 }
 
 @Composable
-fun LogoutCard(onClick: (Boolean) -> Unit) {
+fun LogoutCard(userId: String, onClick: (Boolean) -> Unit, onLogout: () -> Unit) {
+//    val userId = preferences[PreferencesKeys.USERID_KEY] ?: "-1"  // Directly observe
+
     Card(
         modifier = Modifier
-            .fillMaxWidth(1f) // Set width percentage as per your constraint in XML
-            .padding(horizontal = 5.dp, vertical = 15.dp)
-            .clickable(onClick = { onClick(true) }), // Handles the click event
+            .fillMaxWidth(1f)
+            .padding(horizontal = 5.dp, vertical = 15.dp),
         shape = RoundedCornerShape(10.dp),
         elevation = CardDefaults.cardElevation(3.dp),
         colors = CardDefaults.cardColors(Color.White),
-        border = CardDefaults.outlinedCardBorder(true)// Set background color of the card
+        border = CardDefaults.outlinedCardBorder(true)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(10.dp), // Padding inside the card
-            horizontalArrangement = Arrangement.Center, // Horizontally center the items
-            verticalAlignment = Alignment.CenterVertically // Vertically center the items
+                .padding(10.dp)
+                .clickable(onClick = { if (userId == "-1") onClick(true) else onLogout() }),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                painter = painterResource(Res.drawable.baseline_power_settings_new_24), // Replace with your icon
+                painter = painterResource(Res.drawable.baseline_power_settings_new_24),
                 contentDescription = "Logout Icon",
-                modifier = Modifier.size(24.dp), // Set size of the icon
-                tint = Color.Black // Set tint color for the icon
+                modifier = Modifier.size(24.dp),
+                tint = Color.Black
             )
-            Spacer(modifier = Modifier.width(10.dp)) // Spacer between icon and text
+            Spacer(modifier = Modifier.width(10.dp))
             Text(
-                text = "Login",
+                text = if (userId == "-1") "Login" else "Logout",
                 fontSize = 17.sp,
                 color = Color.Black,
                 textAlign = TextAlign.Center
@@ -468,6 +530,7 @@ fun ProfileImageSelector(
                     alignment = Alignment.Center
                 )
             }
+
             imageUrl.isNotEmpty() -> {
                 CoilImage(
                     modifier = Modifier
@@ -482,6 +545,7 @@ fun ProfileImageSelector(
                     previewPlaceholder = painterResource(Res.drawable.compose_multiplatform),
                 )
             }
+
             else -> {
                 Image(
                     painter = painter,

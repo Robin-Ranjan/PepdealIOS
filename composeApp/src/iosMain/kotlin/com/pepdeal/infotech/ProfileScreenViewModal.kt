@@ -12,7 +12,7 @@ class ProfileScreenViewModal():ViewModel() {
     private val repo = PersonalInfoRepo()
 
     private val _userProfilePicMaster = MutableStateFlow<UserProfilePicMaster?>(null)
-    val userProfilePicMaster : StateFlow<UserProfilePicMaster?> get() = _userProfilePicMaster.asStateFlow()
+    val userProfilePicMaster : StateFlow<UserProfilePicMaster?> get() = _userProfilePicMaster
 
     private var hasFetchedProfilePic = false // Prevents repeated API calls
 
@@ -25,5 +25,9 @@ class ProfileScreenViewModal():ViewModel() {
             _userProfilePicMaster.value = userProfile
             hasFetchedProfilePic = userProfile?.profilePicUrl.isNullOrEmpty().not() // Fetch only once
         }
+    }
+    fun reset(){
+        _userProfilePicMaster.value = null
+        hasFetchedProfilePic = false
     }
 }

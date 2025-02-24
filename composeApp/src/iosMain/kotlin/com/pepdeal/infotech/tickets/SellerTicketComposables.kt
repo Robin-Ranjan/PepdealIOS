@@ -41,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -64,90 +65,90 @@ import pepdealios.composeapp.generated.resources.compose_multiplatform
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SellerTicketScreen(viewModal: SellerTicketViewModal = ViewModals.sellerTicketViewModal){
+fun SellerTicketScreen(viewModal: SellerTicketViewModal = ViewModals.sellerTicketViewModal) {
 
     val sellerTicketProductList by viewModal.sellerTicketProduct.collectAsStateWithLifecycle()
     val isLoading by viewModal.isLoading.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit){
+    LaunchedEffect(Unit) {
         scope.launch {
-            viewModal.getAllSellerTicketProduct("00955bb4-ae5c-4b68-9b51-477c76fb1797")
+            viewModal.getAllSellerTicketProduct("-OIssBIQoj5chr2PuTLo")
         }
     }
 
-   MaterialTheme{
-       Scaffold {
-           Column(
-               modifier = Modifier
-                   .fillMaxSize()
-                   .background(Color.White)
-           ) {
-               TopAppBar(
-                   title = {
-                       Text(
-                           text = "Tickets",
-                           fontSize = 16.sp,
-                           fontWeight = FontWeight.Bold,
-                           lineHeight = 18.sp
-                       )
-                   },
-                   navigationIcon = {
-                       IconButton(
-                           onClick = {
-                               viewModal.resetTicket()
-                               NavigationProvider.navController.popBackStack()
-                           }
-                       ) {
-                           Icon(
-                               imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                               contentDescription = "Back",
-                               tint = Color.Black
-                           )
-                       }
-                   },
-                   colors = TopAppBarDefaults.topAppBarColors(
-                       containerColor = Color.White,  // Background color
-                       titleContentColor = Color.Black,  // Title color
-                       navigationIconContentColor = Color.Black,  // Back button color
-                       actionIconContentColor = Color.Unspecified
-                   ),
-                   modifier = Modifier.shadow(4.dp),
-                   expandedHeight = 50.dp
-               )
+    MaterialTheme {
+        Scaffold {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White)
+            ) {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = "Tickets",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            lineHeight = 18.sp
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = {
+                                viewModal.resetTicket()
+                                NavigationProvider.navController.popBackStack()
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color.Black
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.White,  // Background color
+                        titleContentColor = Color.Black,  // Title color
+                        navigationIconContentColor = Color.Black,  // Back button color
+                        actionIconContentColor = Color.Unspecified
+                    ),
+                    modifier = Modifier.shadow(4.dp),
+                    expandedHeight = 50.dp
+                )
 
-               Box(modifier = Modifier.fillMaxSize()) {
-                   if(isLoading) {
-                       CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                   }else{
-                   LazyColumn(
-                       modifier = Modifier
-                           .fillMaxWidth()
-                           .background(Color.White)
-                           .padding(5.dp),
-                       horizontalAlignment = Alignment.CenterHorizontally
-                   ) {
-                       items(items = sellerTicketProductList) { tickets ->
-                           SellerTicketCard(
-                               item = tickets,
-                               onReject = {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    if (isLoading) {
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color.White)
+                                .padding(5.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            items(items = sellerTicketProductList) { tickets ->
+                                SellerTicketCard(
+                                    item = tickets,
+                                    onReject = {
+                                        viewModal.changeTicketStatus(tickets.ticket.ticketId,"1")
+                                    },
+                                    onConfirm = {
+                                        viewModal.changeTicketStatus(tickets.ticket.ticketId,"0")
+                                    },
+                                    onDelivered = {
+                                        viewModal.changeTicketStatus(tickets.ticket.ticketId,"3")
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
-                               },
-                               onConfirm = {
-
-                               },
-                               onDelivered = {
-
-                               }
-                           )
-                       }
-                   }
-               }
-               }
-           }
-       }
-
-   }
+    }
 }
 
 @Composable
@@ -194,35 +195,111 @@ fun SellerTicketCard(
                 Column(modifier = Modifier.padding(start = 8.dp)) {
                     Text(text = item.productName.toNameFormat(), fontWeight = FontWeight.Bold)
 
-                    Text(
-                        text = if (item.ticket.sellingPrice != "-1")
-                            item.ticket.sellingPrice.toTwoDecimalPlaces().toRupee()
-                        else "On Call",
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 14.sp
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = if (item.ticket.sellingPrice != "-1")
+                                item.ticket.sellingPrice.toTwoDecimalPlaces().toRupee()
+                            else "On Call",
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 14.sp
+                        )
 
-                    Text(text = "QTY: ${item.ticket.quantity}", fontSize = 12.sp)
-                    Text(text = "Size: ${item.ticket.sizeName}", fontSize = 12.sp)
-                    Text(text = item.ticket.colour, fontSize = 12.sp)
-                    Text(text = Util.formatDateWithTimestamp(item.ticket.updatedAt), fontSize = 12.sp)
+                        Text(
+                            text = "QTY: ${item.ticket.quantity}",
+                            fontSize = 12.sp
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Size: ${item.ticket.sizeName}",
+                            fontSize = 12.sp
+                        )
+                        Text(
+                            text = item.ticket.colour,
+                            fontSize = 12.sp
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = Util.formatDateWithTimestamp(item.ticket.updatedAt),
+                            fontSize = 12.sp
+                        )
+
+//                        Text(
+//                            text = statusText,
+//                            color = textColor,
+//                            fontWeight = FontWeight.SemiBold
+//                        )
+
+                        // Status Text
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(5.dp)  // Define a fixed size
+                                    .clip(CircleShape)
+                                    .background(textColor)
+                            )
+                            Spacer(modifier = Modifier.width(2.dp))
+                            Text(
+                                text = statusText,
+                                fontSize = 14.sp,
+                                lineHeight = 14.sp,
+                                color = textColor,
+                                fontWeight = FontWeight.Normal,
+                            )
+                        }
+
+                    }
+
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(text = item.userDetails?.userName ?: "Unknown", fontSize = 14.sp)
+                        Text(
+                            text = item.userDetails?.mobileNo ?: "N/A",
+                            fontSize = 14.sp,
+                            textAlign = TextAlign.End
+                        )
+                    }
                 }
             }
-
-            Text(text = statusText, color = textColor, fontWeight = FontWeight.SemiBold)
 
             val showStatusLayout = item.ticket.ticketStatus == "2"
             val showDeliveredButton = item.ticket.ticketStatus == "0"
 
             if (showStatusLayout) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Button(onClick = onReject, colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) {
+                    Button(
+                        modifier = Modifier.weight(1f)
+                            .padding(start = 3.dp, end = 3.dp, top = 3.dp),
+                        shape = RoundedCornerShape(5.dp),
+                        onClick = onReject,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                    ) {
                         Text("Reject")
                     }
-                    Button(onClick = onConfirm, colors = ButtonDefaults.buttonColors(containerColor = Color.Green)) {
+                    Button(
+                        modifier = Modifier.weight(1f)
+                            .padding(start = 3.dp, end = 3.dp, top = 3.dp),
+                        shape = RoundedCornerShape(5.dp),
+                        onClick = onConfirm,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Green)
+                    ) {
                         Text("Confirm")
                     }
                 }
@@ -230,20 +307,14 @@ fun SellerTicketCard(
 
             if (showDeliveredButton) {
                 Button(
-                    onClick = onDelivered,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Green),
                     modifier = Modifier.fillMaxWidth()
+                        .padding(start = 3.dp, end = 3.dp, top = 3.dp),
+                    onClick = onDelivered,
+                    shape = RoundedCornerShape(5.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Green)
                 ) {
                     Text("Delivered")
                 }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                Text(text = item.userDetails?.userName ?: "Unknown", fontSize = 14.sp)
-                Text(text = item.userDetails?.mobileNo ?: "N/A", fontSize = 14.sp, textAlign = TextAlign.End)
             }
         }
     }

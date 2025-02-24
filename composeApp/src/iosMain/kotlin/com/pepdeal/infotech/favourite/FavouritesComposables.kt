@@ -62,13 +62,19 @@ import com.pepdeal.infotech.util.ViewModals
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil3.CoilImage
 import kotlinx.coroutines.launch
+import kottieAnimation.KottieAnimation
+import kottieComposition.KottieCompositionSpec
+import kottieComposition.animateKottieCompositionAsState
+import kottieComposition.rememberKottieComposition
+import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
 import pepdealios.composeapp.generated.resources.compose_multiplatform
 import pepdealios.composeapp.generated.resources.red_heart
+import utils.KottieConstants
 
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalResourceApi::class)
 @Composable
 fun FavoriteProductScreen(viewModal: FavoriteProductViewModal = ViewModals.favoriteProductViewModal) {
 
@@ -77,17 +83,33 @@ fun FavoriteProductScreen(viewModal: FavoriteProductViewModal = ViewModals.favor
     val isLoading by viewModal.isLoading.collectAsStateWithLifecycle()
     val columnState = rememberLazyListState()
     val scope = rememberCoroutineScope()
+    var animation by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        try {
+            animation = Res.readBytes("files/empty_list.json").decodeToString()
+        } catch (e: Exception) {
+            println(e.message)
+        }
+    }
+
+    val composition = rememberKottieComposition(
+        spec = KottieCompositionSpec.JsonString(animation)
+    )
+
+    val animationState by animateKottieCompositionAsState(
+        composition = composition,
+        iterations = KottieConstants.IterateForever,
+        isPlaying = true
+    )
+
     LaunchedEffect(Unit) {
         viewModal.getAllFavoriteProduct(Objects.USER_ID)
     }
 
     MaterialTheme {
-        Scaffold {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.White)
-            ) {
+        Scaffold(
+            topBar = {
                 TopAppBar(
                     title = {
                         Text(
@@ -112,19 +134,37 @@ fun FavoriteProductScreen(viewModal: FavoriteProductViewModal = ViewModals.favor
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.White,  // Background color
-                        titleContentColor = Color.Black,  // Title color
-                        navigationIconContentColor = Color.Black,  // Back button color
-                        actionIconContentColor = Color.Unspecified
+                        containerColor = Color.White,
+                        titleContentColor = Color.Black,
+                        navigationIconContentColor = Color.Black
                     ),
-                    modifier = Modifier.shadow(4.dp),
-                    expandedHeight = 50.dp
+                    modifier = Modifier.shadow(4.dp)
                 )
-
-                Box(modifier = Modifier.fillMaxSize()) {
-                    if (isLoading) {
+            }
+        ) { paddingValues ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White)
+                    .padding(paddingValues) // Apply padding from Scaffold
+            ) {
+                when {
+                    isLoading -> {
                         CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                    } else {
+                    }
+
+                    favProductList.isEmpty() -> {
+                        // Lottie Animation for Empty State
+                        KottieAnimation(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(top = 50.dp),
+                            composition = composition,
+                            progress = { animationState.progress }
+                        )
+                    }
+
+                    else -> {
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -132,17 +172,14 @@ fun FavoriteProductScreen(viewModal: FavoriteProductViewModal = ViewModals.favor
                                 .padding(5.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             state = columnState
-                        )
-                        {
-                            items(items = favProductList,
-                                key = { it.product.productId }) { favProduct ->
+                        ) {
+                            items(items = favProductList, key = { it.product.productId }) { favProduct ->
                                 var isVisible by remember { mutableStateOf(true) }
                                 AnimatedContent(
                                     targetState = isVisible,
                                     transitionSpec = {
-                                        fadeIn(animationSpec = tween(300)) togetherWith fadeOut(
-                                            animationSpec = tween(300)
-                                        )
+                                        fadeIn(animationSpec = tween(300)) togetherWith
+                                                fadeOut(animationSpec = tween(300))
                                     }
                                 ) { visible ->
                                     if (visible) {

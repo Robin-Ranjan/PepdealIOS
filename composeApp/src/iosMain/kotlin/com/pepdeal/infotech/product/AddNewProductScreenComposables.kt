@@ -476,8 +476,6 @@ fun AddNewProductScreen(viewModal: AddNewProductViewModal = ViewModals.addNewPro
                             } else {
                                 Button(
                                     onClick = {
-//                                        uploading = true
-//                            CoroutineScope(Dispatchers.IO).launch {
                                         try {
                                             Util.validateShopAndSubmit(
                                                 fields = buildMap {
@@ -537,7 +535,6 @@ fun AddNewProductScreen(viewModal: AddNewProductViewModal = ViewModals.addNewPro
                                                 },
                                                 status = { status ->
                                                     if (status) {
-//                                                        if (selectedProductColours != null) {
                                                             viewModal.registerProduct(
                                                                 shopId = Objects.SHOP_ID,
                                                                 productMaster = ProductMaster(
@@ -568,7 +565,6 @@ fun AddNewProductScreen(viewModal: AddNewProductViewModal = ViewModals.addNewPro
                                                                 ),
                                                                 uriList = imageFileList.filterNotNull().toMutableList()
                                                             )
-//                                                        }
                                                     }
                                                 }
                                             )

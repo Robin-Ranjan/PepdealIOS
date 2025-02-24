@@ -33,7 +33,7 @@ sealed class Routes {
     object FavouritesPage : Routes()
 
     @Serializable
-    object CustomerTicketPage : Routes()
+    data class CustomerTicketPage(val userId: String) : Routes()
 
     @Serializable
     object SellerTicketPage : Routes()

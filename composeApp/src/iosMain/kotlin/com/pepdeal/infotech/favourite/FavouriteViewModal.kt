@@ -20,6 +20,7 @@ class FavoriteProductViewModal:ViewModel() {
 
     fun getAllFavoriteProduct(userId:String){
         viewModelScope.launch {
+            _isLoading.value = true
             favRepo.getFavoriteProductsForUserFlow(userId)
                 .collect{ product ->
                     currentFavoriteList.add(product)

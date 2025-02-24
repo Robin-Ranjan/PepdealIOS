@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -31,6 +32,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
@@ -51,6 +53,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -61,12 +64,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pepdeal.infotech.Objects
 import com.pepdeal.infotech.color.ColorItem
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.shop.TextFieldWithLabel
@@ -82,6 +87,7 @@ import dev.icerock.moko.media.compose.rememberMediaPickerControllerFactory
 import dev.icerock.moko.permissions.compose.BindEffect
 import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import network.chaintech.sdpcomposemultiplatform.sdp
 import network.chaintech.sdpcomposemultiplatform.ssp
@@ -99,14 +105,11 @@ fun UpdateProductScreen(
     productId: String,
     viewModal: UpdateProductViewModal = ViewModals.updateProductViewModal
 ) {
-
     val factory = rememberPermissionsControllerFactory()
     val controller = remember(factory) { factory.createPermissionsController() }
     val coroutineScope: CoroutineScope = rememberCoroutineScope()
-
     val medialPickerFactory = rememberMediaPickerControllerFactory()
     val picker = remember(factory) { medialPickerFactory.createMediaPickerController() }
-
     val productName = remember { mutableStateOf(TextFieldValue()) }
     val brandName = remember { mutableStateOf(TextFieldValue()) }
     val productCategory = remember { mutableStateOf(TextFieldValue()) }
@@ -132,12 +135,13 @@ fun UpdateProductScreen(
     val snackBar = remember { SnackbarHostState() }
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    var isUploading by remember { mutableStateOf(false) }
     var isImageUpdated by remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
 
     val productImages by viewModal.productImages.collectAsStateWithLifecycle()
     val productDetails by viewModal.productDetails.collectAsStateWithLifecycle()
-
+    val registerProductResponse by viewModal.updateProductResponse.collectAsStateWithLifecycle()
+    val isUploading by viewModal.isUploading.collectAsStateWithLifecycle()
     LaunchedEffect(productId) {
         viewModal.fetchProductDetails(productId)
         viewModal.fetchProductImages(productId)
@@ -174,6 +178,24 @@ fun UpdateProductScreen(
         // Update the UI state with the matched colors
         selectedProductColour.value = matchedColors
         productColors.value = TextFieldValue(matchedColors.joinToString(", ") { it.name })
+    }
+
+    LaunchedEffect(Unit) {
+        snapshotFlow { registerProductResponse }
+            .collectLatest { response ->
+                response?.let {
+                    if (it.first) {
+                        snackBar.showSnackbar("Product Updated Successfully")
+                        viewModal.reset()
+                        navController.popBackStack()
+                    } else {
+                        println(it.second)
+                        if (it.second.isNotEmpty() && it.second.isNotBlank()) {
+                            snackBar.showSnackbar(it.second)
+                        }
+                    }
+                }
+            }
     }
 
     MaterialTheme {
@@ -339,12 +361,12 @@ fun UpdateProductScreen(
                                         color = Color.Black,
                                         shape = RoundedCornerShape(2.dp)
                                     ),
-                                verticalAlignment = Alignment.CenterVertically // Aligns content vertically
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
                                     text = "On Call",
                                     modifier = Modifier.weight(1f)
-                                        .padding(start = 5.dp), // Makes the text take available space
+                                        .padding(start = 5.dp),
                                     color = Color.Black,
                                     style = MaterialTheme.typography.bodyLarge
                                 )
@@ -423,7 +445,8 @@ fun UpdateProductScreen(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .background(Color.White),
+                                    .background(Color.White)
+                                    .clickable { showDialog = true },
                                 horizontalArrangement = Arrangement.SpaceEvenly,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -478,7 +501,6 @@ fun UpdateProductScreen(
                             } else {
                                 Button(
                                     onClick = {
-                                        isUploading = true
                                         try {
                                             Util.validateShopAndSubmit(
                                                 fields = buildMap {
@@ -539,40 +561,38 @@ fun UpdateProductScreen(
                                                     }
                                                 },
                                                 status = { status ->
-                                                    isUploading = false
                                                     if (status) {
-//                                                        if (selectedProductColours != null) {
-//                                                        viewModal.registerProduct(
-//                                                            shopId = Objects.SHOP_ID,
-//                                                            productMaster = ProductMaster(
-//                                                                productId = "",
-//                                                                userId = Objects.USER_ID,
-//                                                                shopId = Objects.SHOP_ID,
-//                                                                productName = productName.value.text,
-//                                                                brandId = "",
-//                                                                brandName = brandName.value.text,
-//                                                                categoryId = productCategory.value.text,
-//                                                                subCategoryId = productSubCategory.value.text,
-//                                                                description = productDescription.value.text,
-//                                                                description2 = productDescription2.value.text,
-//                                                                specification = productSpecification.value.text,
-//                                                                warranty = productWarranty.value.text,
-//                                                                sizeId = productSize.value.text,
-//                                                                sizeName = "",
-//                                                                color = productColorsCode?:"",
-//                                                                searchTag = searchTag.value.text,
-//                                                                onCall = if(showProductPrices) "0" else "1",
-//                                                                mrp = productMrp.value.text,
-//                                                                discountMrp = productDiscount.value.text,
-//                                                                sellingPrice = productSale.value.text,
-//                                                                isActive = "1",
-//                                                                flag = "1",
-//                                                                createdAt = Util.getCurrentTimeStamp(),
-//                                                                updatedAt = Util.getCurrentTimeStamp()
-//                                                            ),
-//                                                            uriList = imageFileList.filterNotNull().toMutableList()
-//                                                        )
-//                                                        }
+                                                        viewModal.updateProductDetails(
+                                                            productId = productId,
+                                                            updatedProductMaster = ProductMaster(
+                                                                productId = "",
+                                                                userId = Objects.USER_ID,
+                                                                shopId = Objects.SHOP_ID,
+                                                                productName = productName.value.text,
+                                                                brandId = "",
+                                                                brandName = brandName.value.text,
+                                                                categoryId = productCategory.value.text,
+                                                                subCategoryId = productSubCategory.value.text,
+                                                                description = productDescription.value.text,
+                                                                description2 = productDescription2.value.text,
+                                                                specification = productSpecification.value.text,
+                                                                warranty = productWarranty.value.text,
+                                                                sizeId = productSize.value.text,
+                                                                sizeName = "",
+                                                                color = productColors.value.text,
+                                                                searchTag = searchTag.value.text,
+                                                                onCall = if (showProductPrices) "0" else "1",
+                                                                mrp = productMrp.value.text,
+                                                                discountMrp = productDiscount.value.text,
+                                                                sellingPrice = productSale.value.text,
+                                                                isActive = "1",
+                                                                flag = "1",
+                                                                createdAt = Util.getCurrentTimeStamp(),
+                                                                updatedAt = Util.getCurrentTimeStamp()
+                                                            ),
+                                                            isImageUpdated,
+                                                            newUriList = mutableListOf()
+                                                        )
                                                     }
                                                 }
                                             )
@@ -594,6 +614,70 @@ fun UpdateProductScreen(
                 }
             }
         }
+
+        if (showDialog) {
+            AlertDialog(
+                onDismissRequest = { showDialog = false },
+                shape = RoundedCornerShape(12.dp),
+                tonalElevation = 6.dp,
+                title = {
+                    Text(
+                        text = "Update Image",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        lineHeight = 20.sp,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(bottom = 0.dp)
+                    )
+                },
+                text = {
+                    Text(
+                        text = "Updating the image will remove all existing images. Do you wish to continue?",
+                        fontSize = 16.sp,
+                        lineHeight = 16.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            isImageUpdated = true
+                            showDialog = false
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 1.dp)
+                    ) {
+                        Text(
+                            "Yes, Update",
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 14.sp,
+                            lineHeight = 14.sp
+                        )
+                    }
+                },
+                dismissButton = {
+                    OutlinedButton(
+                        onClick = { showDialog = false },
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 1.dp)
+                    ) {
+                        Text(
+                            "Cancel",
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 14.sp,
+                            lineHeight = 14.sp
+                        )
+                    }
+                },
+                containerColor = Color.White
+            )
+        }
     }
 }
 
@@ -611,8 +695,10 @@ fun TextFieldWithChips(
         )
         // Place additional UI elements below the text field.
         if (state.value.text.isNotEmpty()) {
-            ColorChips(colorCodes = state.value.text,
-                colorMap)
+            ColorChips(
+                colorCodes = state.value.text,
+                colorMap
+            )
         }
     }
 }

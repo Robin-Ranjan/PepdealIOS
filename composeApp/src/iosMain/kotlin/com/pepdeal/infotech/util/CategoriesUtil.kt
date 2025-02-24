@@ -54,7 +54,8 @@ object CategoriesUtil {
         ProductCategories(10, "Pet Supplies"),
         ProductCategories(11, "Personalized Gifts"),
         ProductCategories(12,"Stationary"),
-        ProductCategories(13,"Hardware & Paint")
+        ProductCategories(13,"Hardware & Paint"),
+        ProductCategories(14,"Food & Beverages")
     )
 
     val subCategories = listOf(
@@ -169,6 +170,21 @@ object CategoriesUtil {
         SubCategory(80,13,"Construction Material",""),
         SubCategory(81,13,"Paints & Adhesive",""),
         SubCategory(82,13,"Safety & Security",""),
+
+        // Food & Beverages
+        SubCategory(83,14,"Sabjis & Curries",""),
+        SubCategory(84,14,"Thalis & Combos",""),
+        SubCategory(85,14,"Chinese Dishes",""),
+        SubCategory(86,14,"South Indian Dishes",""),
+        SubCategory(87,14,"North Indian Dishes",""),
+        SubCategory(88,14,"Mughlai & Biryani",""),
+        SubCategory(89,14,"Fast Food & Snacks",""),
+        SubCategory(90,14,"Pizzas & Pastas",""),
+        SubCategory(91,14,"Burgers & Sandwiches",""),
+        SubCategory(92,14,"Street Food & Chat",""),
+        SubCategory(93,14,"Desserts & Sweets",""),
+        SubCategory(94,14,"Beverages",""),
+        SubCategory(95,14,"Alcoholic Beverages",""),
     )
 
 }

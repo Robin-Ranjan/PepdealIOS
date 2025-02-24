@@ -5,22 +5,35 @@ import com.pepdeal.infotech.product.ProductMaster
 import com.pepdeal.infotech.user.UserMaster
 import com.pepdeal.infotech.shop.modal.ShopMaster
 import com.pepdeal.infotech.util.FirebaseUtil
+import com.pepdeal.infotech.util.Util
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.darwin.Darwin
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import io.ktor.client.request.patch
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
+import io.ktor.client.utils.EmptyContent.contentType
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.http.isSuccess
+import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
 class SellerTicketRepo {
     private val json = Json { ignoreUnknownKeys = true }
-    private val client = HttpClient(Darwin)
+    private val client = HttpClient(Darwin){
+        install(ContentNegotiation){
+            json(json)
+        }
+    }
 
     fun getTicketForSellerFlow(shopId: String): Flow<ProductTicket> = flow {
         val customerTickets = fetchSellerTicket(shopId)
@@ -155,4 +168,29 @@ class SellerTicketRepo {
             UserMaster()
         }
     }
+
+    suspend fun updateTicketMasterStatus(
+        ticketId: String,
+        status: String,
+        onSuccess: (Boolean) -> Unit
+    ) {
+//        withContext(Dispatchers.IO) {
+            try {
+                val updateData = mapOf(
+                    "ticketStatus" to status,
+                    "updatedAt" to Util.getCurrentTimeStamp()
+                )
+                val response: HttpResponse =
+                    client.patch("${FirebaseUtil.BASE_URL}ticket_master/$ticketId.json") {
+                        contentType(ContentType.Application.Json)
+                        setBody(updateData)
+                    }
+
+                onSuccess(response.status.isSuccess())
+            } catch (e: Exception) {
+                onSuccess(false)
+            }
+//        }
+    }
+
 }

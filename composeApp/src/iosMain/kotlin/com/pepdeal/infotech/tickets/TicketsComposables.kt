@@ -56,14 +56,14 @@ import pepdealios.composeapp.generated.resources.compose_multiplatform
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CustomerTicketScreen(viewModal: TicketViewModal = ViewModals.customerTicketViewModal) {
+fun CustomerTicketScreen(userId:String,viewModal: TicketViewModal = ViewModals.customerTicketViewModal) {
     val ticketProductList by viewModal.ticketProduct.collectAsStateWithLifecycle()
     val isLoading by viewModal.isLoading.collectAsStateWithLifecycle()
 
     val scope = rememberCoroutineScope()
     LaunchedEffect(Unit) {
         scope.launch {
-            viewModal.getAllTicketProduct("-OIyeU1oyShOcB8r4-_8")
+            viewModal.getAllTicketProduct(userId)
         }
     }
 
@@ -241,7 +241,7 @@ fun TicketProductCard(
                     text = statusText,
                     fontSize = 14.sp,
                     lineHeight = 14.sp,
-                    color = Color.Black,
+                    color = color,
                     modifier = Modifier
                         .padding(5.dp),
                     fontWeight = FontWeight.Normal,

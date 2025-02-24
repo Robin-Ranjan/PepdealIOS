@@ -58,6 +58,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pepdeal.infotech.Objects
 import com.pepdeal.infotech.fonts.FontUtils.getFontResourceByName
 import com.pepdeal.infotech.shop.ShopItemView
 import com.pepdeal.infotech.util.NavigationProvider
@@ -171,7 +172,7 @@ fun SuperShopScreen(userId: String, viewModal: SuperShopViewModal = ViewModals.s
                                             scope.launch {
                                                 isVisible = false
                                                 if (shopId != "-1") viewModal.removeSuperShop(
-                                                    "-OIyeU1oyShOcB8r4-_8",
+                                                    userId,
                                                     shopId
                                                 )
                                             }

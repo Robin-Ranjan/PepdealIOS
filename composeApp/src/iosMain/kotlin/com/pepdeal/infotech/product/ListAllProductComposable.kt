@@ -64,6 +64,7 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pepdeal.infotech.DataStore
+import com.pepdeal.infotech.PreferencesKeys
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.rememberDataStore
 import com.pepdeal.infotech.util.NavigationProvider
@@ -93,14 +94,14 @@ fun ListAllProductScreen(
     viewModal: ListAllProductViewModal = ViewModals.listAllProductViewModal
 ) {
     val datastore = DataStore.dataStore
-    val myKey = stringPreferencesKey("userId")
+    val myKey = PreferencesKeys.MOBILE_NO
     // Collect the data from DataStore as state.
     val preferencesFlow = datastore.data
     // Provide an initial empty preferences in case no value is stored yet.
     val preferences by preferencesFlow.collectAsState(initial = emptyPreferences())
 
     // Retrieve the current value (or default to "Default Value").
-    var currentValue = preferences[myKey] ?: "Default Value"
+    var currentValue: String
 
     val productsWithImages by viewModal.productWithImages.collectAsStateWithLifecycle()
     val isLoading by viewModal.isLoading.collectAsStateWithLifecycle()
@@ -112,10 +113,10 @@ fun ListAllProductScreen(
             viewModal.getAllProduct(shopId)
         }
     }
-    LaunchedEffect(Unit){
+    LaunchedEffect(Unit) {
         var pref = "Default"
-         datastore.data.map {
-             pref = it[myKey] ?: "Default"
+        datastore.data.map {
+            pref = it[myKey] ?: "Default"
         }.flowOn(Dispatchers.IO)
         println(pref)
     }
@@ -178,25 +179,31 @@ fun ListAllProductScreen(
                     LazyColumn {
                         items(items = productsWithImages,
                             key = { it.product.productId }) { products ->
+                            var isLive by remember { mutableStateOf(products.product.isActive == "0") }
                             ProductCard(products,
-                                onSwitchChanged = {
-
+                                isLive = isLive,
+                                onSwitchChanged = { newState ->
+                                    isLive = newState
+                                    viewModal.updateProductStatusByShopOwner(
+                                        products.product.productId,
+                                        if (newState) "0" else "1"
+                                    )
                                 },
                                 onUpdateClick = {
                                     coroutineScope.launch {
-                                        datastore.edit{
+                                        datastore.edit {
                                             it.clear()
                                         }
                                     }
                                     navController.navigate(Routes.UpdateProductPage(products.product.productId))
                                 }, onRemoveClick = {
-                                    coroutineScope.launch {
-                                        datastore.edit { prefs ->
-                                            prefs[myKey] = "User Id Updated"
-                                        }
-                                    }
+//                                    coroutineScope.launch {
+//                                        datastore.edit { prefs ->
+//                                            prefs[myKey] = "User Id Updated"
+//                                        }
+//                                    }
 
-                                     currentValue = preferences[myKey] ?: "Default Value"
+                                    currentValue = preferences[myKey] ?: "Default Value"
                                     println(currentValue)
 //                                    coroutineScope.launch {
 //                                        datastore.edit {
@@ -217,13 +224,14 @@ fun ListAllProductScreen(
 @Composable
 fun ProductCard(
     productWithImages: ProductWithImages,
+    isLive: Boolean,
     onSwitchChanged: (Boolean) -> Unit,
     onUpdateClick: () -> Unit,
     onRemoveClick: () -> Unit,
 ) {
     val product = productWithImages.product
     val productImages = productWithImages.images
-    val isLive by remember { mutableStateOf(product.isActive == "0") }
+//    val isLive by remember { mutableStateOf(product.isActive == "0") }
 
     val sellingPrice =
         if (product.onCall == "1") product.sellingPrice.toTwoDecimalPlaces() else "On Call"

@@ -22,16 +22,10 @@ class LoginRepo {
     suspend fun validateUserLogin(
         mobileNo: String,
         pass: String,
-        onResult: (Boolean, String) -> Unit
+        onResult: (Boolean, String,String,String,String) -> Unit
     ) {
          val client = HttpClient(Darwin)
         try {
-//            println("${FirebaseUtil.BASE_URL}user_master.json?orderBy=\"mobileNo\"&equalTo=\"$mobileNo\"")
-//            val response: HttpResponse =
-//                client.get("${FirebaseUtil.BASE_URL}user_master.json?orderBy=\"mobileNo\"&equalTo=\"+919113381241\"") {
-////                client.get("${FirebaseUtil.BASE_URL}user_master.json?orderBy=\"mobileNo\"&equalTo=\"+919113381241\"") {
-//                    contentType(ContentType.Application.Json)
-//                }
             val response: HttpResponse = client.get("${FirebaseUtil.BASE_URL}user_master.json") {
                 parameter("orderBy", "\"mobileNo\"")
                 parameter("equalTo", "\"$mobileNo\"")
@@ -44,29 +38,29 @@ class LoginRepo {
                 val responseBody: String = response.bodyAsText()
                 if (responseBody == "null" || responseBody.isBlank()) {
                     println("User Not Found")
-                    onResult(false, "User Not Found")
+                    onResult(false, "User Not Found","-1","-1","-1")
                     return
                 }
                 val userMap: Map<String, UserMaster> = json.decodeFromString(responseBody)
                 println(userMap.values)
                 if (userMap.isEmpty()) {
                     println("User Not Found Map")
-                    onResult(false, "User Not Found")
+                    onResult(false, "User Not Found","-1","-1","-1")
                 } else {
                     coroutineScope {
                         userMap.values.forEach { userMaster ->
                             if (userMaster.password == pass) {
                                 println("Login Successfully")
-                                onResult(true, "Login Successfully")
+                                onResult(true, "Login Successfully",userMaster.userId,userMaster.userStatus,userMaster.userName)
                             } else {
                                 println("Incorrect Password")
-                                onResult(false, "Incorrect Password")
+                                onResult(false, "Incorrect Password","-1","-1","-1")
                             }
                         }
                     }
                 }
             } else {
-                onResult(false, "User Not Found")
+                onResult(false, "User Not Found","-1","-1","-1")
                 println("User Not Found")
             }
 
