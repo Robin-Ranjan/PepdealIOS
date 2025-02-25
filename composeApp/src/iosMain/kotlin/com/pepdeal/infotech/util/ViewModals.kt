@@ -14,6 +14,7 @@ import com.pepdeal.infotech.shop.shopDetails.ShopDetailsViewModal
 import com.pepdeal.infotech.shop.ShopViewModal
 import com.pepdeal.infotech.shopVideo.favShopVideo.FavoriteShopVideoViewModal
 import com.pepdeal.infotech.shopVideo.ShopVideosViewModal
+import com.pepdeal.infotech.shopVideo.UploadShopVideoViewModal
 import com.pepdeal.infotech.superShop.SuperShopViewModal
 import com.pepdeal.infotech.tickets.SellerTicketViewModal
 import com.pepdeal.infotech.tickets.TicketViewModal
@@ -38,4 +39,5 @@ object ViewModals {
     val addNewProductViewModal by lazy { AddNewProductViewModal() }
     val updateProductViewModal by lazy { UpdateProductViewModal() }
     val listAllProductViewModal by lazy { ListAllProductViewModal() }
+    val uploadShopVideoViewModal by lazy { UploadShopVideoViewModal() }
 }

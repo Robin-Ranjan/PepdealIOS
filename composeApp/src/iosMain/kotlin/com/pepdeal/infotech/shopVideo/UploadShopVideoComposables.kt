@@ -1,6 +1,8 @@
 package com.pepdeal.infotech.shopVideo
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +19,7 @@ import androidx.compose.material.Surface
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -47,13 +50,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import chaintech.videoplayer.host.MediaPlayerHost
 import chaintech.videoplayer.model.PlayerSpeed
 import chaintech.videoplayer.model.ScreenResize
 import chaintech.videoplayer.model.VideoPlayerConfig
 import chaintech.videoplayer.ui.video.VideoPlayerComposable
 import com.pepdeal.infotech.profile.ProfileImageSelector
+import com.pepdeal.infotech.util.ImagesUtil.readFileAsByteArray
 import com.pepdeal.infotech.util.NavigationProvider
+import com.pepdeal.infotech.util.ViewModals
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil3.CoilImage
 import dev.icerock.moko.media.Media
@@ -71,16 +77,16 @@ import dev.icerock.moko.permissions.RequestCanceledException
 import dev.icerock.moko.permissions.compose.BindEffect
 import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
 import kotlinx.coroutines.launch
-import network.chaintech.sdpcomposemultiplatform.sdp
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
 import pepdealios.composeapp.generated.resources.compose_multiplatform
 import platform.UIKit.UIApplication
 import platform.UIKit.UINavigationController
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UploadShopVideoScreen() {
+fun UploadShopVideoScreen(shopId:String,viewModal: UploadShopVideoViewModal = ViewModals.uploadShopVideoViewModal) {
     val factory = rememberPermissionsControllerFactory()
     val controller = remember(factory) { factory.createPermissionsController() }
     val thumbNailImage = remember { mutableStateOf<ImageBitmap?>(null) }
@@ -90,8 +96,11 @@ fun UploadShopVideoScreen() {
     val scope = rememberCoroutineScope()
     enableBackGestureForNavigationController()
 
-    val thumbNailUrl by remember { mutableStateOf("") }
-    val videoUrl by remember { mutableStateOf("") }
+    val shopVideos by viewModal.shopVideos.collectAsStateWithLifecycle(null)
+    val isUploading by viewModal.isUploading.collectAsStateWithLifecycle(false)
+
+    var thumbNailUrl by remember { mutableStateOf("") }
+    var videoUrl by remember { mutableStateOf("") }
     // Player Host for VideoPlayerComposable
     val playerHost = remember {
         MediaPlayerHost(
@@ -99,23 +108,78 @@ fun UploadShopVideoScreen() {
             isMuted = true,
             initialSpeed = PlayerSpeed.X1,
             initialVideoFitMode = ScreenResize.FILL,
-            isLooping = true,
+            isLooping = false,
             isFullScreen = false
         )
     }
 
     var selectedVideoPath by remember { mutableStateOf("") }
+
+    // ✅ Safe LaunchedEffect for Video Handling
+    LaunchedEffect(shopVideos) {
+        shopVideos?.let { video ->
+            if (video.videoUrl.isNotEmpty()) {
+                playerHost.pause()
+                playerHost.loadUrl(video.videoUrl)
+                playerHost.play()
+                videoUrl = video.videoUrl
+            }
+            thumbNailUrl = video.thumbNailUrl
+            println(thumbNailUrl)
+        }
+    }
+    // ✅ Load Selected Video when `selectedVideoPath` is updated
     LaunchedEffect(selectedVideoPath) {
         if (selectedVideoPath.isNotEmpty()) {
             playerHost.pause()
             playerHost.loadUrl(selectedVideoPath)
             playerHost.play()
         }
+//        println(selectedVideoPath)
+//        val byte = readFileAsByteArray(selectedVideoPath)
+//        println(byte)
+//        println("Byte array size: ${byte?.size ?: 0} bytes")
     }
+
+    LaunchedEffect(Unit){
+        viewModal.getTheShopVideo(shopId)
+    }
+
     MaterialTheme {
         BindEffect(controller)
         BindMediaPickerEffect(picker)
+
         Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = "Shop Video",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            lineHeight = 18.sp
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = {
+                            NavigationProvider.navController.popBackStack()
+                        }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color.Black
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.White, // Background color
+                        titleContentColor = Color.Black, // Title color
+                        navigationIconContentColor = Color.Black, // Back button color
+                        actionIconContentColor = Color.Unspecified
+                    ),
+                    modifier = Modifier.shadow(4.dp)
+                )
+            },
             snackbarHost = {
                 SnackbarHost(hostState = snackBar, snackbar = { data ->
                     Snackbar(content = { Text(text = data.visuals.message) })
@@ -126,139 +190,31 @@ fun UploadShopVideoScreen() {
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color.White)
+                    .padding(paddingValues)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                TopAppBar(
-                    title = {
-                        androidx.compose.material.Text(
-                            text = "Shop Video",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            lineHeight = 18.sp
-                        )
-                    },
-                    navigationIcon = {
-                        IconButton(
-                            onClick = {
-//                                viewModal.resetTicket()
-                                NavigationProvider.navController.popBackStack()
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Color.Black
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.White,  // Background color
-                        titleContentColor = Color.Black,  // Title color
-                        navigationIconContentColor = Color.Black,  // Back button color
-                        actionIconContentColor = Color.Unspecified
-                    ),
-                    modifier = Modifier.shadow(4.dp),
-                    expandedHeight = 50.dp
+                // ✅ Video Upload Guidelines
+                Text(
+                    text = "Note: Video size should be up to 1 min and less than 10MB.",
+                    color = Color.Red,
+                    modifier = Modifier.padding(8.dp),
+                    textAlign = TextAlign.Center
                 )
-                Box(modifier = Modifier.fillMaxSize()) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(paddingValues)
-                            .verticalScroll(rememberScrollState()),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
+
+                // ✅ Video Selection Box
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .background(Color.Gray),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (shopVideos?.videoUrl?.isEmpty() != false) {
                         Text(
-                            text = "Note: Video size should be up to 1 min and less than 10MB.",
-                            color = Color.Red,
-                            modifier = Modifier.padding(8.dp),
-                            textAlign = TextAlign.Center
-                        )
-
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp)
-                                .background(Color.Gray),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (selectedVideoPath.isEmpty()) {
-                                Text(
-                                    text = "Tap to select a video",
-                                    color = Color.White,
-                                    modifier = Modifier.clickable {
-                                        scope.launch {
-                                            requestPermissionForVideo(
-                                                controller = controller,
-                                                permission = Permission.GALLERY,
-                                                snackBar,
-                                                picker
-                                            ) { media ->
-                                                selectedVideoPath = media
-                                            }
-                                        }
-                                    })
-                            } else {
-                                VideoPlayerComposable(
-                                    modifier = Modifier.fillMaxSize(),
-                                    playerHost = playerHost,
-                                    playerConfig = VideoPlayerConfig(
-                                        isSeekBarVisible = false,
-                                        isDurationVisible = true,
-                                        isScreenLockEnabled = false,
-                                        isScreenResizeEnabled = false,
-                                        isFullScreenEnabled = true
-                                    )
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(10.sdp))
-                        // Thumbnail Image (Optional)
-
-                        if (thumbNailUrl.isEmpty()) {
-                            Surface(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(150.dp),
-                            ) {
-                                ProfileImageSelector(
-                                    imageState = thumbNailImage,
-                                    controller = controller,
-                                    picker = picker,
-                                    snackBar = snackBar,
-                                    contentScale = ContentScale.FillWidth
-                                )
-                            }
-                        } else {
-                            CoilImage(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(150.dp)
-                                    .background(color = Color.Gray),
-                                imageModel = { thumbNailUrl.trim() },
-                                imageOptions = ImageOptions(
-                                    contentScale = ContentScale.Crop,
-                                    alignment = Alignment.Center,
-                                    colorFilter = ColorFilter.colorMatrix(ColorMatrix().apply {
-                                        setToSaturation(1f)
-                                    })
-                                ),
-                                previewPlaceholder = painterResource(Res.drawable.compose_multiplatform)
-                            )
-                        }
-
-                        // Validation Status
-                        Text(
-                            text = "", // Add validation status logic here
-                            color = Color.Red,
-                            fontSize = 16.sp,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 16.dp)
-                                .align(Alignment.CenterHorizontally)
-                        )
-
-                        Button(
-                            onClick = {
+                            text = "Tap to select a video",
+                            color = Color.White,
+                            modifier = Modifier.clickable {
                                 scope.launch {
                                     requestPermissionForVideo(
                                         controller = controller,
@@ -269,35 +225,171 @@ fun UploadShopVideoScreen() {
                                         selectedVideoPath = media
                                     }
                                 }
-                            },
-                            modifier = Modifier.padding(top = 16.dp)
-                        ) {
-                            Text(text = "Select Another Video")
-                        }
+                            }
+                        )
+                    } else {
+                        VideoPlayerComposable(
+                            modifier = Modifier.fillMaxSize(),
+                            playerHost = playerHost,
+                            playerConfig = VideoPlayerConfig(
+                                isSeekBarVisible = false,
+                                isDurationVisible = true,
+                                isScreenLockEnabled = false,
+                                isScreenResizeEnabled = false,
+                                isFullScreenEnabled = true
+                            )
+                        )
+                    }
+                }
 
-                        Button(
-                            onClick = {
-                                if((thumbNailImage.value != null || thumbNailUrl.isNotEmpty()) && (selectedVideoPath.isNotEmpty() || videoUrl.isNotEmpty())){
-                                    scope.launch {
-                                        val result =
-                                            UploadShopVideoRepo().validateVideo(selectedVideoPath)
-                                        snackBar.showSnackbar(result.message)
-                                    }
-                                }else{
-                                    scope.launch {
-                                        snackBar.showSnackbar("Select video and image both")
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // ✅ Thumbnail Selector
+//                if (!shopVideos?.thumbNailUrl?.isEmpty() != false) {
+//                if (shopVideos?.thumbNailUrl?.isNotEmpty() == true) {
+//                    Surface(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .height(200.dp)
+//                            .border(border = BorderStroke(1.dp, color = Color.Black)),
+//                    ) {
+//                        ProfileImageSelector(
+//                            imageState = thumbNailImage,
+//                            controller = controller,
+//                            picker = picker,
+//                            snackBar = snackBar,
+//                            contentScale = ContentScale.FillWidth
+//                        )
+//                    }
+//                } else {
+//                    CoilImage(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .height(200.dp)
+//                            .background(color = Color.Gray)
+//                            .border(border = BorderStroke(1.dp, color = Color.Black))
+//                            .clickable {
+//
+//                            },
+//                        imageModel = { shopVideos!!.thumbNailUrl },
+//                        imageOptions = ImageOptions(
+//                            contentScale = ContentScale.FillBounds,
+//                            alignment = Alignment.Center,
+//                            colorFilter = ColorFilter.colorMatrix(ColorMatrix().apply {
+//                                setToSaturation(1f)
+//                            })
+//                        ),
+//                        previewPlaceholder = painterResource(Res.drawable.compose_multiplatform)
+//                    )
+//                }
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .border(BorderStroke(1.dp, Color.Black))
+                        .background(Color.Gray)
+                        .clickable(enabled = shopVideos?.thumbNailUrl.isNullOrEmpty()) {
+                            // Handle image selection
+                        }
+                ) {
+                    shopVideos?.thumbNailUrl?.takeIf { it.isEmpty() }?.let { imageUrl ->
+                        // If a thumbnail exists, display it using CoilImage
+                        CoilImage(
+                            modifier = Modifier.fillMaxSize(),
+                            imageModel = { imageUrl },
+                            imageOptions = ImageOptions(
+                                contentScale = ContentScale.FillBounds,
+                                alignment = Alignment.Center,
+                                colorFilter = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(1f) })
+                            ),
+                            previewPlaceholder = painterResource(Res.drawable.compose_multiplatform)
+                        )
+                    } ?: run {
+                        // If no thumbnail, show ProfileImageSelector
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
+                                .border(border = BorderStroke(1.dp, color = Color.Black)),
+                        ) {
+                            ProfileImageSelector(
+                                imageState = thumbNailImage,
+                                controller = controller,
+                                picker = picker,
+                                snackBar = snackBar,
+                                contentScale = ContentScale.FillWidth
+                            )
+                        }
+                    }
+                }
+
+
+                // ✅ Validation Status (if needed)
+                Text(
+                    text = "", // Add validation status logic here
+                    color = Color.Red,
+                    fontSize = 16.sp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp)
+                        .align(Alignment.CenterHorizontally)
+                )
+
+                if(isUploading){
+                    CircularProgressIndicator()
+                } else {
+                    // ✅ Buttons Section
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                requestPermissionForVideo(
+                                    controller = controller,
+                                    permission = Permission.GALLERY,
+                                    snackBar,
+                                    picker
+                                ) { media ->
+                                    selectedVideoPath = media
+                                }
+                            }
+                        },
+                        modifier = Modifier.padding(top = 10.dp)
+                    ) {
+                        Text(text = "Select Another Video")
+                    }
+
+                    Button(
+                        onClick = {
+                            if ((thumbNailImage.value != null || thumbNailUrl.isNotEmpty()) &&
+                                (selectedVideoPath.isNotEmpty() || videoUrl.isNotEmpty())
+                            ) {
+                                scope.launch {
+                                    val result = UploadShopVideoRepo().validateVideo(selectedVideoPath)
+                                    snackBar.showSnackbar(result.message)
+                                    if(result.isValid){
+                                        readFileAsByteArray(selectedVideoPath)?.let {
+                                            viewModal.uploadVideo(shopId,
+                                                it,
+                                                thumbNailImage.value
+                                            )
+                                        }
                                     }
                                 }
-                            },
-                            modifier = Modifier.padding(top = 16.dp)
-                        ) {
-                            Text(text = "Submit")
-                        }
+                            } else {
+                                scope.launch {
+                                    snackBar.showSnackbar("Select video and image both")
+                                }
+                            }
+                        },
+                        modifier = Modifier.padding(top = 10.dp)
+                    ) {
+                        Text(text = "Submit")
                     }
                 }
             }
         }
     }
+
 }
 
 suspend fun requestPermissionForVideo(

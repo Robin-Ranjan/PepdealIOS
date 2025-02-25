@@ -3,6 +3,9 @@ package com.pepdeal.infotech.product
 import androidx.compose.ui.graphics.ImageBitmap
 import com.pepdeal.infotech.FirebaseUploadResponse
 import com.pepdeal.infotech.util.FirebaseUtil
+import com.pepdeal.infotech.util.ImagesUtil.toByteArray
+import com.pepdeal.infotech.util.ImagesUtil.toNSData
+import com.pepdeal.infotech.util.ImagesUtil.toUIImage
 import com.pepdeal.infotech.util.Util
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -22,18 +25,8 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
-import kotlinx.cinterop.ExperimentalForeignApi
-import kotlinx.cinterop.readBytes
-import kotlinx.cinterop.refTo
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import platform.CoreGraphics.CGBitmapContextCreate
-import platform.CoreGraphics.CGBitmapContextCreateImage
-import platform.CoreGraphics.CGColorSpaceCreateDeviceRGB
-import platform.CoreGraphics.CGImageAlphaInfo
-import platform.Foundation.NSData
-import platform.UIKit.UIImage
-import platform.UIKit.UIImageJPEGRepresentation
 
 
 class AddNewProductRepo {
@@ -305,36 +298,5 @@ class AddNewProductRepo {
             println("Exception in createNewProductImageId: ${e.message}")
             e.printStackTrace()
         }
-    }
-
-    private fun UIImage.toNSData(): NSData? {
-        return UIImageJPEGRepresentation(this, 0.8)
-    }
-
-    @OptIn(ExperimentalForeignApi::class)
-    fun NSData.toByteArray(): ByteArray {
-        return (this.bytes?.readBytes(this.length.toInt())) ?: ByteArray(0)
-    }
-
-    @OptIn(ExperimentalForeignApi::class)
-    fun ImageBitmap.toUIImage(): UIImage? {
-        val width = this.width
-        val height = this.height
-        val buffer = IntArray(width * height)
-
-        this.readPixels(buffer)
-
-        val colorSpace = CGColorSpaceCreateDeviceRGB()
-        val context = CGBitmapContextCreate(
-            data = buffer.refTo(0),
-            width = width.toULong(),
-            height = height.toULong(),
-            bitsPerComponent = 8u,
-            bytesPerRow = (4 * width).toULong(),
-            space = colorSpace,
-            bitmapInfo = CGImageAlphaInfo.kCGImageAlphaPremultipliedLast.value
-        )
-        val cgImage = CGBitmapContextCreateImage(context)
-        return cgImage?.let { UIImage.imageWithCGImage(it) }
     }
 }

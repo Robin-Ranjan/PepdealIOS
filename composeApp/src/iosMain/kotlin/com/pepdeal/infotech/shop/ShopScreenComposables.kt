@@ -59,6 +59,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pepdeal.infotech.BannerCarouselWidget
 import com.pepdeal.infotech.Objects
 import com.pepdeal.infotech.shop.modal.ShopWithProducts
 import com.pepdeal.infotech.fonts.FontUtils.getFontResourceByName
@@ -87,24 +88,27 @@ import pepdealios.composeapp.generated.resources.pepdeal_logo
 @Composable
 fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
 
-    var showContent by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val shopListNew by viewModel.shops.collectAsStateWithLifecycle()
+    val bannerList by viewModel.bannerList.collectAsStateWithLifecycle()
     var searchQuery by remember { mutableStateOf("") }
     val columnState = rememberLazyListState()
     val keyboardController = LocalSoftwareKeyboardController.current
-//    var filteredShops by remember { mutableStateOf<List<ShopWithProducts>>(emptyList()) }
 
     var locationName by remember { mutableStateOf("") }
 
     val latestShopList = rememberUpdatedState(shopListNew)
     LaunchedEffect(Unit) {
         if (latestShopList.value.isEmpty()) {
-//            println("products:- loadMore")
             scope.launch {
                 viewModel.loadMoreShops()
             }
+        }
+    }
+    LaunchedEffect(Unit){
+        if(bannerList.isEmpty()){
+            viewModel.getTheBannerList()
         }
     }
 
@@ -115,7 +119,6 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
                 val totalItems = columnState.layoutInfo.totalItemsCount
                 if (totalItems > 0 && lastVisibleIndex >= totalItems - 3 && !isLoading && searchQuery.isEmpty()) {
                     scope.launch {
-//                        println("loadMoreShops")
                         viewModel.loadMoreShops()
                     }
                 }
@@ -188,6 +191,14 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
                         },
                     state = columnState
                 ) {
+                    if(bannerList.isNotEmpty()){
+                        item {
+                            BannerCarouselWidget(
+                                bannerList,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
                     items(displayedProductList,
                         key = { it.shop.shopId!! }
                     ) { shop ->

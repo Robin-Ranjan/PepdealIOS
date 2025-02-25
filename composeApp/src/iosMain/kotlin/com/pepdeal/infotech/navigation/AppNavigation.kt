@@ -44,7 +44,7 @@ fun AppNavigation() {
     NavigationProvider.navController = navController
 
 //    if (Platform.OS == OsFamily.IOS) {
-        enableBackGestureForNavigationController()
+    enableBackGestureForNavigationController()
 //    }
     NavHost(navController = navController, startDestination = SubGraph.MainPage) {
 
@@ -59,12 +59,6 @@ fun AppNavigation() {
                 },
                     onForgotPasswordClick = {
 
-                    }, onRegisterClick = {
-//                        navController.navigate(Routes.RegistrationPage) {
-//                            popUpTo<Routes.LoginPage> {
-//                                inclusive = true
-//                            }
-//                        }
                     })
             }
 
@@ -102,13 +96,13 @@ fun AppNavigation() {
             composable<Routes.ShopDetails> { backStackEntry ->
                 val shopId = backStackEntry.toRoute<Routes.ShopDetails>().shopId
                 val userId = backStackEntry.toRoute<Routes.ShopDetails>().userId
-                ShopDetailsWithProductPage(shopId,userId)
+                ShopDetailsWithProductPage(shopId, userId)
             }
 
             composable<Routes.EditShopDetails> {
                 val shopId = it.toRoute<Routes.EditShopDetails>().shopId
                 val userId = it.toRoute<Routes.EditShopDetails>().userId
-                EditShopDetailsScreen(shopId,userId)
+                EditShopDetailsScreen(shopId, userId)
             }
 
             composable<Routes.PersonalInfoPage> {
@@ -127,7 +121,8 @@ fun AppNavigation() {
             }
 
             composable<Routes.UploadShopVideoPage> {
-                UploadShopVideoScreen()
+                val shopId = it.toRoute<Routes.UploadShopVideoPage>().shopId
+                UploadShopVideoScreen(shopId)
             }
 
             composable<Routes.UpdateProductPage> {

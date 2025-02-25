@@ -51,9 +51,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
-import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.emptyPreferences
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.attafitamim.krop.core.crop.CropError
 import com.attafitamim.krop.core.crop.CropResult
@@ -101,7 +99,6 @@ import pepdealios.composeapp.generated.resources.tickets
 @Composable
 fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenViewModal) {
     val datastore = DataStore.dataStore
-    val preferences by datastore.data.collectAsState(initial = emptyPreferences())
 
     val currentUserId by datastore.data.map { it[PreferencesKeys.USERID_KEY] ?: "-1" }
         .collectAsState(initial = "-1")
@@ -111,7 +108,7 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
 
     val userName by datastore.data.map { it[PreferencesKeys.USER_NAME] ?: "-1" }
         .collectAsState(initial = "-1")
-    val userPhone by datastore.data.map { it[PreferencesKeys.MOBILE_NO] ?:"-1" }
+    val userPhone by datastore.data.map { it[PreferencesKeys.MOBILE_NO] ?: "-1" }
         .collectAsState(initial = "-1")
 
     val scope = rememberCoroutineScope()
@@ -207,7 +204,7 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
 
                             Spacer(modifier = Modifier.height(8.dp))
 
-                            if(userName!= "-1" && userPhone != "-1"){
+                            if (userName != "-1" && userPhone != "-1") {
                                 Text(
                                     text = userName.toNameFormat(),
                                     fontSize = 15.sp,
@@ -253,11 +250,17 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                         text = "Tickets",
                         icon = Res.drawable.tickets,
                         onClick = {
-                            NavigationProvider.navController.navigate(
-                                Routes.CustomerTicketPage(
-                                    currentUserId
+                            if (currentUserId != "-1") {
+                                NavigationProvider.navController.navigate(
+                                    Routes.CustomerTicketPage(
+                                        currentUserId
+                                    )
                                 )
-                            )
+                            } else {
+                                scope.launch {
+                                    snackBar.showSnackbar("Login Please")
+                                }
+                            }
                         })
                     ProfileMenuItem(
                         text = "Saved Shop Video",
@@ -335,7 +338,7 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                     ProfileMenuItem(
                         text = "Shop Video",
                         icon = Res.drawable.baseline_video,
-                        onClick = { NavigationProvider.navController.navigate(Routes.UploadShopVideoPage) })
+                        onClick = { NavigationProvider.navController.navigate(Routes.UploadShopVideoPage(Objects.SHOP_ID)) })
 
                     Text(
                         text = "Support & FAQ",

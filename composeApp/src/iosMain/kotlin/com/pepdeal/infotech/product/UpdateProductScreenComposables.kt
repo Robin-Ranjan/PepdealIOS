@@ -132,6 +132,8 @@ fun UpdateProductScreen(
     val imageBitmap2 = remember { mutableStateOf<ImageBitmap?>(null) }
     val imageBitmap3 = remember { mutableStateOf<ImageBitmap?>(null) }
 
+    val imageFileList = listOf(imageBitmap1.value, imageBitmap2.value, imageBitmap3.value)
+
     val snackBar = remember { SnackbarHostState() }
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -590,8 +592,8 @@ fun UpdateProductScreen(
                                                                 createdAt = Util.getCurrentTimeStamp(),
                                                                 updatedAt = Util.getCurrentTimeStamp()
                                                             ),
-                                                            isImageUpdated,
-                                                            newUriList = mutableListOf()
+                                                            isImageEdited = isImageUpdated,
+                                                            newUriList = imageFileList.filterNotNull().toMutableList()
                                                         )
                                                     }
                                                 }

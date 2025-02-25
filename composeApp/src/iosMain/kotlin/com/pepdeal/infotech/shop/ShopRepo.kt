@@ -1,6 +1,7 @@
 package com.pepdeal.infotech.shop
 
 
+import com.pepdeal.infotech.banner.BannerMaster
 import com.pepdeal.infotech.product.ProductImageMaster
 import com.pepdeal.infotech.product.ProductMaster
 import com.pepdeal.infotech.product.ProductWithImages
@@ -9,6 +10,7 @@ import com.pepdeal.infotech.shop.modal.ShopWithProducts
 import com.pepdeal.infotech.util.FirebaseUtil
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.darwin.Darwin
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
@@ -301,6 +303,35 @@ class ShopRepo {
         } finally {
             client.close()
         }
+    }
+
+    // Fetch images for a specific product
+     suspend fun getActiveBannerImages(): List<BannerMaster> = coroutineScope {
+        val client = HttpClient(Darwin){
+            install(ContentNegotiation){
+                json
+            }
+        }
+        val imageList = mutableListOf<BannerMaster>()
+
+        try {
+            val response: HttpResponse = client.get("${FirebaseUtil.BASE_URL}banner_master.json?orderBy=\"isActive\"&equalTo=\"0\"") {
+                contentType(ContentType.Application.Json)
+            }
+
+            if (response.status == HttpStatusCode.OK) {
+                val responseBody: String = response.bodyAsText()
+
+                val imagesMap: Map<String, BannerMaster> = json.decodeFromString(responseBody)
+
+                imageList.addAll(imagesMap.values)
+            }
+        } catch (e: Exception) {
+            println("Error fetching banner images: ${e.message}")
+        } finally {
+            client.close()
+        }
+        return@coroutineScope imageList
     }
 
 

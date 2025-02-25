@@ -70,8 +70,7 @@ import utils.kottieReadBytes
 fun LoginScreen(
     viewModel: LoginViewModal = ViewModals.loginViewModal,
     onLoginClick: () -> Unit,
-    onForgotPasswordClick: () -> Unit,
-    onRegisterClick: () -> Unit
+    onForgotPasswordClick: () -> Unit
 ) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }

@@ -39,6 +39,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
@@ -58,6 +59,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pepdeal.infotech.DataStore
+import com.pepdeal.infotech.PreferencesKeys
 import com.pepdeal.infotech.fonts.FontUtils.getFontResourceByName
 import com.pepdeal.infotech.product.ProductWithImages
 import com.pepdeal.infotech.util.NavigationProvider
@@ -67,6 +70,7 @@ import com.pepdeal.infotech.util.Util.toDiscountFormat
 import com.pepdeal.infotech.util.Util.toTwoDecimalPlaces
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil3.CoilImage
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
@@ -86,6 +90,9 @@ fun ShopDetailsWithProductPage(
     userId: String,
     viewModal: ShopDetailsViewModal = ViewModals.shopDetailsViewModal
 ) {
+    val datastore = DataStore.dataStore
+    val currentUserId by datastore.data.map { it[PreferencesKeys.USERID_KEY] ?: "-1" }
+        .collectAsState(initial = "-1")
 
     val shopDetails by viewModal.shopDetails.collectAsStateWithLifecycle()
     val shopLoading by viewModal.shopLoading.collectAsStateWithLifecycle()
@@ -283,11 +290,13 @@ fun ShopDetailsWithProductPage(
 
                                 // Check favorite status when the product is displayed
                                 LaunchedEffect(product.product.productId) {
-                                    viewModal.checkFavoriteExists(
-                                        "-OIyeU1oyShOcB8r4-_8",
-                                        product.product.productId
-                                    ) { exists ->
-                                        favoriteStates[product.product.productId] = exists
+                                    if(currentUserId!="-1"){
+                                        viewModal.checkFavoriteExists(
+                                            userId = currentUserId,
+                                            product.product.productId
+                                        ) { exists ->
+                                            favoriteStates[product.product.productId] = exists
+                                        }
                                     }
                                 }
 
@@ -308,11 +317,13 @@ fun ShopDetailsWithProductPage(
 
                                             // Call ViewModel to handle like/unlike logic
                                             scope.launch {
-                                                viewModal.toggleFavoriteStatus(
-                                                    userId = "-OIyeU1oyShOcB8r4-_8",
-                                                    product.product.productId,
-                                                    newFavoriteState
-                                                )
+                                                if(currentUserId!="-1"){
+                                                    viewModal.toggleFavoriteStatus(
+                                                        userId = currentUserId,
+                                                        product.product.productId,
+                                                        newFavoriteState
+                                                    )
+                                                }
                                             }
                                         })
                                 }

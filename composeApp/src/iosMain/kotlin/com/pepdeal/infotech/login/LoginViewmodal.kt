@@ -5,9 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pepdeal.infotech.DataStore
 import com.pepdeal.infotech.PreferencesKeys
-import com.pepdeal.infotech.PrefsDataStore
-import com.pepdeal.infotech.product.ShopItems
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,9 +14,6 @@ class LoginViewModal() :ViewModel(){
     private val datastore = DataStore.dataStore
 
     private val loginRepo = LoginRepo()
-//    private val _products =
-//        MutableStateFlow<List<ShopItems>>(emptyList()) // StateFlow to hold product data
-//    val products: StateFlow<List<ShopItems>> get() = _products.asStateFlow()
 
     private val _loginStatus = MutableStateFlow(false)
     val loginStatus: StateFlow<Boolean> get() = _loginStatus.asStateFlow()

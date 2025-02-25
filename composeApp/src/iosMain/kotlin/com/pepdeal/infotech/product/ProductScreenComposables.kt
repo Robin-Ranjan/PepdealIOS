@@ -40,6 +40,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -66,7 +67,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pepdeal.infotech.DataStore
 import com.pepdeal.infotech.Objects
+import com.pepdeal.infotech.PreferencesKeys
 import com.pepdeal.infotech.util.Util.toDiscountFormat
 import com.pepdeal.infotech.util.Util.toTwoDecimalPlaces
 import com.pepdeal.infotech.util.ViewModals
@@ -74,6 +77,7 @@ import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil3.CoilImage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.Font
@@ -90,7 +94,9 @@ import pepdealios.composeapp.generated.resources.red_heart
 @Composable
 fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
 
-//    var showContent by remember { mutableStateOf(false) }
+    val dataStore = DataStore.dataStore
+    val currentUserId by dataStore.data.map { it[PreferencesKeys.USERID_KEY] ?: "-1" }
+        .collectAsState(initial = "-1")
     val listState = rememberLazyGridState()
     val coroutineScope = rememberCoroutineScope()
     val productNewList by viewModel.products.collectAsStateWithLifecycle()
@@ -129,7 +135,6 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
             }
         }
     }
-
 
 
     // Observe scroll position to load more when reaching near the bottom
@@ -188,15 +193,17 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
                         // Determine the heart icon state
                         val isFavorite = favoriteStates[product.productId] ?: false
                         val heartIcon =
-                            if (isFavorite) Res.drawable.red_heart else Res.drawable.black_heart
+                            if (isFavorite && currentUserId!=="-1") Res.drawable.red_heart else Res.drawable.black_heart
 
                         // Check favorite status when the product is displayed
                         LaunchedEffect(product.productId) {
-                            viewModel.checkFavoriteExists(
-                                Objects.USER_ID,
-                                product.productId
-                            ) { exists ->
-                                favoriteStates[product.productId] = exists
+                            if (currentUserId != "-1") {
+                                viewModel.checkFavoriteExists(
+                                    currentUserId,
+                                    product.productId
+                                ) { exists ->
+                                    favoriteStates[product.productId] = exists
+                                }
                             }
                         }
 
@@ -208,30 +215,27 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
                             exit = fadeOut(tween(durationMillis = 300)) + slideOutVertically(
                                 targetOffsetY = { it })
                         ) {
-
                             ProductCard(
-                                product,
+                                shopItems = product,
                                 heartRes = painterResource(heartIcon),
                                 onLikeClicked = {
-                                    val newFavoriteState = !isFavorite
-                                    favoriteStates[product.productId] = newFavoriteState
-
-                                    // Call ViewModel to handle like/unlike logic
-                                    coroutineScope.launch {
-                                        viewModel.toggleFavoriteStatus(
-                                            userId = Objects.USER_ID,
-                                            product.productId,
-                                            newFavoriteState
-                                        )
+                                    if (currentUserId != "-1") {
+                                        val newFavoriteState = !isFavorite
+                                        favoriteStates[product.productId] = newFavoriteState
+                                        // Call ViewModel to handle like/unlike logic
+                                        coroutineScope.launch {
+                                            viewModel.toggleFavoriteStatus(
+                                                userId = currentUserId,
+                                                product.productId,
+                                                newFavoriteState
+                                            )
+                                        }
                                     }
                                 })
                         }
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.height(5.dp))
-
         }
     }
 }

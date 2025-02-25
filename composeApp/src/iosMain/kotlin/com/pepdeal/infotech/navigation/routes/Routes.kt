@@ -54,7 +54,7 @@ sealed class Routes {
     data class FavoriteShopVideosPage(val userId: String) : Routes()
 
     @Serializable
-    object UploadShopVideoPage:Routes()
+    data class UploadShopVideoPage(val shopId: String):Routes()
 
     @Serializable
     data class ListAllProductPage(val shopId:String) :Routes()

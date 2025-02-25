@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.pepdeal.infotech.user.PersonalInfoRepo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class ProfileScreenViewModal():ViewModel() {
