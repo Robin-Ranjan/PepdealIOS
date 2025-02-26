@@ -9,6 +9,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -70,6 +71,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pepdeal.infotech.DataStore
 import com.pepdeal.infotech.Objects
 import com.pepdeal.infotech.PreferencesKeys
+import com.pepdeal.infotech.navigation.routes.Routes
+import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util.toDiscountFormat
 import com.pepdeal.infotech.util.Util.toTwoDecimalPlaces
 import com.pepdeal.infotech.util.ViewModals
@@ -231,6 +234,9 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
                                             )
                                         }
                                     }
+                                },
+                                onProductClicked = {
+                                    NavigationProvider.navController.navigate(Routes.ProductDetailsPage(it))
                                 })
                         }
                     }
@@ -244,12 +250,14 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
 fun ProductCard(
     shopItems: ShopItems,
     heartRes: Painter,
-    onLikeClicked: () -> Unit
+    onLikeClicked: () -> Unit,
+    onProductClicked:(String) -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 5.dp, vertical = 5.dp),
+            .padding(horizontal = 5.dp, vertical = 5.dp)
+            .clickable { onProductClicked(shopItems.productId) },
         colors = CardDefaults.cardColors(containerColor = Color.White),
         shape = RoundedCornerShape(3.dp),
         elevation = CardDefaults.elevatedCardElevation(0.dp),

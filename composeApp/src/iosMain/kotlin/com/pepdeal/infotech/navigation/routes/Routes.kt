@@ -30,7 +30,7 @@ sealed class Routes {
     data class UpdateProductPage(val productId:String) : Routes()
 
     @Serializable
-    object FavouritesPage : Routes()
+    data class FavouritesPage(val userId: String) : Routes()
 
     @Serializable
     data class CustomerTicketPage(val userId: String) : Routes()
@@ -58,6 +58,12 @@ sealed class Routes {
 
     @Serializable
     data class ListAllProductPage(val shopId:String) :Routes()
+
+    @Serializable
+    data class CategoryWiseProductPage(val subCategoryName:String) :Routes()
+
+    @Serializable
+    data class ProductDetailsPage(val productId: String) :Routes()
 
     companion object {
         const val ColorBottomSheet = "color_bottom_sheet"

@@ -111,9 +111,14 @@ class FavouritesRepo {
         }
     }
 
-    fun getFavoriteProductsForUserFlow(userId: String): Flow<FavProductWithImages> = flow {
+    fun getFavoriteProductsForUserFlow(userId: String): Flow<FavProductWithImages?> = flow {
         val favoriteProducts = fetchFavoriteProducts(userId)
             .sortedByDescending { it.createdAt.toLongOrNull() ?: 0L }
+
+
+        if(favoriteProducts.isEmpty()){
+            emit(null)
+        }
 
         for (favorite in favoriteProducts) {
             val product = fetchProductDetails(favorite.productId) ?: continue

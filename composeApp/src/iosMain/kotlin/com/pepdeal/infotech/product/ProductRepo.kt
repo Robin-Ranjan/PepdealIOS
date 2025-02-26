@@ -63,22 +63,6 @@ class ProductRepo {
         }
     }
 
-//    fun getAllProductsFlow(client: HttpClient): Flow<ShopItems> = callbackFlow {
-//        try {
-//            val products = fetchActiveProducts(client)
-//            for (product in products) {
-//                if (product.flag == "0" && fetchShopDetails(client, product.shopId)) {
-//                    product.image = fetchProductImage(client, product.productId) ?: ""
-//                    trySend(product)
-//                }
-//            }
-//        } catch (e: Exception) {
-//            e.printStackTrace()
-//        } finally {
-//            client.close()
-//        }
-//        awaitClose{}
-//    }
 
     fun getAllProductsFlow(): Flow<ShopItems> = callbackFlow {
         val client = HttpClient(Darwin)

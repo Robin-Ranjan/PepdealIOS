@@ -125,9 +125,9 @@ fun UploadShopVideoScreen(shopId:String,viewModal: UploadShopVideoViewModal = Vi
                 videoUrl = video.videoUrl
             }
             thumbNailUrl = video.thumbNailUrl
-            println(thumbNailUrl)
         }
     }
+
     // ✅ Load Selected Video when `selectedVideoPath` is updated
     LaunchedEffect(selectedVideoPath) {
         if (selectedVideoPath.isNotEmpty()) {
@@ -135,10 +135,6 @@ fun UploadShopVideoScreen(shopId:String,viewModal: UploadShopVideoViewModal = Vi
             playerHost.loadUrl(selectedVideoPath)
             playerHost.play()
         }
-//        println(selectedVideoPath)
-//        val byte = readFileAsByteArray(selectedVideoPath)
-//        println(byte)
-//        println("Byte array size: ${byte?.size ?: 0} bytes")
     }
 
     LaunchedEffect(Unit){
@@ -293,7 +289,7 @@ fun UploadShopVideoScreen(shopId:String,viewModal: UploadShopVideoViewModal = Vi
                             // Handle image selection
                         }
                 ) {
-                    shopVideos?.thumbNailUrl?.takeIf { it.isEmpty() }?.let { imageUrl ->
+                    shopVideos?.thumbNailUrl?.takeIf { it.isNotEmpty() }?.let { imageUrl ->
                         // If a thumbnail exists, display it using CoilImage
                         CoilImage(
                             modifier = Modifier.fillMaxSize(),

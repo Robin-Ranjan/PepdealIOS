@@ -2,8 +2,6 @@ package com.pepdeal.infotech.shopVideo
 
 import androidx.compose.ui.graphics.ImageBitmap
 import com.pepdeal.infotech.FirebaseUploadResponse
-import com.pepdeal.infotech.product.ProductImageMaster
-import com.pepdeal.infotech.tickets.TicketMaster
 import com.pepdeal.infotech.util.FirebaseUtil
 import com.pepdeal.infotech.util.ImagesUtil.toByteArray
 import com.pepdeal.infotech.util.ImagesUtil.toNSData
@@ -29,7 +27,14 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
-import kotlinx.cinterop.*
+import kotlinx.cinterop.BetaInteropApi
+import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.ObjCObjectVar
+import kotlinx.cinterop.alloc
+import kotlinx.cinterop.free
+import kotlinx.cinterop.nativeHeap
+import kotlinx.cinterop.ptr
+import kotlinx.cinterop.value
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
@@ -38,10 +43,12 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import platform.AVFoundation.*
+import platform.AVFoundation.AVURLAsset
 import platform.CoreMedia.CMTimeGetSeconds
-import platform.Foundation.*
-import platform.MetricKit.MXHistogramBucket
+import platform.Foundation.NSError
+import platform.Foundation.NSFileManager
+import platform.Foundation.NSFileSize
+import platform.Foundation.NSURL
 import kotlin.math.roundToInt
 
 class UploadShopVideoRepo {
@@ -508,17 +515,18 @@ class UploadShopVideoRepo {
             val uploadResponse =
                 json.decodeFromString(FirebaseUploadResponse.serializer(), responseJson)
             val token = uploadResponse.downloadTokens
+            val name = uploadResponse.name.substringAfterLast("/")
             if (token.isNullOrEmpty()) {
                 println("No download token available in the response")
                 return null
             }
             // Construct the URL using the fixed format and URL-encoded file path
-            return "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/shop_videos_thumbNail_master%2F$shopId%2F$imageName.jpg?alt=media&token=$token"
+            println("https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/shop_videos_thumbNail_master%2F$shopId%2F$name?alt=media&token=$token")
+            return "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/shop_videos_thumbNail_master%2F$shopId%2F$name?alt=media&token=$token"
         } catch (e: Exception) {
             println("Error parsing upload response: ${e.message}")
             e.printStackTrace()
             return null
         }
     }
-
 }

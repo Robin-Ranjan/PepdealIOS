@@ -1,4 +1,4 @@
-package com.pepdeal.infotech.product
+package com.pepdeal.infotech.product.addProduct
 
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.ViewModel
@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.pepdeal.infotech.categories.ProductCategories
 import com.pepdeal.infotech.categories.SubCategory
 import com.pepdeal.infotech.color.ColorItem
+import com.pepdeal.infotech.product.ProductMaster
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch

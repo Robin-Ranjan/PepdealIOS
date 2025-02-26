@@ -39,7 +39,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.pepdeal.infotech.product.AddNewProductViewModal
+import com.pepdeal.infotech.product.addProduct.AddNewProductViewModal
 import com.pepdeal.infotech.util.CategoriesUtil
 import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util.toNameFormat

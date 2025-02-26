@@ -1,7 +1,9 @@
-package com.pepdeal.infotech.product
+package com.pepdeal.infotech.product.updateProduct
 
 import androidx.compose.ui.graphics.ImageBitmap
 import com.pepdeal.infotech.FirebaseUploadResponse
+import com.pepdeal.infotech.product.ProductImageMaster
+import com.pepdeal.infotech.product.ProductMaster
 import com.pepdeal.infotech.util.FirebaseUtil
 import com.pepdeal.infotech.util.ImagesUtil.toByteArray
 import com.pepdeal.infotech.util.ImagesUtil.toNSData

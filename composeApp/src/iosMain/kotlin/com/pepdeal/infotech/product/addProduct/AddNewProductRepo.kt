@@ -1,7 +1,9 @@
-package com.pepdeal.infotech.product
+package com.pepdeal.infotech.product.addProduct
 
 import androidx.compose.ui.graphics.ImageBitmap
 import com.pepdeal.infotech.FirebaseUploadResponse
+import com.pepdeal.infotech.product.ProductImageMaster
+import com.pepdeal.infotech.product.ProductMaster
 import com.pepdeal.infotech.util.FirebaseUtil
 import com.pepdeal.infotech.util.ImagesUtil.toByteArray
 import com.pepdeal.infotech.util.ImagesUtil.toNSData
@@ -137,7 +139,7 @@ class AddNewProductRepo {
         images: List<ImageBitmap>
     ): Pair<Boolean, String> {
         val bucket = "pepdeal-1251f.appspot.com"
-        val baseFileName = "product/${productId}/image"
+        val baseFileName = "product_images/${productId}/image"
 
         // Map each image to a Pair<Boolean, String> outcome.
         val results = images.mapIndexed { index, imageBitmap ->
@@ -249,7 +251,7 @@ class AddNewProductRepo {
                 return null
             }
             // Construct the URL using the fixed format and URL-encoded file path
-            return "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/product%2F$productId%2F$imageName.jpg?alt=media&token=$token"
+            return "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/product_images%2F$productId%2F$imageName.jpg?alt=media&token=$token"
         } catch (e: Exception) {
             println("Error parsing upload response: ${e.message}")
             e.printStackTrace()

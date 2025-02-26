@@ -1,10 +1,10 @@
-package com.pepdeal.infotech.product
+package com.pepdeal.infotech.product.updateProduct
 
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.pepdeal.infotech.shop.modal.ShopMaster
-import kotlinx.coroutines.flow.MutableSharedFlow
+import com.pepdeal.infotech.product.ProductImageMaster
+import com.pepdeal.infotech.product.ProductMaster
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

@@ -40,7 +40,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pepdeal.infotech.product.AddNewProductViewModal
+import com.pepdeal.infotech.product.addProduct.AddNewProductViewModal
 import com.pepdeal.infotech.shop.OpenYourShopViewModal
 import com.pepdeal.infotech.util.ColorUtil
 import com.pepdeal.infotech.util.NavigationProvider

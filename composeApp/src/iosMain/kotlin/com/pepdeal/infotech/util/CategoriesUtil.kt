@@ -100,9 +100,9 @@ object CategoriesUtil {
         SubCategory(29, 4, "Yoga & Pilates", "https://images.unsplash.com/photo-1606238882904-0e0d43b75c0d"),
 
         // Books
-        SubCategory(30, 5, "Fiction Books", "https://images.unsplash.com/photo-1512820790803-83ca734da794"),
-        SubCategory(32, 5, "Non-fiction Books", "https://images.unsplash.com/photo-1516979187457-637abb4f9353"),
-        SubCategory(33, 5, "Academics Books", "https://images.unsplash.com/photo-1606813905267-31c2d9cfc9f2"),
+        SubCategory(30, 5, "Fiction Books", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2Fbooks%2F2.jpeg?alt=media&token=3037177e-31d5-4e41-99bd-ef45fdc7bead"),
+        SubCategory(32, 5, "Non-fiction Books", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2Fbooks%2F2%20(1).jpeg?alt=media&token=d0f9cc4f-2592-45a1-add5-4585310745f6"),
+        SubCategory(33, 5, "Academics Books", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2Fbooks%2Facademic_books?alt=media&token=a45f9c80-562b-48eb-be6d-df744e7b751e"),
         SubCategory(34, 5, "Magazines & Comics", "https://images.unsplash.com/photo-1561234468-2d3605e0b41a"),
         SubCategory(35, 5, "Hobby & Special Interest", "https://images.unsplash.com/photo-1511974035430-5de47d3b95da"),
         SubCategory(36, 5, "Note Books", "https://images.unsplash.com/photo-1553798395-2ea636b7f374"),

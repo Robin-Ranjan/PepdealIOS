@@ -2,12 +2,14 @@ package com.pepdeal.infotech.util
 
 import com.pepdeal.infotech.ProfileScreenViewModal
 import com.pepdeal.infotech.categories.CategoriesViewModel
+import com.pepdeal.infotech.categoriesProduct.CategoryWiseProductViewModal
 import com.pepdeal.infotech.favourite.FavoriteProductViewModal
 import com.pepdeal.infotech.login.LoginViewModal
-import com.pepdeal.infotech.product.AddNewProductViewModal
+import com.pepdeal.infotech.product.addProduct.AddNewProductViewModal
 import com.pepdeal.infotech.product.ListAllProductViewModal
 import com.pepdeal.infotech.product.ProductViewModal
-import com.pepdeal.infotech.product.UpdateProductViewModal
+import com.pepdeal.infotech.product.producrDetails.ProductDetailsViewModal
+import com.pepdeal.infotech.product.updateProduct.UpdateProductViewModal
 import com.pepdeal.infotech.shop.OpenYourShopViewModal
 import com.pepdeal.infotech.shop.editShop.EditShopDetailsViewModal
 import com.pepdeal.infotech.shop.shopDetails.ShopDetailsViewModal
@@ -40,4 +42,6 @@ object ViewModals {
     val updateProductViewModal by lazy { UpdateProductViewModal() }
     val listAllProductViewModal by lazy { ListAllProductViewModal() }
     val uploadShopVideoViewModal by lazy { UploadShopVideoViewModal() }
+    val categoryWiseProductViewModal by lazy { CategoryWiseProductViewModal() }
+    val productDetailsViewModal by lazy { ProductDetailsViewModal() }
 }

@@ -46,7 +46,7 @@ fun MainBottomNavigationWithPager() {
     var selectedItem by remember { mutableStateOf(0) }
 
     // HorizontalPager for "ViewPager2" equivalent
-    val pagerState = rememberPagerState(initialPage = 4, pageCount = { 5 })
+    val pagerState = rememberPagerState(initialPage = 3, pageCount = { 5 })
 
     // Sync selectedItem with pagerState
     LaunchedEffect(pagerState.currentPage) {

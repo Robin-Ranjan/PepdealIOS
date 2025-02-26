@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.onClick
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -54,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pepdeal.infotech.Objects
+import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.product.FavProductWithImages
 import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util
@@ -76,11 +79,13 @@ import utils.KottieConstants
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalResourceApi::class)
 @Composable
-fun FavoriteProductScreen(viewModal: FavoriteProductViewModal = ViewModals.favoriteProductViewModal) {
-
-    val favProductList by viewModal.favoriteProduct.collectAsStateWithLifecycle(initialValue = emptyList())
-
-    val isLoading by viewModal.isLoading.collectAsStateWithLifecycle()
+fun FavoriteProductScreen(
+    userId: String,
+    viewModal: FavoriteProductViewModal = ViewModals.favoriteProductViewModal
+) {
+    val favProductList by viewModal.favoriteProduct.collectAsStateWithLifecycle()
+    val isLoading by viewModal.isLoading.collectAsStateWithLifecycle(initialValue = false)
+    val isEmpty by viewModal.isEmpty.collectAsStateWithLifecycle(initialValue = false)
     val columnState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     var animation by remember { mutableStateOf("") }
@@ -104,7 +109,9 @@ fun FavoriteProductScreen(viewModal: FavoriteProductViewModal = ViewModals.favor
     )
 
     LaunchedEffect(Unit) {
-        viewModal.getAllFavoriteProduct(Objects.USER_ID)
+        if(favProductList.isEmpty()){
+            viewModal.getAllFavoriteProduct(userId)
+        }
     }
 
     MaterialTheme {
@@ -153,7 +160,7 @@ fun FavoriteProductScreen(viewModal: FavoriteProductViewModal = ViewModals.favor
                         CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                     }
 
-                    favProductList.isEmpty() -> {
+                    isEmpty -> {
                         // Lottie Animation for Empty State
                         KottieAnimation(
                             modifier = Modifier
@@ -173,7 +180,9 @@ fun FavoriteProductScreen(viewModal: FavoriteProductViewModal = ViewModals.favor
                             horizontalAlignment = Alignment.CenterHorizontally,
                             state = columnState
                         ) {
-                            items(items = favProductList, key = { it.product.productId }) { favProduct ->
+                            items(
+                                items = favProductList,
+                                key = { it.product.productId }) { favProduct ->
                                 var isVisible by remember { mutableStateOf(true) }
                                 AnimatedContent(
                                     targetState = isVisible,
@@ -183,15 +192,22 @@ fun FavoriteProductScreen(viewModal: FavoriteProductViewModal = ViewModals.favor
                                     }
                                 ) { visible ->
                                     if (visible) {
-                                        FavoriteProductCard(product = favProduct) { productId ->
-                                            scope.launch {
-                                                isVisible = false
-                                                viewModal.removeFavItem(
-                                                    Objects.USER_ID,
-                                                    productId
+                                        FavoriteProductCard(product = favProduct,
+                                            onDeleteClick = { productId ->
+                                                scope.launch {
+                                                    isVisible = false
+                                                    viewModal.removeFavItem(
+                                                        userId,
+                                                        productId
+                                                    )
+                                                }
+                                            }, onFavClick = { productId ->
+                                                NavigationProvider.navController.navigate(
+                                                    Routes.ProductDetailsPage(
+                                                        productId
+                                                    )
                                                 )
-                                            }
-                                        }
+                                            })
                                     }
                                 }
                             }
@@ -206,7 +222,8 @@ fun FavoriteProductScreen(viewModal: FavoriteProductViewModal = ViewModals.favor
 @Composable
 fun FavoriteProductCard(
     product: FavProductWithImages,
-    onDeleteClick: (String) -> Unit
+    onDeleteClick: (String) -> Unit,
+    onFavClick: (String) -> Unit
 ) {
     val productDetails = product.product
     val productImage = product.images[0].productImages
@@ -214,7 +231,8 @@ fun FavoriteProductCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(4.dp),
+            .padding(4.dp)
+            .clickable { onFavClick(productDetails.productId) },
         colors = CardDefaults.cardColors(containerColor = Color.White),
         shape = RoundedCornerShape(5.dp),
         elevation = CardDefaults.cardElevation(4.dp)

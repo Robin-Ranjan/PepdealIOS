@@ -65,7 +65,7 @@ import com.pepdeal.infotech.Objects
 import com.pepdeal.infotech.PreferencesKeys
 import com.pepdeal.infotech.ProfileScreenViewModal
 import com.pepdeal.infotech.navigation.routes.Routes
-import com.pepdeal.infotech.product.requestPermission
+import com.pepdeal.infotech.product.addProduct.requestPermission
 import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util.toNameFormat
 import com.pepdeal.infotech.util.ViewModals
@@ -235,7 +235,15 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                     ProfileMenuItem(
                         text = "Favorites",
                         icon = Res.drawable.black_heart,
-                        onClick = { NavigationProvider.navController.navigate(Routes.FavouritesPage) })
+                        onClick = {
+                            if (currentUserId != "-1") {
+                                NavigationProvider.navController.navigate(Routes.FavouritesPage(currentUserId))
+                            } else {
+                                scope.launch {
+                                    snackBar.showSnackbar("Please Login")
+                                }
+                            }
+                        })
                     ProfileMenuItem(
                         text = "Super Shop",
                         icon = Res.drawable.super_shop_logo,
@@ -338,7 +346,13 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                     ProfileMenuItem(
                         text = "Shop Video",
                         icon = Res.drawable.baseline_video,
-                        onClick = { NavigationProvider.navController.navigate(Routes.UploadShopVideoPage(Objects.SHOP_ID)) })
+                        onClick = {
+                            NavigationProvider.navController.navigate(
+                                Routes.UploadShopVideoPage(
+                                    Objects.SHOP_ID
+                                )
+                            )
+                        })
 
                     Text(
                         text = "Support & FAQ",

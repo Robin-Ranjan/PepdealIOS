@@ -11,6 +11,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.pepdeal.infotech.categories.CategoriesBottomSheet
 import com.pepdeal.infotech.categories.SubCategoriesProductBottomSheet
+import com.pepdeal.infotech.categoriesProduct.CategoryWiseProductScreen
 import com.pepdeal.infotech.color.ColorBottomSheet
 import com.pepdeal.infotech.color.MultipleColorBottomSheet
 import com.pepdeal.infotech.favourite.FavoriteProductScreen
@@ -18,9 +19,10 @@ import com.pepdeal.infotech.fonts.FontBottomSheet
 import com.pepdeal.infotech.login.LoginScreen
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.navigation.routes.SubGraph
-import com.pepdeal.infotech.product.AddNewProductScreen
+import com.pepdeal.infotech.product.addProduct.AddNewProductScreen
 import com.pepdeal.infotech.product.ListAllProductScreen
-import com.pepdeal.infotech.product.UpdateProductScreen
+import com.pepdeal.infotech.product.producrDetails.ProductDetailScreen
+import com.pepdeal.infotech.product.updateProduct.UpdateProductScreen
 import com.pepdeal.infotech.registration.RegisterScreen
 import com.pepdeal.infotech.shop.editShop.EditShopColorBottomSheet
 import com.pepdeal.infotech.shop.editShop.EditShopDetailsScreen
@@ -35,7 +37,6 @@ import com.pepdeal.infotech.tickets.CustomerTicketScreen
 import com.pepdeal.infotech.tickets.SellerTicketScreen
 import com.pepdeal.infotech.user.PersonalInfoScreen
 import com.pepdeal.infotech.util.NavigationProvider
-import kotlin.experimental.ExperimentalNativeApi
 
 
 @Composable
@@ -81,7 +82,8 @@ fun AppNavigation() {
             }
 
             composable<Routes.FavouritesPage> {
-                FavoriteProductScreen()
+                val userId = it.toRoute<Routes.FavouritesPage>().userId
+                FavoriteProductScreen(userId)
             }
 
             composable<Routes.CustomerTicketPage> {
@@ -135,6 +137,15 @@ fun AppNavigation() {
                 ListAllProductScreen(shopId)
             }
 
+            composable<Routes.CategoryWiseProductPage> {
+                val subCategoryName = it.toRoute<Routes.CategoryWiseProductPage>().subCategoryName
+                CategoryWiseProductScreen(subCategoryName)
+            }
+
+            composable<Routes.ProductDetailsPage> {
+                val productId = it.toRoute<Routes.ProductDetailsPage>().productId
+                ProductDetailScreen(productId)
+            }
             dialog(
                 route = Routes.ColorBottomSheet,
                 dialogProperties = DialogProperties(

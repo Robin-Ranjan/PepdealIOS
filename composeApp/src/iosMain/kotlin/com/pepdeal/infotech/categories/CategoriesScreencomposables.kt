@@ -43,7 +43,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.product.SearchView
+import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util.toNameFormat
 import com.pepdeal.infotech.util.ViewModals
 import com.skydoves.landscapist.ImageOptions
@@ -77,7 +79,8 @@ fun CategoriesScreen(viewModel: CategoriesViewModel = ViewModals.categoriesViewM
                 if (category.name.contains(searchQuery, ignoreCase = true) ||
                     subCategoriesMap[category.id]?.any { subCategory ->
                         subCategory.name.contains(searchQuery, ignoreCase = true)
-                    } == true) {
+                    } == true
+                ) {
                     category
                 } else {
                     null // Skip this category if it doesn't match
@@ -86,13 +89,13 @@ fun CategoriesScreen(viewModel: CategoriesViewModel = ViewModals.categoriesViewM
         }
 
         // If no categories matched, return the original categories list
-        filteredCategories = if (filtered.isEmpty()) categories else filtered
+        filteredCategories = filtered.ifEmpty { categories }
     }
 
     MaterialTheme {
         Column(modifier = Modifier.fillMaxSize()
             .background(color = Color.White)
-            .pointerInput(Unit){
+            .pointerInput(Unit) {
                 detectTapGestures(onTap = {
                     keyboardController?.hide()
                 })
@@ -162,7 +165,13 @@ fun CategoryCard(
                                     .weight(1f) // Distribute width equally
                                     .fillMaxWidth() // Ensure full width utilization
                             ) {
-                                SubCategoryItem(subCategory, onSubCategoryClickListener)
+                                SubCategoryItem(subCategory, onSubCategoryClickListener = {
+                                    NavigationProvider.navController.navigate(
+                                        Routes.CategoryWiseProductPage(
+                                            subCategory.name
+                                        )
+                                    )
+                                })
                             }
                         }
 
@@ -191,7 +200,7 @@ fun SubCategoryItem(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Card(
-            modifier = Modifier.size(60.dp), // ✅ Ensure uniform size
+            modifier = Modifier.size(60.dp),
             shape = RectangleShape,
             elevation = CardDefaults.cardElevation(0.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -227,7 +236,11 @@ fun TruncatedText(
     text: String,
     modifier: Modifier = Modifier,
     maxLines: Int = 2,
-    textStyle: TextStyle = TextStyle(fontSize = 11.sp, textAlign = TextAlign.Center, color = Color.Black)
+    textStyle: TextStyle = TextStyle(
+        fontSize = 11.sp,
+        textAlign = TextAlign.Center,
+        color = Color.Black
+    )
 ) {
     var finalText by remember { mutableStateOf(text) }
 
@@ -240,11 +253,13 @@ fun TruncatedText(
         onTextLayout = { layoutResult ->
             // Check if the text overflows and we have reached the maximum lines
             if (layoutResult.hasVisualOverflow) {
-                val lastCharIndex = layoutResult.getLineEnd(maxLines - 1).coerceAtMost(text.length - 1)
+                val lastCharIndex =
+                    layoutResult.getLineEnd(maxLines - 1).coerceAtMost(text.length - 1)
 
                 // Ensure that the last word doesn't get split
                 finalText = if (text[lastCharIndex].isWhitespace()) {
-                    text.take(lastCharIndex).trimEnd() + "…" // Apply truncation without splitting words
+                    text.take(lastCharIndex)
+                        .trimEnd() + "…" // Apply truncation without splitting words
                 } else {
                     // If the last character is not a space, truncate and add ellipsis
                     val spaceBeforeLastWord = text.lastIndexOf(' ', lastCharIndex)
