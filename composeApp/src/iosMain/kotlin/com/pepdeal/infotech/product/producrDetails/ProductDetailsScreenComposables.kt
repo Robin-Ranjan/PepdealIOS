@@ -28,10 +28,13 @@ import androidx.compose.material.icons.filled.PlusOne
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -39,6 +42,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,9 +59,12 @@ import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pepdeal.infotech.DataStore
 import com.pepdeal.infotech.PreferencesKeys
+import com.pepdeal.infotech.TicketDialog
 import com.pepdeal.infotech.product.ProductImageMaster
 import com.pepdeal.infotech.product.ProductMaster
 import com.pepdeal.infotech.shop.modal.ShopMaster
+import com.pepdeal.infotech.tickets.TicketMaster
+import com.pepdeal.infotech.util.ColorUtil
 import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util.toDiscountFormat
 import com.pepdeal.infotech.util.Util.toNameFormat
@@ -66,7 +73,9 @@ import com.pepdeal.infotech.util.Util.toTwoDecimalPlaces
 import com.pepdeal.infotech.util.ViewModals
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil3.CoilImage
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kottieAnimation.KottieAnimation
 import kottieComposition.KottieCompositionSpec
 import kottieComposition.animateKottieCompositionAsState
@@ -98,9 +107,13 @@ fun ProductDetailScreen(
         .collectAsState(initial = "-1")
 
     // variables
-    var heartRes by remember { mutableStateOf(Res.drawable.black_heart)  }
+    var heartRes by remember { mutableStateOf(Res.drawable.black_heart) }
     var isFavorite by remember { mutableStateOf(false) }
-
+    var isTicketExists by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val snackBar = remember { SnackbarHostState() }
+    var showDialog by remember { mutableStateOf(false) }
+    var ticket by remember { mutableStateOf(TicketMaster()) }
     // observers
     val product by viewModal.product.collectAsStateWithLifecycle()
     val shop by viewModal.shop.collectAsStateWithLifecycle()
@@ -119,6 +132,21 @@ fun ProductDetailScreen(
     )
 
     // launchEffects
+
+    LaunchedEffect(product) {
+        if (currentUserId != "-1") {
+            product?.product?.let {
+                viewModal.checkTicketExists(
+                    shopId = product!!.product.shopId,
+                    productId = productId,
+                    userId = currentUserId
+                ) {
+                    isTicketExists = it
+                }
+            }
+        }
+    }
+
     LaunchedEffect(productId) {
         viewModal.getTheProductDetails(productId)
     }
@@ -137,11 +165,11 @@ fun ProductDetailScreen(
         }
     }
 
-    LaunchedEffect(currentUserId ,productId) {
+    LaunchedEffect(currentUserId, productId) {
         if (currentUserId != "-1") {
             viewModal.checkFavoriteExists(currentUserId, productId) { isFav ->
                 isFavorite = isFav
-               heartRes = if(isFav) Res.drawable.red_heart else Res.drawable.black_heart
+                heartRes = if (isFav) Res.drawable.red_heart else Res.drawable.black_heart
                 println(isFav)
             }
         }
@@ -153,26 +181,20 @@ fun ProductDetailScreen(
     MaterialTheme {
         Scaffold(
             floatingActionButton = {
-                FloatingActionButton(
-                    onClick = {
 
-                    },
-                    modifier = Modifier
-                        .padding(16.dp),
-                    shape = RoundedCornerShape(corner = CornerSize(8.dp)),
-                    content = {
-                        Icon(
-                            imageVector = Icons.Filled.Add,
-                            contentDescription = "Floating Button",
-                            tint = Color.Black
-                        )
-                    },
-                    containerColor = Color.White)
+                TicketFloatingActionButton(
+                    currentUserId = currentUserId,
+                    isTicketExists = isTicketExists,
+                    scope = scope,
+                    snackBar = snackBar,
+                    showDialog = {showDialog = it}
+                )
             },
             floatingActionButtonPosition = FabPosition.EndOverlay,
-            containerColor = Color.White
-        ) {
-            Box(modifier = Modifier.fillMaxSize()) {
+            containerColor = Color.White,
+            snackbarHost = { SnackbarHost(snackBar) }
+        ) { paddingValues ->
+            Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
                 Column(modifier = Modifier.fillMaxSize()) {
 
                     when {
@@ -192,10 +214,19 @@ fun ProductDetailScreen(
                                             NavigationProvider.navController.popBackStack()
                                         },
                                         onLikeClick = {
-                                            if(currentUserId!="-1"){
-                                                viewModal.toggleFavoriteStatus(userId = currentUserId, productId = productId, isFavorite = !isFavorite)
+                                            if (currentUserId != "-1") {
+                                                viewModal.toggleFavoriteStatus(
+                                                    userId = currentUserId,
+                                                    productId = productId,
+                                                    isFavorite = !isFavorite
+                                                )
                                                 isFavorite = !isFavorite
-                                                heartRes = if(isFavorite) Res.drawable.red_heart else Res.drawable.black_heart
+                                                heartRes =
+                                                    if (isFavorite) Res.drawable.red_heart else Res.drawable.black_heart
+                                            } else {
+                                                scope.launch {
+                                                    snackBar.showSnackbar("Login Please")
+                                                }
                                             }
                                         }
                                     )
@@ -231,6 +262,33 @@ fun ProductDetailScreen(
                     }
                 }
             }
+
+            product?.let {
+                TicketDialog(
+                    productDetails = it.product,
+                    showDialog = showDialog,
+                    onDismiss = { showDialog = false },
+                    onSubmit = { size, color, quantity ->
+                        println("Size: $size, Color: $color, Quantity: $quantity")
+                        showDialog = false
+                    },
+                    onSubmitTicket = { newTicket ->
+                        println(ticket)
+                       ticket = newTicket.copy(userId = currentUserId)
+                        viewModal.addTicket(currentUserId,ticket){
+                           scope.launch {
+                               if(it.first){
+                                   isTicketExists = true
+                                   snackBar.showSnackbar("Ticket Generated Successfully")
+                               } else {
+                                   snackBar.showSnackbar("Ticket Not Added")
+                                   println(it.second)
+                               }
+                           }
+                        }
+                    }
+                )
+            }
         }
     }
 }
@@ -244,7 +302,8 @@ fun ProductShopInfoSection(shopMaster: ShopMaster) {
             fontWeight = FontWeight.Bold,
             fontFamily = FontFamily(
                 Font(Res.font.manrope_bold)
-            )
+            ),
+            lineHeight = 16.sp
         )
         Text(
             text = shopMaster.shopName?.toNameFormat() ?: "",
@@ -259,12 +318,19 @@ fun ProductShopInfoSection(shopMaster: ShopMaster) {
             color = Color.Gray,
             fontFamily = FontFamily(Font(Res.font.manrope_regular))
         )
+
+        Text(
+            text = shopMaster.shopAddress ?: "",
+            fontSize = 12.sp,
+            color = Color.Gray,
+            fontFamily = FontFamily(Font(Res.font.manrope_regular))
+        )
     }
 }
 
 @Composable
 fun ProductInfoSection(product: ProductMaster) {
-    Column(modifier = Modifier.padding(16.dp)) {
+    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
         Text(
             text = product.productName.toNameFormat(),
             fontSize = 20.sp,
@@ -272,8 +338,12 @@ fun ProductInfoSection(product: ProductMaster) {
         )
         Spacer(modifier = Modifier.height(4.dp))
         Row {
-            if(product.onCall == "1"){
-                Text(text = product.discountMrp.toDiscountFormat(), fontSize = 16.sp, color = Color.Red)
+            if (product.onCall == "1") {
+                Text(
+                    text = product.discountMrp.toDiscountFormat(),
+                    fontSize = 16.sp,
+                    color = Color.Red
+                )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = product.sellingPrice.toTwoDecimalPlaces().toRupee(),
@@ -301,8 +371,23 @@ fun ProductInfoSection(product: ProductMaster) {
 
 @Composable
 fun WarrantySection(product: ProductMaster) {
+
+    val colorNames = if (product.color.isNotBlank() && product.color != "-") {
+        product.color.split(",")
+            .mapNotNull { code -> ColorUtil.colorMap.entries.find { it.value == code }?.key }
+            .joinToString(",") // Corrected joinToString usage
+            .toNameFormat()
+    } else {
+        null
+    }
+
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-        Text(text = product.warranty, fontSize = 11.sp, color = Color.Gray)
+        Text(
+            text = "Warranty:${product.warranty}",
+            fontSize = 13.sp,
+            color = Color.Gray,
+            lineHeight = 13.sp
+        )
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 painter = painterResource(Res.drawable.original),
@@ -311,8 +396,21 @@ fun WarrantySection(product: ProductMaster) {
             )
             Spacer(modifier = Modifier.width(8.dp))
             Column {
-                Text(text = product.brandId, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                Text(text = product.categoryId.toNameFormat(), fontSize = 14.sp)
+                colorNames?.let {
+                    Text(
+                        text = "Color: $it",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                if (product.brandId.isNotEmpty() && product.brandId.isNotEmpty() && product.brandId != "-") {
+                    Text(
+                        text = "Brand:${product.brandId.toNameFormat()}",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Text(text = "Category:${product.categoryId.toNameFormat()}", fontSize = 14.sp)
             }
         }
     }
@@ -320,7 +418,7 @@ fun WarrantySection(product: ProductMaster) {
 
 @Composable
 fun AdditionalDetailsSection(product: ProductMaster) {
-    Column(modifier = Modifier.padding(16.dp)) {
+    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
         Text(
             text = "Product Description",
             fontSize = 16.sp,
@@ -340,9 +438,11 @@ fun AdditionalDetailsSection(product: ProductMaster) {
         Text(text = "Product Specifications", fontSize = 16.sp, fontWeight = FontWeight.Bold)
         Text(text = product.specification.toNameFormat(), fontSize = 12.sp, color = Color.Gray)
 
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(text = "Additional Details", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-        Text(text = product.description2.toNameFormat(), fontSize = 12.sp, color = Color.Gray)
+        if (product.description2.isNotEmpty() || product.description2.isNotBlank()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(text = "Additional Details", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text(text = product.description2.toNameFormat(), fontSize = 12.sp, color = Color.Gray)
+        }
     }
 }
 
@@ -353,7 +453,7 @@ fun ProductImagesCarouselWidget(
     modifier: Modifier = Modifier,
     heartRes: DrawableResource,
     onBackClicked: () -> Unit,
-    onLikeClick:() -> Unit
+    onLikeClick: () -> Unit
 ) {
     val pagerState = rememberPagerState(pageCount = {
         productImages.size
@@ -454,4 +554,47 @@ fun ProductImageWidget(
         ),
         previewPlaceholder = painterResource(Res.drawable.compose_multiplatform)
     )
+}
+
+@Composable
+fun TicketFloatingActionButton(
+    currentUserId: String,
+    isTicketExists: Boolean,
+    scope: CoroutineScope,
+    snackBar: SnackbarHostState,
+    showDialog:(Boolean) ->Unit
+) {
+    val buttonColor = if (isTicketExists) Color.Gray else Color.White
+    val iconColor = if (isTicketExists) Color.LightGray else Color.Black
+
+    FloatingActionButton(
+        onClick = {
+            when {
+                currentUserId == "-1" -> {
+                    scope.launch {
+                        snackBar.showSnackbar("Please Login")
+                    }
+                }
+
+                isTicketExists -> {
+                    scope.launch {
+                        snackBar.showSnackbar("The ticket is active for this product.")
+                    }
+                }
+
+                else -> {
+                    showDialog(true)
+                }
+            }
+        },
+        shape = RoundedCornerShape(corner = CornerSize(8.dp)),
+        containerColor = buttonColor,
+        elevation = FloatingActionButtonDefaults.elevation(5.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Add,
+            contentDescription = "Floating Button",
+            tint = iconColor
+        )
+    }
 }

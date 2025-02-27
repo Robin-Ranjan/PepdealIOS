@@ -1,4 +1,4 @@
-package com.pepdeal.infotech.shopVideo
+package com.pepdeal.infotech.shopVideo.uploadShopVideo
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background

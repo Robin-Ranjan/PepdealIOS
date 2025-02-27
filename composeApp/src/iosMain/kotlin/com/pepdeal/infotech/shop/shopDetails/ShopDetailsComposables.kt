@@ -8,6 +8,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.runtime.Composable
 import com.pepdeal.infotech.util.ViewModals
 import androidx.compose.foundation.layout.Box
@@ -62,6 +63,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pepdeal.infotech.DataStore
 import com.pepdeal.infotech.PreferencesKeys
 import com.pepdeal.infotech.fonts.FontUtils.getFontResourceByName
+import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.product.ProductWithImages
 import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util
@@ -104,7 +106,7 @@ fun ShopDetailsWithProductPage(
     // Track favorite states
     val favoriteStates = remember { mutableStateMapOf<String, Boolean>() }
     LaunchedEffect(shopId) {
-        scope.launch {
+        if(shopProducts.isEmpty()){
             viewModal.fetchShopDetails(shopId)
             viewModal.fetchShopProducts(shopId)
             viewModal.checkSuperShopExist(userId, shopId)
@@ -159,7 +161,7 @@ fun ShopDetailsWithProductPage(
                                     viewModal.reset()
                                     NavigationProvider.navController.popBackStack()
                                 },
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(30.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -290,7 +292,7 @@ fun ShopDetailsWithProductPage(
 
                                 // Check favorite status when the product is displayed
                                 LaunchedEffect(product.product.productId) {
-                                    if(currentUserId!="-1"){
+                                    if (currentUserId != "-1") {
                                         viewModal.checkFavoriteExists(
                                             userId = currentUserId,
                                             product.product.productId
@@ -317,7 +319,7 @@ fun ShopDetailsWithProductPage(
 
                                             // Call ViewModel to handle like/unlike logic
                                             scope.launch {
-                                                if(currentUserId!="-1"){
+                                                if (currentUserId != "-1") {
                                                     viewModal.toggleFavoriteStatus(
                                                         userId = currentUserId,
                                                         product.product.productId,
@@ -325,6 +327,13 @@ fun ShopDetailsWithProductPage(
                                                     )
                                                 }
                                             }
+                                        },
+                                        onProductClicked = { productId ->
+                                            NavigationProvider.navController.navigate(
+                                                Routes.ProductDetailsPage(
+                                                    productId
+                                                )
+                                            )
                                         })
                                 }
                             }
@@ -340,11 +349,13 @@ fun ShopDetailsWithProductPage(
 fun ShopProductCard(
     shopItems: ProductWithImages,
     heartRes: Painter,
-    onLikeClicked: () -> Unit
+    onLikeClicked: () -> Unit,
+    onProductClicked: (String) -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onProductClicked(shopItems.product.productId) }
             .padding(horizontal = 5.dp, vertical = 5.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         shape = RoundedCornerShape(3.dp),

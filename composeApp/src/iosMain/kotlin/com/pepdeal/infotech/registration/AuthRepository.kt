@@ -233,4 +233,38 @@ object AuthRepository {
         }
     }
 
+    suspend fun sendOtp(phoneNumber: String, recaptchaToken: String): String? {
+        return withContext(Dispatchers.Default) {
+            try {
+                val formattedPhoneNumber = if (phoneNumber.startsWith("+")) phoneNumber else "+$phoneNumber"
+                val requestBody = SendOTPRequest(phoneNumber = formattedPhoneNumber, recaptchaToken = recaptchaToken)
+
+                println("Sending OTP Request: $requestBody")
+
+                val response: HttpResponse = client.post("$BASE_URL/accounts:sendVerificationCode?key=$FIREBASE_API_KEY") {
+                    contentType(ContentType.Application.Json)
+                    setBody(requestBody)
+                }
+
+                val responseText = response.bodyAsText()
+                println("Response: $responseText")
+
+                if (response.status.isSuccess()) {
+                    val otpResponse: SendOTPResponse = response.body()
+                    println("OTP Session Info: ${otpResponse.sessionInfo}")
+                    return@withContext otpResponse.sessionInfo
+                } else {
+                    println("Response Error: ${response.status}")
+                    println("Error Details: $responseText")
+                    return@withContext null
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                println("Exception: ${e.message}")
+                return@withContext null
+            }
+        }
+    }
+
+
 }

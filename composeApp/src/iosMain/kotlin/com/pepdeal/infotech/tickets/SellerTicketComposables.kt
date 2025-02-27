@@ -72,9 +72,7 @@ fun SellerTicketScreen(viewModal: SellerTicketViewModal = ViewModals.sellerTicke
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
-        scope.launch {
-            viewModal.getAllSellerTicketProduct("-OIssBIQoj5chr2PuTLo")
-        }
+        viewModal.getAllSellerTicketProduct("-OIssBIQoj5chr2PuTLo")
     }
 
     MaterialTheme {
@@ -132,13 +130,13 @@ fun SellerTicketScreen(viewModal: SellerTicketViewModal = ViewModals.sellerTicke
                                 SellerTicketCard(
                                     item = tickets,
                                     onReject = {
-                                        viewModal.changeTicketStatus(tickets.ticket.ticketId,"1")
+                                        viewModal.changeTicketStatus(tickets.ticket.ticketId, "1")
                                     },
                                     onConfirm = {
-                                        viewModal.changeTicketStatus(tickets.ticket.ticketId,"0")
+                                        viewModal.changeTicketStatus(tickets.ticket.ticketId, "0")
                                     },
                                     onDelivered = {
-                                        viewModal.changeTicketStatus(tickets.ticket.ticketId,"3")
+                                        viewModal.changeTicketStatus(tickets.ticket.ticketId, "3")
                                     }
                                 )
                             }

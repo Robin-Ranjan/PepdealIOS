@@ -6,6 +6,8 @@ import com.pepdeal.infotech.favourite.FavouritesRepo
 import com.pepdeal.infotech.favourite.modal.FavoriteProductMaster
 import com.pepdeal.infotech.product.ProductWithImages
 import com.pepdeal.infotech.shop.modal.ShopMaster
+import com.pepdeal.infotech.tickets.TicketMaster
+import com.pepdeal.infotech.tickets.TicketRepo
 import com.pepdeal.infotech.util.Util
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,8 +16,9 @@ import kotlinx.coroutines.launch
 
 class ProductDetailsViewModal():ViewModel() {
 
-    val repo = ProductDetailsRepo()
+    private val repo = ProductDetailsRepo()
     private val favRepo = FavouritesRepo()
+    private val ticketRepo = TicketRepo()
 
     private val _product = MutableStateFlow<ProductWithImages?>(null)
     val product:StateFlow<ProductWithImages?> get() = _product.asStateFlow()
@@ -69,6 +72,21 @@ class ProductDetailsViewModal():ViewModel() {
                 favRepo.removeFavoriteItem(userId, productId) {
                 }
             }
+        }
+    }
+
+    fun checkTicketExists(shopId: String, productId: String,userId:String,callback: (exists: Boolean) -> Unit) {
+        viewModelScope.launch {
+           val exists =  ticketRepo.checkTicketExists(shopId, productId,userId)
+            println(exists)
+            callback(exists)
+        }
+    }
+
+    fun addTicket(userMobileNo:String,ticketMaster: TicketMaster,onCallback:(Pair<Boolean,String>) -> Unit){
+        viewModelScope.launch {
+            val result =  ticketRepo.addTicket(userMobileNo,ticketMaster)
+            onCallback(result)
         }
     }
 

@@ -1,7 +1,9 @@
-package com.pepdeal.infotech.shopVideo
+package com.pepdeal.infotech.shopVideo.uploadShopVideo
 
 import androidx.compose.ui.graphics.ImageBitmap
 import com.pepdeal.infotech.FirebaseUploadResponse
+import com.pepdeal.infotech.shopVideo.ShopVideosMaster
+import com.pepdeal.infotech.shopVideo.ValidationResult
 import com.pepdeal.infotech.util.FirebaseUtil
 import com.pepdeal.infotech.util.ImagesUtil.toByteArray
 import com.pepdeal.infotech.util.ImagesUtil.toNSData

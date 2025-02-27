@@ -28,6 +28,8 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.SnackbarHost
+import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
@@ -36,6 +38,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -106,7 +109,7 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
     var filteredProducts by remember { mutableStateOf<List<ShopItems>>(emptyList()) }
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     var searchQuery by remember { mutableStateOf("") }
-
+    val snackbar = remember { SnackbarHostState() }
     val keyboardController = LocalSoftwareKeyboardController.current
 
     // Track favorite states
@@ -155,89 +158,96 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
     }
 
     MaterialTheme {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(color = Color.White)
-                .padding(5.dp)
-                .pointerInput(Unit) {
-                    detectTapGestures(onTap = {
-                        keyboardController?.hide()
-                    })
-                }
-        ) {
+        Scaffold(
+            snackbarHost = { SnackbarHost(snackbar) }
+        ) { paddingValues->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(color = Color.White)
+                    .padding(paddingValues)
+                    .pointerInput(Unit) {
+                        detectTapGestures(onTap = {
+                            keyboardController?.hide()
+                        })
+                    }
+            ) {
+                Column {
+                    Image(
+                        painter = painterResource(Res.drawable.pepdeal_logo),
+                        contentDescription = "Your image description",
+                        modifier = Modifier
+                            .width(130.dp)
+                            .height(28.dp)
+                            .padding(start = 5.dp),
+                        contentScale = ContentScale.Fit // Adjust based on your needs (e.g., FillBounds, Fit)
+                    )
+                    SearchView("Search Product", searchQuery) {
+                        searchQuery = it
+                    }
 
-            Column {
-                Image(
-                    painter = painterResource(Res.drawable.pepdeal_logo),
-                    contentDescription = "Your image description",
-                    modifier = Modifier
-                        .width(130.dp)
-                        .height(28.dp)
-                        .padding(start = 5.dp),
-                    contentScale = ContentScale.Fit // Adjust based on your needs (e.g., FillBounds, Fit)
-                )
-                SearchView("Search Product", searchQuery) {
-                    searchQuery = it
-                }
+                    Text(text = productNewList.size.toString())
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2), // 2 columns
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(5.dp),
+                        horizontalArrangement = Arrangement.spacedBy(5.dp), // Space between columns
+                        verticalArrangement = Arrangement.spacedBy(8.dp), // Space between rows
+                        state = listState
+                    ) {
+                        items(items = displayedProductList,
+                            key = { it.productId }) { product ->
+                            // Determine the heart icon state
+                            val isFavorite = favoriteStates[product.productId] ?: false
+                            val heartIcon =
+                                if (isFavorite && currentUserId!=="-1") Res.drawable.red_heart else Res.drawable.black_heart
 
-                Text(text = productNewList.size.toString())
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2), // 2 columns
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(5.dp),
-                    horizontalArrangement = Arrangement.spacedBy(5.dp), // Space between columns
-                    verticalArrangement = Arrangement.spacedBy(8.dp), // Space between rows
-                    state = listState
-                ) {
-                    items(items = displayedProductList,
-                        key = { it.productId }) { product ->
-                        // Determine the heart icon state
-                        val isFavorite = favoriteStates[product.productId] ?: false
-                        val heartIcon =
-                            if (isFavorite && currentUserId!=="-1") Res.drawable.red_heart else Res.drawable.black_heart
-
-                        // Check favorite status when the product is displayed
-                        LaunchedEffect(product.productId) {
-                            if (currentUserId != "-1") {
-                                viewModel.checkFavoriteExists(
-                                    currentUserId,
-                                    product.productId
-                                ) { exists ->
-                                    favoriteStates[product.productId] = exists
+                            // Check favorite status when the product is displayed
+                            LaunchedEffect(product.productId) {
+                                if (currentUserId != "-1") {
+                                    viewModel.checkFavoriteExists(
+                                        currentUserId,
+                                        product.productId
+                                    ) { exists ->
+                                        favoriteStates[product.productId] = exists
+                                    }
                                 }
                             }
-                        }
 
-                        // Shop Card
-                        AnimatedVisibility(
-                            visible = true, // Replace with your condition if necessary
-                            enter = fadeIn(tween(durationMillis = 300)) + slideInVertically(
-                                initialOffsetY = { it }),
-                            exit = fadeOut(tween(durationMillis = 300)) + slideOutVertically(
-                                targetOffsetY = { it })
-                        ) {
-                            ProductCard(
-                                shopItems = product,
-                                heartRes = painterResource(heartIcon),
-                                onLikeClicked = {
-                                    if (currentUserId != "-1") {
-                                        val newFavoriteState = !isFavorite
-                                        favoriteStates[product.productId] = newFavoriteState
-                                        // Call ViewModel to handle like/unlike logic
-                                        coroutineScope.launch {
-                                            viewModel.toggleFavoriteStatus(
-                                                userId = currentUserId,
-                                                product.productId,
-                                                newFavoriteState
-                                            )
+                            // Shop Card
+                            AnimatedVisibility(
+                                visible = true, // Replace with your condition if necessary
+                                enter = fadeIn(tween(durationMillis = 300)) + slideInVertically(
+                                    initialOffsetY = { it }),
+                                exit = fadeOut(tween(durationMillis = 300)) + slideOutVertically(
+                                    targetOffsetY = { it })
+                            ) {
+                                ProductCard(
+                                    shopItems = product,
+                                    heartRes = painterResource(heartIcon),
+                                    onLikeClicked = {
+                                        if (currentUserId != "-1") {
+                                            val newFavoriteState = !isFavorite
+                                            favoriteStates[product.productId] = newFavoriteState
+                                            // Call ViewModel to handle like/unlike logic
+                                            coroutineScope.launch {
+                                                viewModel.toggleFavoriteStatus(
+                                                    userId = currentUserId,
+                                                    product.productId,
+                                                    newFavoriteState
+                                                )
+                                            }
+                                        }else{
+                                            coroutineScope.launch {
+                                                snackbar.showSnackbar("Login Please")
+                                            }
                                         }
-                                    }
-                                },
-                                onProductClicked = {
-                                    NavigationProvider.navController.navigate(Routes.ProductDetailsPage(it))
-                                })
+                                    },
+                                    onProductClicked = {
+                                        NavigationProvider.navController.navigate(Routes.ProductDetailsPage(it))
+                                    })
+                            }
                         }
                     }
                 }

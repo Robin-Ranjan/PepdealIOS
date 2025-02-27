@@ -53,11 +53,11 @@ import pepdealios.composeapp.generated.resources.pepdeal_logo
 
 @Composable
 fun RegisterScreen() {
-    var username by remember { mutableStateOf("t") }
-    var phoneNumber by remember { mutableStateOf("+15551234567") }
-    var email by remember { mutableStateOf("t") }
-    var password by remember { mutableStateOf("t") }
-    var confirmPassword by remember { mutableStateOf("t") }
+    var username by remember { mutableStateOf("") }
+    var phoneNumber by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
     var isTermAccepted by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
 
@@ -201,7 +201,7 @@ fun RegisterScreen() {
                                 onClick = {
                                     handleRegistration(
                                         username = username,
-                                        phoneNumber = phoneNumber,
+                                        phoneNumber = "+91$phoneNumber",
                                         email = email,
                                         password = password,
                                         confirmPassword = confirmPassword,
@@ -292,7 +292,7 @@ suspend fun validateInfo(
             false
         }
 
-        phoneNumber.length != 12 -> {
+        phoneNumber.length != 13 -> {
             snackBarHostState.showSnackbar("Enter a valid phone number")
             false
         }
@@ -355,7 +355,7 @@ fun handleRegistration(
                 snackBarHostState.showSnackbar("OTP Sent Successfully!")
                 setShowOtpScreen(true)  // Switch to OTP screen
             } else {
-                snackBarHostState.showSnackbar("Failed to send OTP. Try again.")
+                snackBarHostState.showSnackbar("Failed to send OTP. Try again.$result")
             }
         } catch (e: Exception) {
             snackBarHostState.showSnackbar("Error: ${e.message}")

@@ -6,21 +6,36 @@ import com.pepdeal.infotech.user.UserMaster
 import com.pepdeal.infotech.shop.modal.ShopMaster
 import com.pepdeal.infotech.util.FirebaseUtil
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.engine.darwin.Darwin
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import io.ktor.client.request.patch
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.http.isSuccess
+import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 class TicketRepo {
     private val json = Json { ignoreUnknownKeys = true }
-    private val client = HttpClient(Darwin)
+    private val client = HttpClient(Darwin){
+        install(ContentNegotiation){
+            json(json)
+        }
+    }
 
     fun getTicketForCustomerFlow(userId: String): Flow<ProductTicket> = flow {
         val customerTickets = fetchCustomerTicket(userId).sortedByDescending {
@@ -146,4 +161,135 @@ class TicketRepo {
             UserMaster()
         }
     }
+
+    // Function to check if a ticket exists using Firebase REST API & Ktor
+    suspend fun checkTicketExists(
+        shopId: String,
+        productId: String,
+        userId: String
+    ): Boolean {
+        return try {
+            val response: HttpResponse = client.get("${FirebaseUtil.BASE_URL}ticket_master.json") {
+                parameter("orderBy", "\"userId\"")
+                parameter("equalTo", "\"$userId\"")
+                contentType(ContentType.Application.Json)
+            }
+
+            println("userId:$userId , productId:$productId , shopId:$shopId")
+
+            if (response.status == HttpStatusCode.OK) {
+                val responseBody: String = response.body()
+                val ticketData: Map<String, TicketMaster> = Json.decodeFromString(responseBody)
+
+                println(responseBody)
+
+                // Check for matching ticket conditions
+                ticketData.values.any { ticket ->
+                    ticket.productId == productId &&
+                            ticket.shopId == shopId &&
+                            (ticket.ticketStatus == "0" || ticket.ticketStatus == "2")
+                }
+            } else {
+                println("Error: Firebase responded with status ${response.status}")
+                false
+            }
+        } catch (e: Exception) {
+            println("Error fetching tickets: ${e.message}")
+            false
+        }
+    }
+
+    suspend fun addTicket(userMobileNo:String,ticketMaster: TicketMaster): Pair<Boolean, String> {
+        return try {
+//            val userMobileNo = getUserMobile(ticketMaster.userId)
+            val shopMobileNo = getShopMobile(ticketMaster.shopId)
+                ?: return false to "Failed to fetch user/shop details."
+
+            if (userMobileNo == shopMobileNo) {
+                return false to "You can't raise a ticket on your own product."
+            }
+
+//            // Step 4: Check if a ticket already exists
+//            val existingTicket = checkExistingTicket(ticketMaster.productId, ticketMaster.userId, ticketMaster.shopId)
+//            if (existingTicket != null) {
+//                return if (existingTicket.ticketStatus == "3") {
+//                    addNewTicket(ticketMaster)
+//                } else {
+//                    false to "Ticket already exists and is not delivered. Cannot add a new one."
+//                }
+//            }
+
+            // Step 5: No existing ticket found, add a new one
+            addNewTicket(ticketMaster)
+
+        } catch (e: Exception) {
+            println(e.message)
+            false to "Error: ${e.message}"
+        }
+    }
+
+//    private suspend fun getUserMobile(userId: String): String? {
+//        return try {
+//            val response: HttpResponse = client.get("${FirebaseUtil.BASE_URL}/user_master/$userId/mobileNo.json")
+//            response.body<String?>()
+//        } catch (e: Exception) {
+//            null
+//        }
+//    }
+
+    private suspend fun getShopMobile(shopId: String): String? {
+        return try {
+            val response: HttpResponse = client.get("${FirebaseUtil.BASE_URL}/shop_master/$shopId/shopMobileNo.json")
+            response.body<String?>()
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private suspend fun addNewTicket(ticketMaster: TicketMaster): Pair<Boolean, String> {
+        return withContext(Dispatchers.IO) {
+            try {
+                // Step 1: Create a new ticket node (Firebase auto-generates a unique key)
+                val postResponse: HttpResponse = client.post("${FirebaseUtil.BASE_URL}ticket_master.json") {
+                    contentType(ContentType.Application.Json)
+                    setBody(ticketMaster)
+                }
+
+                // Extract the generated key from Firebase
+                val responseBody = postResponse.bodyAsText()
+                val generatedKey = extractFirebaseKey(responseBody)
+                    ?: return@withContext false to "Failed to retrieve Firebase key."
+
+                // Step 2: Update the ticket with its generated key
+                val updatedTicket = ticketMaster.copy(ticketId = generatedKey)
+                val patchResponse: HttpResponse = client.patch("${FirebaseUtil.BASE_URL}ticket_master/$generatedKey.json") {
+                    contentType(ContentType.Application.Json)
+                    setBody(updatedTicket)
+                }
+
+                if (patchResponse.status.isSuccess()) {
+                    true to "Ticket added successfully with ID: $generatedKey"
+                } else {
+                    false to "Failed to update the ticket."
+                }
+            } catch (e: Exception) {
+                println(e.message)
+                e.printStackTrace()
+                false to "Error: ${e.message}"
+            }
+        }
+    }
+
+    @Serializable
+    data class FirebasePostResponse(val name: String)
+
+    private fun extractFirebaseKey(responseBody: String): String? {
+        return try {
+            println(Json.decodeFromString<FirebasePostResponse>(responseBody).name)
+            Json.decodeFromString<FirebasePostResponse>(responseBody).name
+        } catch (e: Exception) {
+            null
+        }
+    }
+
 }

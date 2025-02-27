@@ -29,6 +29,8 @@
 	</dict>
 	<key>UILaunchScreen</key>
 	<dict/>
+	<key>LSApplicationCategoryType</key>
+	<string></string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
 		<string>armv7</string>
@@ -46,7 +48,6 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>To Access the Product and Profile Pic</string>
 	<key>NSAppTransportSecurity</key>

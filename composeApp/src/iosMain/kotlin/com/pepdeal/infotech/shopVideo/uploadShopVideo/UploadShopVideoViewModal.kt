@@ -1,8 +1,9 @@
-package com.pepdeal.infotech.shopVideo
+package com.pepdeal.infotech.shopVideo.uploadShopVideo
 
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pepdeal.infotech.shopVideo.ShopVideosMaster
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

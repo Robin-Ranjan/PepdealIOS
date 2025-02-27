@@ -19,6 +19,7 @@ import com.pepdeal.infotech.fonts.FontBottomSheet
 import com.pepdeal.infotech.login.LoginScreen
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.navigation.routes.SubGraph
+import com.pepdeal.infotech.placeAPI.PlacesSearchScreen
 import com.pepdeal.infotech.product.addProduct.AddNewProductScreen
 import com.pepdeal.infotech.product.ListAllProductScreen
 import com.pepdeal.infotech.product.producrDetails.ProductDetailScreen
@@ -29,8 +30,8 @@ import com.pepdeal.infotech.shop.editShop.EditShopDetailsScreen
 import com.pepdeal.infotech.shop.editShop.EditShopFontBottomSheet
 import com.pepdeal.infotech.shop.OpenYourShopScreen
 import com.pepdeal.infotech.shop.shopDetails.ShopDetailsWithProductPage
-import com.pepdeal.infotech.shopVideo.UploadShopVideoScreen
-import com.pepdeal.infotech.shopVideo.enableBackGestureForNavigationController
+import com.pepdeal.infotech.shopVideo.uploadShopVideo.UploadShopVideoScreen
+import com.pepdeal.infotech.shopVideo.uploadShopVideo.enableBackGestureForNavigationController
 import com.pepdeal.infotech.shopVideo.favShopVideo.FavoriteShopVideoScreen
 import com.pepdeal.infotech.superShop.SuperShopScreen
 import com.pepdeal.infotech.tickets.CustomerTicketScreen
@@ -146,6 +147,10 @@ fun AppNavigation() {
                 val productId = it.toRoute<Routes.ProductDetailsPage>().productId
                 ProductDetailScreen(productId)
             }
+
+//            composable<Routes.SearchScreenPage> {
+//                PlacesSearchScreen()
+//            }
             dialog(
                 route = Routes.ColorBottomSheet,
                 dialogProperties = DialogProperties(

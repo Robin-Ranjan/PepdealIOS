@@ -2,6 +2,7 @@ package com.pepdeal.infotech.tickets
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -44,6 +45,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util
 import com.pepdeal.infotech.util.ViewModals
@@ -56,13 +58,16 @@ import pepdealios.composeapp.generated.resources.compose_multiplatform
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CustomerTicketScreen(userId:String,viewModal: TicketViewModal = ViewModals.customerTicketViewModal) {
+fun CustomerTicketScreen(
+    userId: String,
+    viewModal: TicketViewModal = ViewModals.customerTicketViewModal
+) {
     val ticketProductList by viewModal.ticketProduct.collectAsStateWithLifecycle()
     val isLoading by viewModal.isLoading.collectAsStateWithLifecycle()
 
     val scope = rememberCoroutineScope()
     LaunchedEffect(Unit) {
-        scope.launch {
+        if (ticketProductList.isEmpty()) {
             viewModal.getAllTicketProduct(userId)
         }
     }
@@ -121,7 +126,15 @@ fun CustomerTicketScreen(userId:String,viewModal: TicketViewModal = ViewModals.c
                         {
                             items(items = ticketProductList,
                                 key = { it.ticket.ticketId }) { ticketProduct ->
-                                TicketProductCard(ticketProduct = ticketProduct)
+                                TicketProductCard(
+                                    ticketProduct = ticketProduct,
+                                    onTicketClicked = { productId ->
+                                        NavigationProvider.navController.navigate(
+                                            Routes.ProductDetailsPage(
+                                                productId
+                                            )
+                                        )
+                                    })
                             }
                         }
                     }
@@ -133,7 +146,8 @@ fun CustomerTicketScreen(userId:String,viewModal: TicketViewModal = ViewModals.c
 
 @Composable
 fun TicketProductCard(
-    ticketProduct: ProductTicket
+    ticketProduct: ProductTicket,
+    onTicketClicked: (String) -> Unit
 ) {
     val ticketDetails = ticketProduct.ticket
     val productImage = ticketProduct.imageUrl
@@ -148,12 +162,13 @@ fun TicketProductCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onTicketClicked(ticketDetails.productId) }
             .padding(5.dp),
         shape = RoundedCornerShape(5.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        Box(modifier = Modifier.fillMaxSize()){
+        Box(modifier = Modifier.fillMaxSize()) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -228,14 +243,17 @@ fun TicketProductCard(
                 }
             }
             // Status Text
-            Row(modifier = Modifier
-                .align(Alignment.BottomEnd),
+            Row(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(modifier = Modifier
-                    .size(5.dp)  // Define a fixed size
-                    .clip(CircleShape)
-                    .background(color))
+                Box(
+                    modifier = Modifier
+                        .size(5.dp)  // Define a fixed size
+                        .clip(CircleShape)
+                        .background(color)
+                )
                 Spacer(modifier = Modifier.width(2.dp))
                 Text(
                     text = statusText,

@@ -16,7 +16,7 @@ import com.pepdeal.infotech.shop.shopDetails.ShopDetailsViewModal
 import com.pepdeal.infotech.shop.ShopViewModal
 import com.pepdeal.infotech.shopVideo.favShopVideo.FavoriteShopVideoViewModal
 import com.pepdeal.infotech.shopVideo.ShopVideosViewModal
-import com.pepdeal.infotech.shopVideo.UploadShopVideoViewModal
+import com.pepdeal.infotech.shopVideo.uploadShopVideo.UploadShopVideoViewModal
 import com.pepdeal.infotech.superShop.SuperShopViewModal
 import com.pepdeal.infotech.tickets.SellerTicketViewModal
 import com.pepdeal.infotech.tickets.TicketViewModal

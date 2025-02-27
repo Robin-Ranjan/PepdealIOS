@@ -72,7 +72,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pepdeal.infotech.DataStore
 import com.pepdeal.infotech.Objects
 import com.pepdeal.infotech.navigation.routes.Routes
+import com.pepdeal.infotech.placeAPI.PlacesSearchScreen
 import com.pepdeal.infotech.shop.modal.ShopMaster
+import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.NavigationProvider.navController
 import com.pepdeal.infotech.util.States
 import com.pepdeal.infotech.util.Util
@@ -256,8 +258,10 @@ fun OpenYourShopScreen(viewModel: OpenYourShopViewModal = ViewModals.openYOurSho
                         maxLines = 3,
                         state = shopAddress,
                         onClick = {
+//                            navController.navigate(Routes.SearchScreenPage)
                             showShopAddressUI = true
-                        })
+                        },
+                        isEditable = false)
 
                     TextFieldWithLabel(
                         label = "Shop Address For Sign Board",
@@ -441,6 +445,18 @@ fun OpenYourShopScreen(viewModel: OpenYourShopViewModal = ViewModals.openYOurSho
                     }
                 }
             }
+
+            if(showShopAddressUI){
+                PlacesSearchScreen(
+                    addressDetails = { placeDetails ->
+                        shopAddress.value = TextFieldValue(placeDetails.address)
+                        latitude.value = TextFieldValue(placeDetails.latitude.toString())
+                        longitude.value = TextFieldValue(placeDetails.longitude.toString())
+                    }, onDismiss = {
+                        showShopAddressUI = false
+                    }
+                )
+            }
         }
     }
 }
@@ -491,8 +507,8 @@ fun TextFieldWithLabel(
         minLines = minLines,
         keyboardOptions = KeyboardOptions.Default.copy(
             keyboardType = inputType
-        )
-
+        ),
+        readOnly = isEditable,
     )
 }
 
