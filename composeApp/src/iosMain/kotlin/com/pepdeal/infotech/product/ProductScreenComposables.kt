@@ -109,7 +109,7 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
     var filteredProducts by remember { mutableStateOf<List<ShopItems>>(emptyList()) }
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     var searchQuery by remember { mutableStateOf("") }
-    val snackbar = remember { SnackbarHostState() }
+    val snackbarHost = remember { SnackbarHostState() }
     val keyboardController = LocalSoftwareKeyboardController.current
 
     // Track favorite states
@@ -149,9 +149,10 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
             .distinctUntilChanged()
             .collect { lastVisibleIndex ->
                 val totalItems = listState.layoutInfo.totalItemsCount
-                if (totalItems > 0 && lastVisibleIndex >= totalItems - 5 && !viewModel.isLoading.value && searchQuery.isEmpty()) {
+                if (totalItems > 0 && lastVisibleIndex >= totalItems - 10 && !viewModel.isLoading.value && searchQuery.isEmpty()) {
                     coroutineScope.launch {
                         viewModel.fetchItemsPage()
+                        println("loading more ")
                     }
                 }
             }
@@ -159,7 +160,7 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
 
     MaterialTheme {
         Scaffold(
-            snackbarHost = { SnackbarHost(snackbar) }
+            snackbarHost = { SnackbarHost(snackbarHost) }
         ) { paddingValues->
             Box(
                 modifier = Modifier
@@ -240,7 +241,7 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
                                             }
                                         }else{
                                             coroutineScope.launch {
-                                                snackbar.showSnackbar("Login Please")
+                                                snackbarHost.showSnackbar("Login Please")
                                             }
                                         }
                                     },

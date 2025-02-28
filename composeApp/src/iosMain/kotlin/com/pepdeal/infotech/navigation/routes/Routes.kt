@@ -68,6 +68,15 @@ sealed class Routes {
     @Serializable
     object SearchScreenPage : Routes()
 
+    @Serializable
+    data class YourShopScreenPage(val shopId:String) :Routes()
+
+    @Serializable
+    data class SupportScreenPage(val userName:String,val userMobileNo:String):Routes()
+
+    @Serializable
+    object AboutUs :Routes()
+
     companion object {
         const val ColorBottomSheet = "color_bottom_sheet"
         const val EditShopColorBottomSheet = "edit_shop_color_bottom_sheet"

@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pepdeal.infotech.banner.BannerMaster
 import com.pepdeal.infotech.shop.modal.ShopWithProducts
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,16 +26,18 @@ class ShopViewModal : ViewModel() {
     private var lastShopId: String? = null
 
     fun loadMoreShops() {
-        if (_isLoading.value) return // Prevent duplicate loading
+        if (_isLoading.value) return
 
         _isLoading.value = true
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 shopRepo.getActiveShopsFlowPaginationEmitWithFilter(lastShopId)
-                    .collect { newShops ->
-                        lastShopId = newShops.shop.shopId // Update last shopId for pagination
-                        _shops.update { oldList ->
-                            (oldList + newShops).distinctBy { it.shop.shopId }
+                    .collect { newShop ->  // ✅ newShop is a single item, not a list
+                        if (newShop.shop.shopId != lastShopId) { // ✅ Prevent duplicate shop
+                            lastShopId = newShop.shop.shopId
+                            _shops.update { oldList ->
+                                (oldList + newShop).distinctBy { it.shop.shopId }
+                            }
                         }
                         _isLoading.value = false
                     }

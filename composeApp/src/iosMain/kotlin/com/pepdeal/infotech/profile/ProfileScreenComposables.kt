@@ -45,6 +45,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntSize
@@ -81,6 +82,7 @@ import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
 import pepdealios.composeapp.generated.resources.arrow_forward
@@ -90,6 +92,7 @@ import pepdealios.composeapp.generated.resources.baseline_power_settings_new_24
 import pepdealios.composeapp.generated.resources.baseline_video
 import pepdealios.composeapp.generated.resources.black_heart
 import pepdealios.composeapp.generated.resources.compose_multiplatform
+import pepdealios.composeapp.generated.resources.manrope_semibold
 import pepdealios.composeapp.generated.resources.shopping_bag
 import pepdealios.composeapp.generated.resources.super_shop_logo
 import pepdealios.composeapp.generated.resources.support
@@ -111,6 +114,9 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
     val userPhone by datastore.data.map { it[PreferencesKeys.MOBILE_NO] ?: "-1" }
         .collectAsState(initial = "-1")
 
+    val shopId by datastore.data.map { it[PreferencesKeys.SHOPID_KEY] ?: "-1" }
+        .collectAsState(initial = "-1")
+
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     val profileImage = remember { mutableStateOf<ImageBitmap?>(null) }
@@ -126,6 +132,14 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
         if (profileImageUrl?.profilePicUrl.isNullOrEmpty() && currentUserId != "-1") {
             println("Fetching profile picture")
             viewModal.fetchUserProfilePic(currentUserId)
+        }
+    }
+
+    LaunchedEffect(userStatus) {
+        userStatus.let {
+            if (userStatus == "1" && userPhone != "-1" && shopId == "-1") {
+                viewModal.fetchShopId(shopMobileNo = userPhone)
+            }
         }
     }
 
@@ -209,14 +223,18 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                                     text = userName.toNameFormat(),
                                     fontSize = 15.sp,
                                     color = Color.Black,
-                                    lineHeight = 15.sp
+                                    lineHeight = 15.sp,
+                                    fontFamily = FontFamily(Font(Res.font.manrope_semibold)),
+                                    fontWeight = FontWeight.Medium
                                 )
 
                                 Text(
                                     text = userPhone,
-                                    fontSize = 11.sp,
+                                    fontSize = 13.sp,
                                     color = Color.Black,
-                                    lineHeight = 15.sp
+                                    lineHeight = 15.sp,
+                                    fontFamily = FontFamily(Font(Res.font.manrope_semibold)),
+                                    fontWeight = FontWeight.Medium
                                 )
                             }
                         }
@@ -237,7 +255,11 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                         icon = Res.drawable.black_heart,
                         onClick = {
                             if (currentUserId != "-1") {
-                                NavigationProvider.navController.navigate(Routes.FavouritesPage(currentUserId))
+                                NavigationProvider.navController.navigate(
+                                    Routes.FavouritesPage(
+                                        currentUserId
+                                    )
+                                )
                             } else {
                                 scope.launch {
                                     snackBar.showSnackbar("Please Login")
@@ -284,7 +306,13 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                         ProfileMenuItem(
                             text = "Your Shop",
                             icon = Res.drawable.shopping_bag,
-                            onClick = { NavigationProvider.navController.navigate(Routes.OpenYourShopPage) })
+                            onClick = {
+                                NavigationProvider.navController.navigate(
+                                    Routes.YourShopScreenPage(
+                                        shopId = shopId
+                                    )
+                                )
+                            })
                     } else {
                         ProfileMenuItem(
                             text = "Open Your Shop",
@@ -365,15 +393,24 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                     ProfileMenuItem(
                         text = "Support",
                         icon = Res.drawable.support,
-                        onClick = { println("Favorites") })
+                        onClick = {
+                            NavigationProvider.navController.navigate(
+                                Routes.SupportScreenPage(
+                                    userName,
+                                    userPhone
+                                )
+                            )
+                        })
                     ProfileMenuItem(
                         text = "Legal",
                         icon = Res.drawable.baseline_edit_document_24,
                         onClick = { println("Favorites") })
+
                     ProfileMenuItem(
                         text = "About Us",
                         icon = Res.drawable.support,
-                        onClick = { println("Favorites") })
+                        onClick = { NavigationProvider.navController.navigate(Routes.AboutUs) })
+
                     // Logout Card
                     LogoutCard(
                         userId = currentUserId,

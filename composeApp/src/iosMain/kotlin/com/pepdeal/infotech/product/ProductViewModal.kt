@@ -27,48 +27,43 @@ class ProductViewModal() : ViewModel() {
     val isLoading: StateFlow<Boolean> get() = _isLoading
 
 
-    private var currentPage = 0 // Page counter
-    private val pageSize = 10   // Number of items per page
-    private var endReached = false // Prevent fetching more if no more data
+    // Define this at the ViewModel level
+    private var currentPage = 0  // Page counter
+    private val pageSize = 50    // Number of items per page
+    private var endReached = false  // Flag to prevent further loading if no more data
 
     fun fetchItemsPage() {
-        if (_isLoading.value || endReached) return // Prevent duplicate loading
+        println("📌 fetchItemsPage() called")  // ✅ Add this
 
+        if (_isLoading.value || endReached) {
+            println("⛔ Skipping fetch: isLoading=${_isLoading.value}, endReached=$endReached")
+            return
+        }
         _isLoading.value = true
 
         viewModelScope.launch {
             var itemCount = 0 // Track how many items are loaded
-
+            val lastProductId = _products.value.lastOrNull()?.productId // ✅ Update pagination index
             try {
-                productRepo.getAllProductsFlowPagination(
-                    (currentPage * pageSize).toString(),
-                    pageSize
-                )
-                    .catch { exception ->
-                        println("Caught Exception: $exception")
-                    }
+                productRepo.getAllProductsFlowPagination(lastProductId, pageSize)
                     .collect { newProduct ->
-                        // Using a mutable list to efficiently add items without creating new lists
+                        println("📌 New product received: ${newProduct.productName}")
                         _products.update { oldList ->
-                            // Use `distinctBy` to filter out duplicates
                             (oldList + newProduct).distinctBy { it.productId }
                         }
-
-                        // Increment page count, handle loading state
                         itemCount++
-                        _isLoading.value = false
                     }
             } catch (e: Exception) {
                 e.printStackTrace()
-                println("Exception: ${e.message}")
+                println("⚠️ Error fetching products: ${e.message}")
             }
 
-            // If fewer than `pageSize` items were added, it means no more data left
-            if (itemCount < pageSize) {
-                endReached = true
+            if (itemCount == 0) {
+                endReached = true // ✅ Only stop if **no new items** were added
+                println("🚨 No more products. Stopping pagination!")
             }
 
-            currentPage++ // Move to the next page
+            currentPage++
             _isLoading.value = false
         }
     }

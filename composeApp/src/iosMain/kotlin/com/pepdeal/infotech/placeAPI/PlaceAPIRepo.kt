@@ -32,13 +32,6 @@ import platform.Foundation.URLQueryAllowedCharacterSet
 import platform.Foundation.create
 import platform.Foundation.stringByAddingPercentEncodingWithAllowedCharacters
 
-//private val json = Json { ignoreUnknownKeys = true }
-//private val client = HttpClient(Darwin) {
-//    install(ContentNegotiation) {
-//        json(json)
-//    }
-//}
-
 // Initialize Ktor HttpClient
 val httpClient = HttpClient {
     install(ContentNegotiation) {

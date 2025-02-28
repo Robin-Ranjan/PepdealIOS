@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -72,7 +73,9 @@ import kottieComposition.rememberKottieComposition
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
+import pepdealios.composeapp.generated.resources.black_heart
 import pepdealios.composeapp.generated.resources.compose_multiplatform
+import pepdealios.composeapp.generated.resources.pepdeal_logo
 import pepdealios.composeapp.generated.resources.red_heart
 import utils.KottieConstants
 
@@ -255,7 +258,23 @@ fun FavoriteProductCard(
                         contentScale = ContentScale.Crop,
                         alignment = Alignment.Center
                     ),
-                    previewPlaceholder = painterResource(Res.drawable.compose_multiplatform)
+                    previewPlaceholder = painterResource(Res.drawable.compose_multiplatform),
+                    loading = {
+                        Image(
+                            painter = painterResource(Res.drawable.pepdeal_logo), // Show a default placeholder on failure
+                            contentDescription = "Placeholder",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    },
+                    failure = {
+                        Image(
+                            painter = painterResource(Res.drawable.pepdeal_logo), // Show a default placeholder on failure
+                            contentDescription = "Placeholder",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
                 )
 
                 Spacer(modifier = Modifier.width(8.dp))

@@ -17,6 +17,8 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.awaitClose
@@ -25,61 +27,17 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
 
 class ShopRepo {
 
     val json = Json{ignoreUnknownKeys =true}
-    fun getActiveShopsFlow(): Flow<ShopWithProducts> = callbackFlow {
-        val client = HttpClient(Darwin)
-
-        try {
-            val response: HttpResponse = client.get("${FirebaseUtil.BASE_URL}shop_master.json") {
-                contentType(ContentType.Application.Json)
-            }
-
-            if (response.status == HttpStatusCode.OK) {
-                val responseBody: String = response.bodyAsText()
-
-                // Deserialize JSON into Map
-                val shopsMap: Map<String, ShopMaster> = json.decodeFromString(responseBody)
-                println("shop ${shopsMap.values}")
-                coroutineScope {
-                    val deferredShops = shopsMap.map { (_, shop) ->
-                        async {
-                            println("calling product function 1")
-                            if (shop.isActive == "0" && shop.flag == "0") {
-                                println("shopId:- ${shop.shopName}")
-                                println("calling product function")
-                                val products = getActiveProductsWithImages(shop.shopId ?: "-1")
-                                if (products.isNotEmpty()) {
-                                    ShopWithProducts(shop, products)
-                                } else {
-                                    null
-                                }
-                            } else null
-                        }
-                    }
-
-                    deferredShops.awaitAll().filterNotNull().forEach { shopWithProducts ->
-                        trySend(shopWithProducts) // Emit shop with products
-                    }
-                }
-            } else {
-                close(Exception("Error fetching shop data: ${response.status}"))
-            }
-        } catch (e: Exception) {
-            close(e) // Close the flow on error
-        } finally {
-            client.close()
-        }
-
-        awaitClose { }
-    }
 
     private suspend fun getActiveProductsWithImages(shopId: String): List<ProductWithImages> {
-        val client = HttpClient(Darwin)
+//        val client = HttpClient(Darwin)
         val productList = mutableListOf<ProductWithImages>()
         println("product function")
         try {
@@ -108,8 +66,6 @@ class ShopRepo {
             }
         } catch (e: Exception) {
             println("Error fetching product data: ${e.message}")
-        } finally {
-            client.close()
         }
 
         return productList
@@ -118,7 +74,7 @@ class ShopRepo {
 
     // Fetch images for a specific product
     private suspend fun getProductImages(productId: String): List<ProductImageMaster> = coroutineScope {
-        val client = HttpClient(Darwin)
+//        val client = HttpClient(Darwin)
         val imageList = mutableListOf<ProductImageMaster>()
 
         try {
@@ -135,139 +91,14 @@ class ShopRepo {
             }
         } catch (e: Exception) {
             println("Error fetching product images: ${e.message}")
-        } finally {
-            client.close()
         }
         return@coroutineScope imageList
     }
 
-
-
-
-    fun getShopsHttp(): Flow<ProductMaster> = callbackFlow {
-        val client = HttpClient(Darwin)  // Specify the iOS engine
-        var count = 0
-        try {
-            // Making the HTTP GET request to Firebase Realtime Database
-            val response: HttpResponse = client.get("${FirebaseUtil.BASE_URL}product_master.json?orderBy=\"productId\"&equalTo=\"43f034a4-42e2-4c79-85d8-3eb88a9b3658\""){
-                contentType(ContentType.Application.Json)
-            }
-
-
-            // Get the response body as a String
-            val responseBody: String = response.bodyAsText()
-            println("${responseBody.length} ${response.status}")
-
-            // Deserialize the response into a Map (String -> ProductMaster)
-            val json = Json { ignoreUnknownKeys = true }  // Add this configuration to ignore unknown keys
-            val productsMap: Map<String, ProductMaster> = json.decodeFromString(responseBody)
-
-
-            // Emit each ProductMaster from the map
-            for ((_, product) in productsMap) {
-                count++
-                println("${product.productName} $count")
-                trySend(product)  // Emit each product one by one
-            }
-        } catch (e: Exception) {
-            close(e)  // Close the flow with an exception if something goes wrong
-        } finally {
-            client.close()  // Close the client after the operation
-        }
-
-        awaitClose { }
-    }
-
-    fun getActiveShopsFlowPagination(lastShopId: String? = null, pageSize: Int = 10): Flow<List<ShopWithProducts>> = flow {
-        val client = HttpClient(Darwin)
-        try {
-            val url = if (lastShopId != null) {
-                "${FirebaseUtil.BASE_URL}shop_master.json?orderBy=\"shopId\"&startAt=\"$lastShopId\"&limitToFirst=$pageSize"
-            } else {
-                "${FirebaseUtil.BASE_URL}shop_master.json?orderBy=\"shopId\"&limitToFirst=$pageSize"
-            }
-            println("Fetching shops from: $url")
-
-            val response: HttpResponse = client.get(url) {
-                contentType(ContentType.Application.Json)
-            }
-
-            if (response.status == HttpStatusCode.OK) {
-                val responseBody: String = response.bodyAsText()
-
-                val shopsMap: Map<String, ShopMaster> = json.decodeFromString(responseBody)
-                val activeShops = shopsMap.values.filter { it.isActive == "0" && it.flag == "0" }
-
-                coroutineScope {
-                    val deferredShops = activeShops.map { shop ->
-                        async {
-                            val products = getActiveProductsWithImages(shop.shopId ?: "-1")
-                            if (products.isNotEmpty()) ShopWithProducts(shop, products) else null
-                        }
-                    }
-
-                    val shopsWithProducts = deferredShops.awaitAll().filterNotNull()
-
-                    if (shopsWithProducts.isNotEmpty()) {
-                        emit(shopsWithProducts) // Emit paginated shops
-                    }
-                }
-            } else {
-                throw Exception("Error fetching shop data: ${response.status}")
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        } finally {
-            client.close()
-        }
-    }
-
-
-    fun getActiveShopsFlowPaginationEmit(
-        lastShopId: String? = null,
-        pageSize: Int = 10
-    ): Flow<ShopWithProducts> = flow {
-        val client = HttpClient(Darwin)
-
-        try {
-            val url = if (lastShopId != null) {
-                "${FirebaseUtil.BASE_URL}shop_master.json?orderBy=\"shopId\"&startAt=\"$lastShopId\"&limitToFirst=$pageSize"
-            } else {
-                "${FirebaseUtil.BASE_URL}shop_master.json?orderBy=\"shopId\"&limitToFirst=$pageSize"
-            }
-            println("Fetching shops from: $url")
-
-            val response: HttpResponse = client.get(url) {
-                contentType(ContentType.Application.Json)
-            }
-
-            if (response.status == HttpStatusCode.OK) {
-                val responseBody: String = response.bodyAsText()
-                val shopsMap: Map<String, ShopMaster> = json.decodeFromString(responseBody)
-                val activeShops = shopsMap.values.filter { it.isActive == "0" && it.flag == "0" }
-
-                for (shop in activeShops) {
-                    val products = getActiveProductsWithImages(shop.shopId ?: "-1")
-                    if (products.isNotEmpty()) {
-                        emit(ShopWithProducts(shop, products)) // Emit each shop immediately
-                    }
-                }
-            } else {
-                throw Exception("Error fetching shop data: ${response.status}")
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        } finally {
-            client.close()
-        }
-    }
-
     fun getActiveShopsFlowPaginationEmitWithFilter(
         lastShopId: String? = null,
-        pageSize: Int = 50
+        pageSize: Int = 20
     ): Flow<ShopWithProducts> = channelFlow { // ✅ Use channelFlow for concurrency
-        val client = HttpClient(Darwin)
-
         try {
             val url = if (lastShopId != null) {
                 "${FirebaseUtil.BASE_URL}shop_master.json?orderBy=\"shopId\"&startAt=\"$lastShopId\"&limitToFirst=$pageSize"
@@ -285,25 +116,25 @@ class ShopRepo {
 
                 val activeShops = shopsMap.values.filter { it.flag == "0" }
 
-                coroutineScope { // ✅ Use coroutineScope for async execution
-                    val deferredShops = activeShops.map { shop ->
-                        async { // ✅ Fetch products concurrently using async
-                            val products = getActiveProductsWithImages(shop.shopId ?: "-1")
-                            if (products.isNotEmpty()) {
-                                send(ShopWithProducts(shop, products)) // ✅ Send result safely
-                            }
+                activeShops.forEach { shop ->
+                    launch { // ✅ Launch a coroutine for each shop (without blocking)
+                        val products = withContext(Dispatchers.IO) {
+                            getActiveProductsWithImages(shop.shopId ?: "-1")
+                        }
+                        if (products.isNotEmpty()) {
+                            send(ShopWithProducts(shop, products)) // ✅ Send each result as it's ready
                         }
                     }
-                    deferredShops.awaitAll() // ✅ Wait for all async tasks to finish
                 }
             } else {
                 throw Exception("Error fetching shop data: ${response.status}")
             }
         } catch (e: Exception) {
             e.printStackTrace()
-        } finally {
-            client.close()
         }
+//        finally {
+//            client.close()
+//        }
     }
 
 
@@ -334,6 +165,14 @@ class ShopRepo {
             client.close()
         }
         return@coroutineScope imageList
+    }
+
+    private val client = HttpClient(Darwin) {
+        engine {
+            configureRequest {
+                setAllowsCellularAccess(true)
+            }
+        }
     }
 
 

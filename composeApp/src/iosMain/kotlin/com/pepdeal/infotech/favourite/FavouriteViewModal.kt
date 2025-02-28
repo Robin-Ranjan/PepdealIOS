@@ -27,8 +27,11 @@ class FavoriteProductViewModal : ViewModel() {
             favRepo.getFavoriteProductsForUserFlow(userId)
                 .collect { product ->
                     product?.let {
-                        currentFavoriteList.add(product)
-                        _favoriteProduct.value = currentFavoriteList.toList()
+                        // ✅ Filter out duplicates before adding
+                        if (currentFavoriteList.none { it.product.productId == product.product.productId }) {
+                            currentFavoriteList.add(product)
+                            _favoriteProduct.value = currentFavoriteList.toList()
+                        }
                         if (_isLoading.value) _isLoading.value = false
                     } ?: run {
                         _isLoading.value = false
@@ -50,6 +53,8 @@ class FavoriteProductViewModal : ViewModel() {
             favRepo.removeFavoriteItem(userId, productId) {
                 _favoriteProduct.value =
                     _favoriteProduct.value.filterNot { it.product.productId == productId }
+
+                if(_favoriteProduct.value.isEmpty()) _isEmpty.value = true
             }
         }
     }

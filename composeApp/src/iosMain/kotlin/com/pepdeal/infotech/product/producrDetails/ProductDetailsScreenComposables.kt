@@ -463,7 +463,7 @@ fun ProductImagesCarouselWidget(
         contentAlignment = Alignment.BottomCenter,
         modifier = modifier
             .fillMaxWidth()
-            .height(400.dp)
+            .height(500.dp)
     ) {
         // Image Pager
         HorizontalPager(
@@ -529,10 +529,10 @@ fun ProductImagesCarouselWidget(
                     if (pagerState.currentPage == iteration) Color.DarkGray else Color.LightGray
                 Box(
                     modifier = Modifier
-                        .padding(2.dp)
+                        .padding(10.dp)
                         .clip(CircleShape)
                         .background(color)
-                        .size(8.dp)
+                        .size(10.dp)
                 )
             }
         }

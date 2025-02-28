@@ -9,6 +9,9 @@ import androidx.navigation.compose.dialog
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.pepdeal.infotech.AboutUsScreen
+import com.pepdeal.infotech.support.SupportScreen
+import com.pepdeal.infotech.yourShop.YourShopScreen
 import com.pepdeal.infotech.categories.CategoriesBottomSheet
 import com.pepdeal.infotech.categories.SubCategoriesProductBottomSheet
 import com.pepdeal.infotech.categoriesProduct.CategoryWiseProductScreen
@@ -19,7 +22,6 @@ import com.pepdeal.infotech.fonts.FontBottomSheet
 import com.pepdeal.infotech.login.LoginScreen
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.navigation.routes.SubGraph
-import com.pepdeal.infotech.placeAPI.PlacesSearchScreen
 import com.pepdeal.infotech.product.addProduct.AddNewProductScreen
 import com.pepdeal.infotech.product.ListAllProductScreen
 import com.pepdeal.infotech.product.producrDetails.ProductDetailScreen
@@ -148,9 +150,21 @@ fun AppNavigation() {
                 ProductDetailScreen(productId)
             }
 
-//            composable<Routes.SearchScreenPage> {
-//                PlacesSearchScreen()
-//            }
+            composable<Routes.SupportScreenPage> {
+                val userName = it.toRoute<Routes.SupportScreenPage>().userName
+                val mobileNo = it.toRoute<Routes.SupportScreenPage>().userMobileNo
+
+                SupportScreen(userName, userPhoneNo = mobileNo)
+            }
+
+            composable<Routes.YourShopScreenPage> {
+                val shopId = it.toRoute<Routes.YourShopScreenPage>().shopId
+                YourShopScreen(shopId)
+            }
+
+            composable<Routes.AboutUs> {
+                AboutUsScreen()
+            }
             dialog(
                 route = Routes.ColorBottomSheet,
                 dialogProperties = DialogProperties(

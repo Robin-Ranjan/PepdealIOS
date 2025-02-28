@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,10 +31,10 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -58,31 +59,66 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pepdeal.infotech.Objects
 import com.pepdeal.infotech.fonts.FontUtils.getFontResourceByName
+import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.shop.ShopItemView
 import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util
 import com.pepdeal.infotech.util.Util.fromHex
 import com.pepdeal.infotech.util.ViewModals
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kottieAnimation.KottieAnimation
+import kottieComposition.KottieCompositionSpec
+import kottieComposition.animateKottieCompositionAsState
+import kottieComposition.rememberKottieComposition
+import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.FontResource
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
 import pepdealios.composeapp.generated.resources.manrope_bold
 import pepdealios.composeapp.generated.resources.super_shop_positive
+import utils.KottieConstants
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalResourceApi::class)
 @Composable
 fun SuperShopScreen(userId: String, viewModal: SuperShopViewModal = ViewModals.superShopViewModal) {
 
-    val superShops by viewModal.superShop.collectAsStateWithLifecycle(initialValue = emptyList())
+    val superShops by viewModal.superShop.collectAsStateWithLifecycle()
+    val isLoading by viewModal.isLoading.collectAsStateWithLifecycle(initialValue = false)
+    val isEmpty by viewModal.isLoading.collectAsStateWithLifecycle(initialValue = false)
 
-    val isLoading by viewModal.isLoading.collectAsStateWithLifecycle()
     val columnState = rememberLazyListState()
     val scope = rememberCoroutineScope()
+
+    //Animation
+    var animation by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        try {
+            animation = Res.readBytes("files/empty_list.json").decodeToString()
+            println("Animation JSON: $animation")
+        } catch (e: Exception) {
+            println(e.message)
+        }
+    }
+
+    val composition = rememberKottieComposition(
+        spec = KottieCompositionSpec.JsonString(animation)
+    )
+
+    val animationState by animateKottieCompositionAsState(
+        composition = composition,
+        iterations = KottieConstants.IterateForever,
+        isPlaying = true
+    )
+
+    LaunchedEffect(Unit) {
+        if (superShops.isEmpty()) {
+            viewModal.fetchSuperShop(userId)
+        }
+    }
+
     // Outer CardView
     val nestedScrollConnection = remember {
         object : NestedScrollConnection {
@@ -92,23 +128,16 @@ fun SuperShopScreen(userId: String, viewModal: SuperShopViewModal = ViewModals.s
         }
     }
 
-    LaunchedEffect(userId) {
-        scope.launch {
-            viewModal.fetchSuperShop(userId)
-        }
-    }
-
-
     MaterialTheme {
-        Scaffold {
-            Column {
+        Scaffold(
+            topBar = {
                 TopAppBar(
                     title = {
                         Text(
                             text = "Super Shops",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
-                            lineHeight = 18.sp
+                            lineHeight = 16.sp
                         )
                     },
                     navigationIcon = {
@@ -132,16 +161,33 @@ fun SuperShopScreen(userId: String, viewModal: SuperShopViewModal = ViewModals.s
                         actionIconContentColor = Color.Unspecified
                     ),
                     modifier = Modifier.shadow(4.dp),
-                    expandedHeight = 50.dp
                 )
-
-                Box(
-                    modifier = Modifier.fillMaxSize()
-                        .background(Color.White)
-                ) {
-                    if (isLoading) {
+            }
+        ) { paddingValues ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White)
+                    .padding(paddingValues)
+            ) {
+                when {
+                    isLoading -> {
                         CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                    } else {
+                    }
+
+                    isEmpty -> {
+                        println(isEmpty)
+                        // Lottie Animation for Empty State
+                        KottieAnimation(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(top = 50.dp),
+                            composition = composition,
+                            progress = { animationState.progress }
+                        )
+                    }
+
+                    else -> {
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -176,7 +222,15 @@ fun SuperShopScreen(userId: String, viewModal: SuperShopViewModal = ViewModals.s
                                                     shopId
                                                 )
                                             }
-                                        })
+                                        },
+                                            onShopClicked = {
+                                                NavigationProvider.navController.navigate(
+                                                    Routes.ShopDetails(
+                                                        it,
+                                                        userId
+                                                    )
+                                                )
+                                            })
                                     }
                                 }
                             }
@@ -189,7 +243,11 @@ fun SuperShopScreen(userId: String, viewModal: SuperShopViewModal = ViewModals.s
 }
 
 @Composable
-fun SuperShopCardView(superShopWithProduct: SuperShopsWithProduct, onDeleteClick: (String) -> Unit) {
+fun SuperShopCardView(
+    superShopWithProduct: SuperShopsWithProduct,
+    onDeleteClick: (String) -> Unit,
+    onShopClicked: (String) -> Unit
+) {
     val cardBackgroundColor = Color.fromHex(superShopWithProduct.shop.bgColourId ?: "#FFFFFF")
     val shopNameColor = Color.fromHex(superShopWithProduct.shop.fontColourId)
     val fontResource: FontResource =
@@ -210,6 +268,7 @@ fun SuperShopCardView(superShopWithProduct: SuperShopsWithProduct, onDeleteClick
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(cardBackgroundColor)
+                    .clickable { superShopWithProduct.shop.shopId?.let { onShopClicked(it) } }
                     .padding(5.dp)
             ) {
                 // Shop Name and Address
@@ -272,8 +331,11 @@ fun SuperShopCardView(superShopWithProduct: SuperShopsWithProduct, onDeleteClick
             ) {
                 items(
                     items = superShopWithProduct.products,
-                    key = { it.product.productId }) { shopItem ->
-                    ShopItemView(shopItem)
+                    key = { it.product.productId }
+                ) { shopItem ->
+                    ShopItemView(shopItem) {
+                        NavigationProvider.navController.navigate(Routes.ProductDetailsPage(it))
+                    }
                 }
             }
         }

@@ -22,7 +22,11 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
@@ -111,28 +115,41 @@ class FavouritesRepo {
         }
     }
 
-    fun getFavoriteProductsForUserFlow(userId: String): Flow<FavProductWithImages?> = flow {
-        val favoriteProducts = fetchFavoriteProducts(userId)
-            .sortedByDescending { it.createdAt.toLongOrNull() ?: 0L }
+    fun getFavoriteProductsForUserFlow(userId: String): Flow<FavProductWithImages?> = channelFlow {
+        try {
+            val favoriteProducts = fetchFavoriteProducts(userId)
+                .sortedByDescending { it.createdAt.toLongOrNull() ?: 0L }
 
+            if (favoriteProducts.isEmpty()) {
+                send(null) // Emit null if no favorite products
+                return@channelFlow
+            }
 
-        if(favoriteProducts.isEmpty()){
-            emit(null)
-        }
+            coroutineScope { // ✅ Run parallel coroutines inside scope
+                val deferredResults = favoriteProducts.map { favorite ->
+                    async {
+                        val product = fetchProductDetails(favorite.productId) ?: return@async null
 
-        for (favorite in favoriteProducts) {
-            val product = fetchProductDetails(favorite.productId) ?: continue
+                        if (product.isActive == "0" && product.flag == "0") {
+                            val shop = fetchShopDetails(product.shopId)
 
-            if (product.isActive == "0" && product.flag == "0") {
-                val shop = fetchShopDetails(product.shopId)
-
-                if (shop?.flag == "0" && shop.isActive == "0") {
-                    val image = fetchProductImage(product.productId)
-                    if (image != null) {
-                        emit(FavProductWithImages(product, listOf(image),favorite.createdAt))
+                            if (shop?.flag == "0" && shop.isActive == "0") {
+                                val image = fetchProductImage(product.productId)
+                                if (image != null) {
+                                    return@async FavProductWithImages(product, listOf(image), favorite.createdAt)
+                                }
+                            }
+                        }
+                        null // Return null if conditions fail
                     }
                 }
+
+                // ✅ Collect non-null results and send them
+                deferredResults.awaitAll().filterNotNull().forEach { send(it) }
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            send(null) // Emit null in case of an error
         }
     }
 

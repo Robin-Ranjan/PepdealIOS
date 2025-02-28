@@ -37,6 +37,7 @@ class SellerTicketRepo {
 
     fun getTicketForSellerFlow(shopId: String): Flow<ProductTicket> = flow {
         val customerTickets = fetchSellerTicket(shopId)
+        customerTickets.sortedByDescending { it.updatedAt.toLongOrNull() ?:0L }
 
         for (ticket in customerTickets) {
             val product = fetchProductDetails(ticket.productId) ?: continue

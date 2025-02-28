@@ -3,6 +3,7 @@ package com.pepdeal.infotech.tickets
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.attafitamim.krop.core.crop.CircleCropShape
+import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util
 import com.pepdeal.infotech.util.Util.toNameFormat
@@ -72,7 +74,9 @@ fun SellerTicketScreen(viewModal: SellerTicketViewModal = ViewModals.sellerTicke
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
-        viewModal.getAllSellerTicketProduct("-OIssBIQoj5chr2PuTLo")
+        if(sellerTicketProductList.isEmpty()){
+            viewModal.getAllSellerTicketProduct("-OIssBIQoj5chr2PuTLo")
+        }
     }
 
     MaterialTheme {
@@ -137,6 +141,9 @@ fun SellerTicketScreen(viewModal: SellerTicketViewModal = ViewModals.sellerTicke
                                     },
                                     onDelivered = {
                                         viewModal.changeTicketStatus(tickets.ticket.ticketId, "3")
+                                    },
+                                    onTicketClicked = {
+                                        NavigationProvider.navController.navigate(Routes.ProductDetailsPage(it))
                                     }
                                 )
                             }
@@ -154,7 +161,8 @@ fun SellerTicketCard(
     item: ProductTicket,
     onReject: () -> Unit,
     onConfirm: () -> Unit,
-    onDelivered: () -> Unit
+    onDelivered: () -> Unit,
+    onTicketClicked:(String) -> Unit
 ) {
     val productImage = item.imageUrl
 
@@ -169,6 +177,7 @@ fun SellerTicketCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onTicketClicked(item.ticket.productId) }
             .padding(5.dp),
         shape = RoundedCornerShape(5.dp),
         elevation = CardDefaults.cardElevation(4.dp),

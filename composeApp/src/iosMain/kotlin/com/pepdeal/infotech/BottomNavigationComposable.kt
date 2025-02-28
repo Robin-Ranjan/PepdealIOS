@@ -38,6 +38,11 @@ import com.pepdeal.infotech.profile.ProfileScreen
 import com.pepdeal.infotech.shop.ShopScreen
 import com.pepdeal.infotech.shopVideo.FeedScreen
 import network.chaintech.sdpcomposemultiplatform.sdp
+import org.jetbrains.compose.resources.painterResource
+import pepdealios.composeapp.generated.resources.Res
+import pepdealios.composeapp.generated.resources.feed_icon
+import pepdealios.composeapp.generated.resources.place_holder
+import pepdealios.composeapp.generated.resources.shopping_bag
 
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -69,11 +74,11 @@ fun MainBottomNavigationWithPager() {
                         tonalElevation = NavigationBarDefaults.Elevation
                     ) {
                         val items = listOf(
-                            "Feed" to Icons.Filled.Home,
-                            "Shop" to Icons.Filled.ShoppingCart,
-                            "Product" to Icons.AutoMirrored.Filled.List,
-                            "Categories" to Icons.Filled.LocationOn,
-                            "Profile" to Icons.Filled.Person
+                            "Feed" to painterResource(Res.drawable.feed_icon),
+                            "Shop" to painterResource(Res.drawable.shopping_bag),
+                            "Product" to painterResource(Res.drawable.place_holder),
+                            "Categories" to painterResource(Res.drawable.feed_icon),
+                            "Profile" to painterResource(Res.drawable.feed_icon),
                         )
 
                         items.forEachIndexed { index, (label, icon) ->

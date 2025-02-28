@@ -75,12 +75,15 @@ import com.pepdeal.infotech.util.Util.toTwoDecimalPlaces
 import com.pepdeal.infotech.util.ViewModals
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil3.CoilImage
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.FontResource
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
+import pepdealios.composeapp.generated.resources.black_heart
 import pepdealios.composeapp.generated.resources.compose_multiplatform
 import pepdealios.composeapp.generated.resources.manrope_bold
 import pepdealios.composeapp.generated.resources.pepdeal_logo
@@ -101,14 +104,16 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
     val latestShopList = rememberUpdatedState(shopListNew)
     LaunchedEffect(Unit) {
         if (latestShopList.value.isEmpty()) {
-            scope.launch {
+            scope.launch(Dispatchers.IO) {
                 viewModel.loadMoreShops()
             }
         }
     }
     LaunchedEffect(Unit){
         if(bannerList.isEmpty()){
-            viewModel.getTheBannerList()
+            scope.launch(Dispatchers.IO) {
+                viewModel.getTheBannerList()
+            }
         }
     }
 
@@ -117,8 +122,8 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
             .distinctUntilChanged()
             .collect { lastVisibleIndex ->
                 val totalItems = columnState.layoutInfo.totalItemsCount
-                if (totalItems > 0 && lastVisibleIndex >= totalItems - 3 && !isLoading && searchQuery.isEmpty()) {
-                    scope.launch {
+                if (totalItems > 0 && lastVisibleIndex >= totalItems - 10 && !isLoading && searchQuery.isEmpty()) {
+                    scope.launch(Dispatchers.IO) {
                         viewModel.loadMoreShops()
                     }
                 }
@@ -312,7 +317,9 @@ fun ShopCardView(shopWithProduct: ShopWithProducts) {
                 ) {
                     items(items = shopWithProduct.products,
                         key = { it.product.productId }) { shopItem ->
-                        ShopItemView(shopItem)
+                        ShopItemView(shopItem){
+                            NavigationProvider.navController.navigate(Routes.ProductDetailsPage(it))
+                        }
                     }
                 }
             }
@@ -321,11 +328,12 @@ fun ShopCardView(shopWithProduct: ShopWithProducts) {
 }
 
 @Composable
-fun ShopItemView(shopItem: ProductWithImages) {
+fun ShopItemView(shopItem: ProductWithImages,onProductClicked:(String) ->Unit) {
     Card(
         modifier = Modifier
             .width(150.dp)
             .fillMaxHeight()
+            .clickable { onProductClicked(shopItem.product.productId) }
             .padding(horizontal = 5.dp, vertical = 5.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         shape = RoundedCornerShape(3.dp),
@@ -351,7 +359,7 @@ fun ShopItemView(shopItem: ProductWithImages) {
                                 1.dp,
                                 color = Color.LightGray
                             ), // Set a fixed height for the image
-                        imageModel = { shopItem.images[0].productImages },
+                        imageModel = { shopItem.images.firstOrNull()?.productImages ?: "" },
                         imageOptions = ImageOptions(
                             contentScale = ContentScale.Crop,
                             alignment = Alignment.Center,
@@ -359,7 +367,15 @@ fun ShopItemView(shopItem: ProductWithImages) {
                                 setToSaturation(1f)
                             })
                         ),
-                        previewPlaceholder = painterResource(Res.drawable.compose_multiplatform)
+                        previewPlaceholder = painterResource(Res.drawable.compose_multiplatform),
+                        failure = {
+                            Image(
+                                painter = painterResource(Res.drawable.black_heart), // Show a default placeholder on failure
+                                contentDescription = "Placeholder",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
                     )
                 }
             }

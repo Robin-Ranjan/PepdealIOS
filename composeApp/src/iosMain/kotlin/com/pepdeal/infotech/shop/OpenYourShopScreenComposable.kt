@@ -494,8 +494,8 @@ fun TextFieldWithLabel(
         },
         modifier = modifier
             .background(Color.White, MaterialTheme.shapes.small)
-            .clickable { onClick() }
-            .padding(8.dp),
+            .padding(8.dp)
+            .clickable { onClick() },
         textStyle = TextStyle(
             color = color,
             fontSize = 15.sp,
@@ -508,7 +508,7 @@ fun TextFieldWithLabel(
         keyboardOptions = KeyboardOptions.Default.copy(
             keyboardType = inputType
         ),
-        readOnly = isEditable,
+        readOnly = !isEditable,
     )
 }
 

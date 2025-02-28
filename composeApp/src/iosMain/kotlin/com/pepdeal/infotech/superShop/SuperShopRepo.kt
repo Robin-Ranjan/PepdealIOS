@@ -33,21 +33,27 @@ class SuperShopRepo {
         }
     }
 
-    fun getSuperShopWithProduct(userId:String): Flow<SuperShopsWithProduct> = flow{
+    fun getSuperShopWithProduct(userId:String): Flow<SuperShopsWithProduct?> = flow{
         try {
             val superShops = fetchSuperShops(userId)
                 .sortedByDescending { it.createdAt.toLongOrNull()?: 0L }
-            for (shop in superShops){
-                val shopDetails = fetchShopDetails(shop.shopId)
+
+            if(superShops.isEmpty()){
+                emit(null)
+            }
+
+            for (superShop in superShops){
+                val shopDetails = fetchShopDetails(superShop.shopId)
                 if(shopDetails?.flag == "0" && shopDetails.isActive == "0"){
-                    val products = getActiveProductsWithImages(shop.shopId)
+                    val products = getActiveProductsWithImages(superShop.shopId)
                     if(products.isNotEmpty()){
-                        emit(SuperShopsWithProduct(shopDetails,products,shop.createdAt))
+                        emit(SuperShopsWithProduct(shopDetails,products,superShop.createdAt))
                     }
                 }
             }
         }catch (e:Exception){
             e.printStackTrace()
+            emit(null)
         }
     }
 

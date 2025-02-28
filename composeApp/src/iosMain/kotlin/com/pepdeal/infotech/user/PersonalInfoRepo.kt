@@ -1,6 +1,7 @@
 package com.pepdeal.infotech.user
 
 import com.pepdeal.infotech.UserProfilePicMaster
+import com.pepdeal.infotech.shop.modal.ShopMaster
 import com.pepdeal.infotech.util.FirebaseUtil
 import com.pepdeal.infotech.util.Util
 import io.ktor.client.HttpClient
@@ -226,6 +227,44 @@ class PersonalInfoRepo {
         } catch (e: Exception) {
             println("Error fetching profile picture: ${e.message}")
             e.printStackTrace()
+            null
+        }
+    }
+
+    suspend fun fetchShopId(shopMobileNo:String):String?{
+        return try {
+            val response: HttpResponse = client.get("${FirebaseUtil.BASE_URL}shop_master.json") {
+                parameter("orderBy", "\"shopMobileNo\"")
+                parameter("equalTo", "\"$shopMobileNo\"")
+                contentType(ContentType.Application.Json)
+            }
+
+            if (response.status == HttpStatusCode.OK) {
+                val responseBody = response.bodyAsText()
+                println("Response: $responseBody") // Debugging Log
+
+                if (responseBody.isEmpty() || responseBody == "{}") {
+                    println("No profile picture found for userId: $shopMobileNo")
+                    return null
+                }
+
+                val result: Map<String, ShopMaster> = json.decodeFromString(responseBody)
+                val profilePic = result.values.firstOrNull() // Get the first value in the map
+
+                if (profilePic == null) {
+                    println("Parsed response is empty for userId: $shopMobileNo")
+                }
+
+                profilePic?.shopId
+            } else {
+                println("Failed to fetch profile picture: ${response.status}")
+                println("Response Body: ${response.bodyAsText()}")
+                null
+            }
+
+        }catch (e:Exception){
+            e.printStackTrace()
+            println(e.message)
             null
         }
     }

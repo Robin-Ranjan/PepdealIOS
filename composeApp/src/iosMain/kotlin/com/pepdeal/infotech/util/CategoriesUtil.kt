@@ -8,33 +8,33 @@ import kotlinx.coroutines.withContext
 
 object CategoriesUtil {
 
-    fun getSubCategoriesList(categoryName: String): List<SubCategory> {
-        val matchingCategory =
-            productCategories.find { it.name.equals(categoryName, ignoreCase = true) }
-        return matchingCategory?.let { category ->
-            subCategories.filter { it.categoryId == category.id }
-        } ?: emptyList()
-    }
-
-    // Function to create the map in a background thread using coroutines
-    fun createCategorySubCategoryMapAsync(
-        categories: List<ProductCategories>,
-        subCategories: List<SubCategory>
-    ) {
-        val categoryIdToName = categories.associateBy({ it.id }, { it.name.lowercase() })
-
-        subCategories.groupBy { it.categoryId }
-            .mapKeys { (categoryId, _) -> categoryIdToName[categoryId] ?: "" }
-            .filterKeys { it.isNotEmpty() }
-    }
+//    fun getSubCategoriesList(categoryName: String): List<SubCategory> {
+//        val matchingCategory =
+//            productCategories.find { it.name.equals(categoryName, ignoreCase = true) }
+//        return matchingCategory?.let { category ->
+//            subCategories.filter { it.categoryId == category.id }
+//        } ?: emptyList()
+//    }
+//
+//    // Function to create the map in a background thread using coroutines
+//    fun createCategorySubCategoryMapAsync(
+//        categories: List<ProductCategories>,
+//        subCategories: List<SubCategory>
+//    ) {
+//        val categoryIdToName = categories.associateBy({ it.id }, { it.name.lowercase() })
+//
+//        subCategories.groupBy { it.categoryId }
+//            .mapKeys { (categoryId, _) -> categoryIdToName[categoryId] ?: "" }
+//            .filterKeys { it.isNotEmpty() }
+//    }
 
     // Function to get subcategories based on category name using the precomputed map
-    fun getSubCategoriesByCategoryNameAsync(
-        categoryName: String,
-        categorySubCategoryMap: Map<String, List<SubCategory>>
-    ) {
-        categorySubCategoryMap[categoryName.lowercase()] ?: emptyList()
-    }
+//    fun getSubCategoriesByCategoryNameAsync(
+//        categoryName: String,
+//        categorySubCategoryMap: Map<String, List<SubCategory>>
+//    ) {
+//        categorySubCategoryMap[categoryName.lowercase()] ?: emptyList()
+//    }
 
     fun getSubCategoriesListById(categoryId: Int): List<SubCategory> {
         if(categoryId==-1) return emptyList()
@@ -100,9 +100,9 @@ object CategoriesUtil {
         SubCategory(29, 4, "Yoga & Pilates", "https://images.unsplash.com/photo-1606238882904-0e0d43b75c0d"),
 
         // Books
-        SubCategory(30, 5, "Fiction Books", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2Fbooks%2F2.jpeg?alt=media&token=3037177e-31d5-4e41-99bd-ef45fdc7bead"),
+        SubCategory(30, 5, "Fiction Books", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2Fbooks%2Ffiction_books.jpeg?alt=media&token=4cd13d64-fb62-4ac2-9c78-8004d76a2847"),
         SubCategory(32, 5, "Non-fiction Books", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2Fbooks%2F2%20(1).jpeg?alt=media&token=d0f9cc4f-2592-45a1-add5-4585310745f6"),
-        SubCategory(33, 5, "Academics Books", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2Fbooks%2Facademic_books?alt=media&token=a45f9c80-562b-48eb-be6d-df744e7b751e"),
+        SubCategory(33, 5, "Academics Books", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2Fbooks%2Facademin_boo.jpeg?alt=media&token=56ab538b-4957-47db-a055-c8bed110cdac"),
         SubCategory(34, 5, "Magazines & Comics", "https://images.unsplash.com/photo-1561234468-2d3605e0b41a"),
         SubCategory(35, 5, "Hobby & Special Interest", "https://images.unsplash.com/photo-1511974035430-5de47d3b95da"),
         SubCategory(36, 5, "Note Books", "https://images.unsplash.com/photo-1553798395-2ea636b7f374"),
