@@ -23,6 +23,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.Json
 
@@ -263,12 +264,11 @@ class ShopRepo {
 
     fun getActiveShopsFlowPaginationEmitWithFilter(
         lastShopId: String? = null,
-        pageSize: Int = 10
-    ): Flow<ShopWithProducts> = flow {
+        pageSize: Int = 50
+    ): Flow<ShopWithProducts> = channelFlow { // ✅ Use channelFlow for concurrency
         val client = HttpClient(Darwin)
 
         try {
-            // Construct the Firebase query URL, adding flag filter directly to the URL
             val url = if (lastShopId != null) {
                 "${FirebaseUtil.BASE_URL}shop_master.json?orderBy=\"shopId\"&startAt=\"$lastShopId\"&limitToFirst=$pageSize"
             } else {
@@ -281,19 +281,20 @@ class ShopRepo {
 
             if (response.status == HttpStatusCode.OK) {
                 val responseBody: String = response.bodyAsText()
-
-                // Parsing the response JSON into a Map of shopId -> ShopMaster
                 val shopsMap: Map<String, ShopMaster> = json.decodeFromString(responseBody)
 
                 val activeShops = shopsMap.values.filter { it.flag == "0" }
-                println("shops:- ${shopsMap.values}")
-                // Iterate over the filtered shops and emit them
-                for (shop in activeShops) {
-                    // Filter products with active flag
-                    val products = getActiveProductsWithImages(shop.shopId ?: "-1")
-                    if (products.isNotEmpty()) {
-                        emit(ShopWithProducts(shop, products)) // Emit each shop with its products
+
+                coroutineScope { // ✅ Use coroutineScope for async execution
+                    val deferredShops = activeShops.map { shop ->
+                        async { // ✅ Fetch products concurrently using async
+                            val products = getActiveProductsWithImages(shop.shopId ?: "-1")
+                            if (products.isNotEmpty()) {
+                                send(ShopWithProducts(shop, products)) // ✅ Send result safely
+                            }
+                        }
                     }
+                    deferredShops.awaitAll() // ✅ Wait for all async tasks to finish
                 }
             } else {
                 throw Exception("Error fetching shop data: ${response.status}")
@@ -304,6 +305,7 @@ class ShopRepo {
             client.close()
         }
     }
+
 
     // Fetch images for a specific product
      suspend fun getActiveBannerImages(): List<BannerMaster> = coroutineScope {
