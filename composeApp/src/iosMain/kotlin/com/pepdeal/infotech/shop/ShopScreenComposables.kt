@@ -27,9 +27,11 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -60,9 +62,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pepdeal.infotech.BannerCarouselWidget
+import com.pepdeal.infotech.LocationViewModel
 import com.pepdeal.infotech.Objects
 import com.pepdeal.infotech.shop.modal.ShopWithProducts
 import com.pepdeal.infotech.fonts.FontUtils.getFontResourceByName
+import com.pepdeal.infotech.locationPermissionController
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.product.ProductWithImages
 import com.pepdeal.infotech.product.SearchView
@@ -75,6 +79,9 @@ import com.pepdeal.infotech.util.Util.toTwoDecimalPlaces
 import com.pepdeal.infotech.util.ViewModals
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil3.CoilImage
+import dev.icerock.moko.media.compose.rememberMediaPickerControllerFactory
+import dev.icerock.moko.permissions.compose.BindEffect
+import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -87,34 +94,62 @@ import pepdealios.composeapp.generated.resources.black_heart
 import pepdealios.composeapp.generated.resources.compose_multiplatform
 import pepdealios.composeapp.generated.resources.manrope_bold
 import pepdealios.composeapp.generated.resources.pepdeal_logo
+import pepdealios.composeapp.generated.resources.place_holder
+import dev.icerock.moko.geo.LocationTracker
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.darwin.Darwin
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
 
+
+@OptIn(FlowPreview::class)
 @Composable
 fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
 
+    // constants
     val scope = rememberCoroutineScope()
-    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
-    val shopListNew by viewModel.shops.collectAsStateWithLifecycle()
-    val bannerList by viewModel.bannerList.collectAsStateWithLifecycle()
-    var searchQuery by remember { mutableStateOf("") }
-    val columnState = rememberLazyListState()
+    val factory = rememberPermissionsControllerFactory()
+    val controller = remember(factory) { factory.createPermissionsController() }
+    val snackBar = remember { SnackbarHostState() }
     val keyboardController = LocalSoftwareKeyboardController.current
 
+    //observer
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val shopListNew by viewModel.shops.collectAsStateWithLifecycle()
+    val searchedShopList by viewModel.searchedShops.collectAsStateWithLifecycle()
+    val bannerList by viewModel.bannerList.collectAsStateWithLifecycle()
+
+    // variables
+    var searchQuery by remember { mutableStateOf("") }
+    val columnState = rememberLazyListState()
     var locationName by remember { mutableStateOf("") }
 
+
     val latestShopList = rememberUpdatedState(shopListNew)
-    LaunchedEffect(Unit) {
+    LaunchedEffect(latestShopList.value.isEmpty()) {
         if (latestShopList.value.isEmpty()) {
             scope.launch(Dispatchers.IO) {
                 viewModel.loadMoreShops()
             }
         }
     }
-    LaunchedEffect(Unit){
-        if(bannerList.isEmpty()){
+    LaunchedEffect(bannerList.isEmpty()) {
+        if (bannerList.isEmpty()) {
             scope.launch(Dispatchers.IO) {
                 viewModel.getTheBannerList()
             }
         }
+    }
+
+    LaunchedEffect(searchQuery) {
+        snapshotFlow { searchQuery }
+            .debounce(1000)                     // Wait 300ms after the last change
+            .distinctUntilChanged()              // Only react if the value has actually changed
+            .collectLatest { debouncedQuery ->
+                // Call your viewModel function with the debounced search query
+                viewModel.loadMoreSearchedShops(debouncedQuery)
+            }
     }
 
     LaunchedEffect(columnState) {
@@ -130,16 +165,23 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
             }
     }
 
+    LaunchedEffect(Unit) {
+        scope.launch {
+            locationPermissionController(
+                controller,
+                snackBar = snackBar,
+                scope
+            )
+        }
+    }
+
     val displayedProductList by derivedStateOf {
         if (searchQuery.isNotEmpty()) {
-            shopListNew.filter {
-                it.shop.searchTag?.contains(searchQuery, ignoreCase = true) == true
-            }
+            searchedShopList
         } else {
             shopListNew
         }
     }
-
 
     // Outer CardView
     val nestedScrollConnection = remember {
@@ -151,6 +193,7 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
     }
 
     MaterialTheme {
+        BindEffect(controller)
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -162,7 +205,6 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
                     })
                 }
         ) {
-
             Column {
                 Row(
                     modifier = Modifier
@@ -182,7 +224,7 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
                 SearchView("Search Shop", searchQuery) {
                     searchQuery = it
                 }
-                Text(text = shopListNew.size.toString())
+                Text(text = if (searchQuery.isEmpty()) shopListNew.size.toString() else searchedShopList.size.toString())
 
                 LazyColumn(
                     modifier = Modifier
@@ -196,7 +238,7 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
                         },
                     state = columnState
                 ) {
-                    if(bannerList.isNotEmpty()){
+                    if (bannerList.isNotEmpty()) {
                         item {
                             BannerCarouselWidget(
                                 bannerList,
@@ -239,7 +281,7 @@ fun ShopCardView(shopWithProduct: ShopWithProducts) {
 
     Card(
         modifier = Modifier
-            .padding(8.dp)
+            .padding(top = 8.dp, start = 8.dp, end = 8.dp, bottom = 0.dp)
             .fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -250,8 +292,14 @@ fun ShopCardView(shopWithProduct: ShopWithProducts) {
             Column {
                 // Shop Name (Header)
                 Box(modifier = Modifier
-                    .clickable { NavigationProvider.navController.navigate(Routes.ShopDetails(shopWithProduct.shop.shopId?:"",
-                        Objects.USER_ID))}) {
+                    .clickable {
+                        NavigationProvider.navController.navigate(
+                            Routes.ShopDetails(
+                                shopWithProduct.shop.shopId ?: "",
+                                Objects.USER_ID
+                            )
+                        )
+                    }) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -317,7 +365,7 @@ fun ShopCardView(shopWithProduct: ShopWithProducts) {
                 ) {
                     items(items = shopWithProduct.products,
                         key = { it.product.productId }) { shopItem ->
-                        ShopItemView(shopItem){
+                        ShopItemView(shopItem) {
                             NavigationProvider.navController.navigate(Routes.ProductDetailsPage(it))
                         }
                     }
@@ -328,7 +376,7 @@ fun ShopCardView(shopWithProduct: ShopWithProducts) {
 }
 
 @Composable
-fun ShopItemView(shopItem: ProductWithImages,onProductClicked:(String) ->Unit) {
+fun ShopItemView(shopItem: ProductWithImages, onProductClicked: (String) -> Unit) {
     Card(
         modifier = Modifier
             .width(150.dp)
@@ -370,7 +418,7 @@ fun ShopItemView(shopItem: ProductWithImages,onProductClicked:(String) ->Unit) {
                         previewPlaceholder = painterResource(Res.drawable.compose_multiplatform),
                         failure = {
                             Image(
-                                painter = painterResource(Res.drawable.black_heart), // Show a default placeholder on failure
+                                painter = painterResource(Res.drawable.place_holder), // Show a default placeholder on failure
                                 contentDescription = "Placeholder",
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Crop

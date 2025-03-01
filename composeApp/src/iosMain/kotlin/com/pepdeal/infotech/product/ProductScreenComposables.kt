@@ -45,6 +45,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -82,6 +83,9 @@ import com.pepdeal.infotech.util.ViewModals
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil3.CoilImage
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -97,6 +101,7 @@ import pepdealios.composeapp.generated.resources.pepdeal_logo
 import pepdealios.composeapp.generated.resources.red_heart
 
 
+@OptIn(FlowPreview::class)
 @Composable
 fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
 
@@ -106,7 +111,7 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
     val listState = rememberLazyGridState()
     val coroutineScope = rememberCoroutineScope()
     val productNewList by viewModel.products.collectAsStateWithLifecycle()
-    var filteredProducts by remember { mutableStateOf<List<ShopItems>>(emptyList()) }
+    val filteredProducts by viewModel.searchedProducts.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     var searchQuery by remember { mutableStateOf("") }
     val snackbarHost = remember { SnackbarHostState() }
@@ -122,24 +127,34 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
         }
     }
 
-    val displayedProductList = remember(searchQuery, productNewList) {
+    val displayedProductList by derivedStateOf {
         if (searchQuery.isNotEmpty()) filteredProducts else productNewList
     }
 
     // Observe search query and filter in the background
-    LaunchedEffect(searchQuery, productNewList) {
-        withContext(Dispatchers.Default) {
-            val filtered = productNewList.filter { product ->
-                // Split product's searchTags by commas
-                product.searchTag.split(",").any { tag ->
-                    // Check if any tag matches the searchQuery
-                    tag.contains(searchQuery, ignoreCase = true)
-                }
+//    LaunchedEffect(searchQuery, productNewList) {
+//        withContext(Dispatchers.Default) {
+//            val filtered = productNewList.filter { product ->
+//                // Split product's searchTags by commas
+//                product.searchTag.split(",").any { tag ->
+//                    // Check if any tag matches the searchQuery
+//                    tag.contains(searchQuery, ignoreCase = true)
+//                }
+//            }
+//            withContext(Dispatchers.Main) {
+//                filteredProducts = filtered
+//            }
+//        }
+//    }
+
+    LaunchedEffect(searchQuery) {
+        snapshotFlow { searchQuery }
+            .debounce(1000)                     // Wait 300ms after the last change
+            .distinctUntilChanged()              // Only react if the value has actually changed
+            .collectLatest { debouncedQuery ->
+                // Call your viewModel function with the debounced search query
+                viewModel.fetchSearchedItemsPage(debouncedQuery)
             }
-            withContext(Dispatchers.Main) {
-                filteredProducts = filtered
-            }
-        }
     }
 
 
@@ -187,7 +202,7 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
                         searchQuery = it
                     }
 
-                    Text(text = productNewList.size.toString())
+                    Text(text = if(searchQuery.isEmpty())productNewList.size.toString() else filteredProducts.size.toString())
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(2), // 2 columns
                         modifier = Modifier

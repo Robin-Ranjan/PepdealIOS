@@ -87,6 +87,8 @@ dependencies{
     // Compose Multiplatform
     commonMainApi("dev.icerock.moko:media-compose:0.11.0")
     commonMainImplementation("com.attafitamim.krop:ui:0.1.6")
+
+    commonMainApi("dev.icerock.moko:geo-compose:0.7.0")
 }
 
 

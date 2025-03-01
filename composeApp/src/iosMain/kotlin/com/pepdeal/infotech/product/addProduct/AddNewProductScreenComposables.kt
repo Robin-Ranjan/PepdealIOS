@@ -110,7 +110,7 @@ import pepdealios.composeapp.generated.resources.manrope_light
 fun AddNewProductScreen(viewModal: AddNewProductViewModal = ViewModals.addNewProductViewModal) {
     val factory = rememberPermissionsControllerFactory()
     val controller = remember(factory) { factory.createPermissionsController() }
-    val coroutineScope: CoroutineScope = rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()
 
     val medialPickerFactory = rememberMediaPickerControllerFactory()
     val picker = remember(factory) { medialPickerFactory.createMediaPickerController() }

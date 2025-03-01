@@ -12,6 +12,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.darwin.Darwin
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
+import io.ktor.client.request.parameter
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
@@ -172,6 +173,73 @@ class ShopRepo {
             configureRequest {
                 setAllowsCellularAccess(true)
             }
+        }
+    }
+
+
+    fun getActiveSearchedShopsFlowPagination(
+        lastShopId: String? = null,
+        pageSize: Int = 200,
+        searchQuery: String = ""
+    ): Flow<ShopWithProducts> = channelFlow {
+        try {
+//            val url = if (lastShopId != null) {
+//                "${FirebaseUtil.BASE_URL}shop_master.json?orderBy=\"shopId\"&startAt=\"$lastShopId\"&limitToFirst=$pageSize"
+//            } else {
+//                "${FirebaseUtil.BASE_URL}shop_master.json?orderBy=\"shopId\"&limitToFirst=$pageSize"
+//            }
+            val url = "${FirebaseUtil.BASE_URL}shop_master.json"
+
+            val response: HttpResponse = client.get(url) {
+                parameter("orderBy","\"isActive\"")
+                parameter("equalTo", "\"0\"")
+                contentType(ContentType.Application.Json)
+            }
+
+            if (response.status == HttpStatusCode.OK) {
+                val responseBody: String = response.bodyAsText()
+                val shopsMap: Map<String, ShopMaster> = json.decodeFromString(responseBody)
+//                var activeShops = shopsMap.values.filter { it.flag == "0" }
+                var activeShops = shopsMap.values
+
+                // If a search query is provided, filter activeShops using searchTag (case-insensitive)
+                if (searchQuery.isNotEmpty()) {
+                    activeShops = activeShops
+                        .filter { shop ->
+                            shop.searchTag
+                                ?.split(",")
+                                ?.any { tag -> tag.trim().contains(searchQuery, ignoreCase = true) } ?: false
+                        }
+                        .sortedByDescending { shop ->
+                            shop.searchTag?.split(",")
+                                ?.map { tag ->
+                                    val trimmed = tag.trim()
+                                    when {
+                                        trimmed.equals(searchQuery, ignoreCase = true) -> 3  // Exact match
+                                        trimmed.startsWith(searchQuery, ignoreCase = true) -> 2 // Starts with query
+                                        trimmed.contains(searchQuery, ignoreCase = true) -> 1  // Contains query
+                                        else -> 0
+                                    }
+                                }?.sum() ?: 0
+                        }
+                }
+
+                // For each active (and filtered) shop, concurrently fetch products and send result
+                activeShops.forEach { shop ->
+                    launch {
+                        val products = withContext(Dispatchers.IO) {
+                            getActiveProductsWithImages(shop.shopId ?: "-1")
+                        }
+                        if (products.isNotEmpty()) {
+                            send(ShopWithProducts(shop, products))
+                        }
+                    }
+                }
+            } else {
+                throw Exception("Error fetching shop data: ${response.status}")
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
