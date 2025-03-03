@@ -99,7 +99,7 @@ fun FavoriteShopVideoScreen(
                 TopAppBar(
                     title = {
                         Text(
-                            text = "Favourite Products",
+                            text = "Saved Video",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             lineHeight = 18.sp

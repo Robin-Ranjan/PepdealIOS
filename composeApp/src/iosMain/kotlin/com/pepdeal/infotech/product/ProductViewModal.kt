@@ -2,17 +2,11 @@ package com.pepdeal.infotech.product
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.pepdeal.infotech.categories.ProductCategories
-import com.pepdeal.infotech.categories.SubCategory
-import com.pepdeal.infotech.color.ColorItem
 import com.pepdeal.infotech.favourite.FavouritesRepo
 import com.pepdeal.infotech.favourite.modal.FavoriteProductMaster
 import com.pepdeal.infotech.util.Util
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.buffer
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -96,9 +90,10 @@ class ProductViewModal() : ViewModel() {
 
         viewModelScope.launch {
             var itemCount = 0 // Track how many items are loaded
-            val lastProductId = _searchedProducts.value.lastOrNull()?.productId // ✅ Update pagination index
+            val lastProductId =
+                _searchedProducts.value.lastOrNull()?.productId // ✅ Update pagination index
             try {
-                productRepo.getAllProductsSearchFlowPagination(lastProductId, pageSize,query)
+                productRepo.getAllProductsSearchFlowPagination(lastProductId, pageSize, query)
                     .collect { newProduct ->
                         println("📌 New product received: ${newProduct.productName}")
                         _searchedProducts.update { oldList ->

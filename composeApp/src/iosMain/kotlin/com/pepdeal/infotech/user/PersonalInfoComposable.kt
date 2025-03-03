@@ -64,6 +64,7 @@ fun PersonalInfoScreen(
     val userDetails = viewModal.userDetails.collectAsStateWithLifecycle()
     val isLoading = viewModal.isLoading.collectAsStateWithLifecycle()
     val uploading = viewModal.uploading.collectAsStateWithLifecycle()
+    val profileImageUrl by viewModal.userProfilePicMaster.collectAsStateWithLifecycle()
 
     var phoneNumber by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
@@ -78,9 +79,12 @@ fun PersonalInfoScreen(
     val snackBar = remember { SnackbarHostState() }
 
     val keyboardController = LocalSoftwareKeyboardController.current
+
     LaunchedEffect(userId) {
-        println("fetching user")
-        viewModal.fetchUserDetails(userId)
+        if (profileImageUrl?.profilePicUrl.isNullOrEmpty()) {
+            println("fetching user")
+            viewModal.fetchUserDetails(userId)
+        }
     }
 
     LaunchedEffect(userDetails.value) {
@@ -88,6 +92,12 @@ fun PersonalInfoScreen(
         phoneNumber = userDetails.value.mobileNo
         username = userDetails.value.userName
         email = userDetails.value.emailId
+    }
+
+    LaunchedEffect(profileImageUrl) {
+        println(profileImageUrl)
+        viewModal.fetchUserProfilePic(userId)
+
     }
 
     MaterialTheme {
@@ -155,7 +165,11 @@ fun PersonalInfoScreen(
                                     imageState = profileImage,
                                     controller = controller,
                                     picker = picker,
-                                    snackBar = snackBar
+                                    snackBar = snackBar,
+                                    imageBitMap = {
+                                        viewModal.uploadNewProfilePic(userId, it)
+                                    },
+                                    imageUrl = profileImageUrl?.profilePicUrl ?: ""
                                 )
                             }
 
@@ -194,17 +208,17 @@ fun PersonalInfoScreen(
                                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email)
                             )
 
-                            if(uploading.value){
+                            if (uploading.value) {
                                 CircularProgressIndicator()
-                            }else{
+                            } else {
                                 Button(onClick = {
-                                    viewModal.updateUserEmailId(userId,email, onSuccess = {
-                                        if(it){
+                                    viewModal.updateUserEmailId(userId, email, onSuccess = {
+                                        if (it) {
                                             viewModal.reset()
                                             NavigationProvider.navController.popBackStack()
                                         }
                                     })
-                                }){
+                                }) {
                                     Text(text = "Upload", fontSize = 20.sp)
                                 }
                             }

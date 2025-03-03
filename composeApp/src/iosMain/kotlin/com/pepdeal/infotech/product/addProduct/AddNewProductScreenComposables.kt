@@ -70,6 +70,7 @@ import com.attafitamim.krop.core.crop.crop
 import com.attafitamim.krop.core.crop.cropperStyle
 import com.attafitamim.krop.core.crop.rememberImageCropper
 import com.attafitamim.krop.ui.ImageCropperDialog
+import com.pepdeal.infotech.ImageCompressor
 import com.pepdeal.infotech.Objects
 import com.pepdeal.infotech.categories.SubCategory
 import com.pepdeal.infotech.navigation.routes.Routes
@@ -633,7 +634,10 @@ fun ImageSelector(
                                             result.bitmap
                                         }
                                     }
-                                    croppedBitmap?.let { imageState.value = it }
+                                    croppedBitmap?.let { bitMap ->
+                                        val compressedBitmap = ImageCompressor().compress(bitMap,60 * 1024)
+                                        imageState.value = compressedBitmap
+                                    }
                                 }
                             }
                         }

@@ -436,7 +436,6 @@ class UploadShopVideoRepo {
                 } else {
                     val imageData = nsData.toByteArray()
                     val fileName = "$baseFileName$index.jpg"
-                    val imageName = "image$index"
 
                     // Upload the image using Ktor and get the download URL.
                     val downloadUrl = uploadThumbNailUsingKtor(
@@ -445,7 +444,6 @@ class UploadShopVideoRepo {
                         fileName,
                         imageData,
                         "image/jpeg",
-                        imageName
                     )
                     if (downloadUrl != null) {
                         return downloadUrl
@@ -476,7 +474,6 @@ class UploadShopVideoRepo {
         fileName: String,
         imageData: ByteArray,
         contentType: String = "image/jpeg",
-        imageName: String
     ): String? {
         val client = HttpClient(Darwin)
         // Construct the upload URL using the file name (assumed to be URL-safe or already encoded)
@@ -490,7 +487,7 @@ class UploadShopVideoRepo {
             }
             if (response.status.isSuccess()) {
                 val responseText = response.bodyAsText()
-                return getDownloadThumbNailUrl(responseText, shopId, imageName)
+                return getDownloadThumbNailUrl(responseText, shopId)
             } else {
                 println("Upload failed with status ${response.status.value}: ${response.bodyAsText()}")
                 return null
@@ -510,8 +507,7 @@ class UploadShopVideoRepo {
 // ------------------------------
     private fun getDownloadThumbNailUrl(
         responseJson: String,
-        shopId: String,
-        imageName: String
+        shopId: String
     ): String? {
         try {
             val uploadResponse =

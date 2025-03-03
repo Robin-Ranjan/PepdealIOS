@@ -7,12 +7,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.LocalMinimumInteractiveComponentEnforcement
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -42,6 +36,7 @@ import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
 import pepdealios.composeapp.generated.resources.feed_icon
 import pepdealios.composeapp.generated.resources.place_holder
+import pepdealios.composeapp.generated.resources.profile_tab
 import pepdealios.composeapp.generated.resources.shopping_bag
 
 
@@ -78,7 +73,7 @@ fun MainBottomNavigationWithPager() {
                             "Shop" to painterResource(Res.drawable.shopping_bag),
                             "Product" to painterResource(Res.drawable.place_holder),
                             "Categories" to painterResource(Res.drawable.feed_icon),
-                            "Profile" to painterResource(Res.drawable.feed_icon),
+                            "Profile" to painterResource(Res.drawable.profile_tab),
                         )
 
                         items.forEachIndexed { index, (label, icon) ->

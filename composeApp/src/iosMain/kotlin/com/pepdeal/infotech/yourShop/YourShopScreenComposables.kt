@@ -1,5 +1,6 @@
 package com.pepdeal.infotech.yourShop
 
+import Notify
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -56,7 +57,11 @@ import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util
 import com.pepdeal.infotech.util.Util.fromHex
 import com.pepdeal.infotech.util.ViewModals
+import createNotification
 import kotlinx.coroutines.flow.map
+import multiplatform.network.cmptoast.ToastDuration
+import multiplatform.network.cmptoast.ToastGravity
+import multiplatform.network.cmptoast.showToast
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
@@ -133,6 +138,15 @@ fun YourShopScreen(
                         ) {
                             IconButton(
                                 onClick = {
+                                    val notification = createNotification(NotificationType.TOAST)
+                                    notification.show("Hello, World!")
+
+                                    showToast(
+                                        message = "This is Short Toast",
+                                        textColor = Color.Black,
+                                        duration = ToastDuration.Short,
+                                        gravity = ToastGravity.Bottom
+                                    )
                                     viewModal.reset()
                                     NavigationProvider.navController.popBackStack()
                                 },

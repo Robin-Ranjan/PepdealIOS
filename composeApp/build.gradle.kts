@@ -65,6 +65,10 @@ kotlin {
             implementation("network.chaintech:sdp-ssp-compose-multiplatform:1.0.5")
             implementation(libs.datastore.preferences)
             implementation(libs.datastore)
+            implementation(libs.alert.kmp)
+
+            implementation("network.chaintech:cmptoast:1.0.4")
+
     }
 
         iosMain.dependencies {

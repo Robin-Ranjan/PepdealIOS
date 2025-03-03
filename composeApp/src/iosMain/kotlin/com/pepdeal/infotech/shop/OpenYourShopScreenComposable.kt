@@ -1,5 +1,8 @@
 package com.pepdeal.infotech.shop
 
+import Notification
+import NotificationDuration
+import Notify
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -188,6 +191,7 @@ fun OpenYourShopScreen(viewModel: OpenYourShopViewModal = ViewModals.openYOurSho
                     },
                     navigationIcon = {
                         IconButton(onClick = {
+                            Notify("Toast",NotificationDuration.SHORT)
                             viewModel.reset()
                             navController.popBackStack()
                         }) {

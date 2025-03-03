@@ -125,9 +125,10 @@ class AddNewProductRepo {
         } catch (e: Exception) {
             // Single error message returned at the end
             onComplete(false, "Error registering product: ${e.message}")
-        } finally {
-            client.close()
         }
+//        finally {
+//            client.close()
+//        }
     }
 
     // ------------------------------

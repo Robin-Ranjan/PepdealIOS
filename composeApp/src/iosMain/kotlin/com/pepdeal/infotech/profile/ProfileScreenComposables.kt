@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.datastore.preferences.core.edit
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.attafitamim.krop.core.crop.CropError
 import com.attafitamim.krop.core.crop.CropResult
@@ -62,6 +63,7 @@ import com.attafitamim.krop.core.crop.cropperStyle
 import com.attafitamim.krop.core.crop.rememberImageCropper
 import com.attafitamim.krop.ui.ImageCropperDialog
 import com.pepdeal.infotech.DataStore
+import com.pepdeal.infotech.ImageCompressor
 import com.pepdeal.infotech.Objects
 import com.pepdeal.infotech.PreferencesKeys
 import com.pepdeal.infotech.ProfileScreenViewModal
@@ -129,6 +131,7 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
     val snackBar = remember { SnackbarHostState() }
 
     LaunchedEffect(profileImageUrl, currentUserId) {
+        println(profileImageUrl)
         if (profileImageUrl?.profilePicUrl.isNullOrEmpty() && currentUserId != "-1") {
             println("Fetching profile picture")
             viewModal.fetchUserProfilePic(currentUserId)
@@ -212,7 +215,10 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                                     controller = controller,
                                     picker = picker,
                                     snackBar = snackBar,
-                                    imageUrl = profileImageUrl?.profilePicUrl ?: ""
+                                    imageUrl = profileImageUrl?.profilePicUrl ?: "",
+                                    imageBitMap = {
+                                        viewModal.uploadNewProfilePic(currentUserId,it)
+                                    }
                                 )
                             }
 
@@ -519,7 +525,8 @@ fun ProfileImageSelector(
     snackBar: SnackbarHostState,
     painter: Painter = painterResource(Res.drawable.baseline_person_24),
     contentScale: ContentScale = ContentScale.Fit,
-    imageUrl: String = ""
+    imageUrl: String = "",
+    imageBitMap:(ImageBitmap) -> Unit
 ) {
     val scope = rememberCoroutineScope()
     val imageCropper = rememberImageCropper()
@@ -562,7 +569,9 @@ fun ProfileImageSelector(
                                 is CropResult.Success -> result.bitmap
                             }
                             croppedBitmap?.let {
-                                imageState.value = it
+                                val compressedImage = ImageCompressor().compress(it,60 * 1024)
+                                imageState.value = compressedImage
+                                imageBitMap(compressedImage)
                             }
                         }
                     }

@@ -314,7 +314,10 @@ fun UploadShopVideoScreen(shopId:String,viewModal: UploadShopVideoViewModal = Vi
                                 controller = controller,
                                 picker = picker,
                                 snackBar = snackBar,
-                                contentScale = ContentScale.FillWidth
+                                contentScale = ContentScale.FillWidth,
+                                imageBitMap = {
+
+                                }
                             )
                         }
                     }

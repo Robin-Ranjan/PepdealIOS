@@ -1,7 +1,6 @@
 package com.pepdeal.infotech.product
 
 
-import androidx.compose.ui.unit.dp
 import com.pepdeal.infotech.shop.modal.ShopMaster
 import com.pepdeal.infotech.util.FirebaseUtil
 import io.ktor.client.HttpClient
@@ -19,53 +18,50 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
 class ProductRepo {
     private val json = Json{ignoreUnknownKeys =true}
-    private suspend fun fetchActiveProducts(client: HttpClient): List<ShopItems> {
-        val response: HttpResponse = client.get("${FirebaseUtil.BASE_URL}product_master.json?orderBy=\"isActive\"&equalTo=\"0\"") {
-            contentType(ContentType.Application.Json)
-        }
-        return if (response.status == HttpStatusCode.OK) {
-            json.decodeFromString(response.body())
-        } else {
-            emptyList()
-        }
-    }
+//    private suspend fun fetchActiveProducts(client: HttpClient): List<ShopItems> {
+//        val response: HttpResponse = client.get("${FirebaseUtil.BASE_URL}product_master.json?orderBy=\"isActive\"&equalTo=\"0\"") {
+//            contentType(ContentType.Application.Json)
+//        }
+//        return if (response.status == HttpStatusCode.OK) {
+//            json.decodeFromString(response.body())
+//        } else {
+//            emptyList()
+//        }
+//    }
+//
+//    private suspend fun fetchShopDetails(client: HttpClient, shopId: String): Boolean {
+//        val response: HttpResponse = client.get("${FirebaseUtil.BASE_URL}shop_master.json?orderBy=\"shopId\"&equalTo=\"$shopId\""){
+//            contentType(ContentType.Application.Json)
+//        }
+//        return if (response.status == HttpStatusCode.OK) {
+//            val shopData = json.decodeFromString<Map<String, String>>(response.body())
+//            shopData["flag"] == "0" && shopData["isActive"] == "0"
+//        } else {
+//            false
+//        }
+//    }
 
-    private suspend fun fetchShopDetails(client: HttpClient, shopId: String): Boolean {
-        val response: HttpResponse = client.get("${FirebaseUtil.BASE_URL}shop_master.json?orderBy=\"shopId\"&equalTo=\"$shopId\""){
-            contentType(ContentType.Application.Json)
-        }
-        return if (response.status == HttpStatusCode.OK) {
-            val shopData = json.decodeFromString<Map<String, String>>(response.body())
-            shopData["flag"] == "0" && shopData["isActive"] == "0"
-        } else {
-            false
-        }
-    }
-
-    private suspend fun fetchProductImage(client: HttpClient, productId: String): String? {
-        val response: HttpResponse = client.get("${FirebaseUtil.BASE_URL}product_images_master.json?orderBy=\"productId\"&equalTo=\"$productId\"") {
-//            parameter("productId", productId)
-//            parameter("limit", 1)
-            contentType(ContentType.Application.Json)
-        }
-        return if (response.status == HttpStatusCode.OK) {
-            val images = Json.decodeFromString<List<Map<String, String>>>(response.body())
-            images.firstOrNull()?.get("productImages")
-        } else {
-            null
-        }
-    }
+//    private suspend fun fetchProductImage(client: HttpClient, productId: String): String? {
+//        val response: HttpResponse = client.get("${FirebaseUtil.BASE_URL}product_images_master.json?orderBy=\"productId\"&equalTo=\"$productId\"") {
+////            parameter("productId", productId)
+////            parameter("limit", 1)
+//            contentType(ContentType.Application.Json)
+//        }
+//        return if (response.status == HttpStatusCode.OK) {
+//            val images = Json.decodeFromString<List<Map<String, String>>>(response.body())
+//            images.firstOrNull()?.get("productImages")
+//        } else {
+//            null
+//        }
+//    }
 
     fun getAllProductsFlowPagination(startIndex: String?, pageSize: Int): Flow<ShopItems> = channelFlow {
         val client = HttpClient(Darwin){

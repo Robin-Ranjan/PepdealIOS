@@ -16,13 +16,11 @@ import platform.Foundation.NSURL
 import platform.Foundation.dataWithContentsOfURL
 import platform.UIKit.UIImage
 import platform.UIKit.UIImageJPEGRepresentation
-import platform.Foundation.*
-import platform.posix.*
 
 object ImagesUtil {
 
     fun UIImage.toNSData(): NSData? {
-        return UIImageJPEGRepresentation(this, 0.8)
+        return UIImageJPEGRepresentation(this, 0.6)
     }
 
     @OptIn(ExperimentalForeignApi::class)
