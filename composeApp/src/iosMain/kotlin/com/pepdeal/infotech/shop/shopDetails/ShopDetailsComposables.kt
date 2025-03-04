@@ -70,10 +70,13 @@ import com.pepdeal.infotech.util.Util
 import com.pepdeal.infotech.util.Util.fromHex
 import com.pepdeal.infotech.util.Util.toDiscountFormat
 import com.pepdeal.infotech.util.Util.toTwoDecimalPlaces
+import com.pepdeal.infotech.yourShop.ShopServicesRow
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil3.CoilImage
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import network.chaintech.sdpcomposemultiplatform.sdp
+import network.chaintech.sdpcomposemultiplatform.ssp
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
@@ -100,16 +103,18 @@ fun ShopDetailsWithProductPage(
     val shopLoading by viewModal.shopLoading.collectAsStateWithLifecycle()
     val shopProducts by viewModal.shopProduct.collectAsStateWithLifecycle()
     val isSuperShop by viewModal.isSuperShop.collectAsStateWithLifecycle()
+    val shopServices by viewModal.shopServices.collectAsStateWithLifecycle()
 
     val scope = rememberCoroutineScope()
 
     // Track favorite states
     val favoriteStates = remember { mutableStateMapOf<String, Boolean>() }
     LaunchedEffect(shopId) {
-        if(shopProducts.isEmpty()){
+        if (shopProducts.isEmpty()) {
             viewModal.fetchShopDetails(shopId)
             viewModal.fetchShopProducts(shopId)
             viewModal.checkSuperShopExist(userId, shopId)
+            viewModal.fetchShopServices(shopId)
         }
     }
 
@@ -242,41 +247,8 @@ fun ShopDetailsWithProductPage(
                         }
 
                         // Services (Horizontal Scroll)
-//        LazyRow(
-//            modifier = Modifier.fillMaxWidth(),
-//            contentPadding = PaddingValues(horizontal = 8.dp)
-//        ) {
-//            items(services) { service ->
-//                Card(
-//                    shape = CircleShape,
-//                    elevation = 5.dp,
-//                    modifier = Modifier
-//                        .padding(5.dp)
-//                        .size(80.dp)
-//                ) {
-//                    Box(
-//                        contentAlignment = Alignment.Center,
-//                        modifier = Modifier.fillMaxSize()
-//                    ) {
-//                        Text(
-//                            text = service,
-//                            fontSize = 10.sp,
-//                            textAlign = TextAlign.Center
-//                        )
-//                    }
-//                }
-//            }
-//        }
+                        ShopServicesRow(shopServices)
 
-                        // Product Grid
-//            if (!shopLoading) {
-//                Box(
-//                    modifier = Modifier.fillMaxSize(),
-//                    contentAlignment = Alignment.Center
-//                ) {
-//                    CircularProgressIndicator()
-//                }
-//            } else {
                         LazyVerticalGrid(
                             columns = GridCells.Fixed(2),
                             contentPadding = PaddingValues(8.dp),
@@ -313,19 +285,22 @@ fun ShopDetailsWithProductPage(
                                     ShopProductCard(product,
                                         painterResource(heartIcon),
                                         onLikeClicked = {
+
+                                            if (currentUserId == "-1") {
+                                                Util.showToast("Login Please")
+                                                return@ShopProductCard
+                                            }
                                             val newFavoriteState = !isFavorite
                                             favoriteStates[product.product.productId] =
                                                 newFavoriteState
 
                                             // Call ViewModel to handle like/unlike logic
                                             scope.launch {
-                                                if (currentUserId != "-1") {
-                                                    viewModal.toggleFavoriteStatus(
-                                                        userId = currentUserId,
-                                                        product.product.productId,
-                                                        newFavoriteState
-                                                    )
-                                                }
+                                                viewModal.toggleFavoriteStatus(
+                                                    userId = currentUserId,
+                                                    product.product.productId,
+                                                    newFavoriteState
+                                                )
                                             }
                                         },
                                         onProductClicked = { productId ->
@@ -429,7 +404,7 @@ fun ShopProductCard(
                         text = shopItems.product.sellingPrice.toTwoDecimalPlaces(),
                         fontFamily = FontFamily(Font(Res.font.manrope_light)),
                         fontSize = 11.sp,
-                        lineHeight = 10.sp,
+                        lineHeight = 11.sp,
                         color = Color.Black
                     )
 
@@ -453,9 +428,10 @@ fun ShopProductCard(
             } else {
                 Text(
                     text = "On Call",
-                    fontFamily = FontFamily(Font(Res.font.manrope_light)), fontSize = 10.sp,
-                    lineHeight = 10.sp,
-                    color = Color.Black,
+                    fontFamily = FontFamily(Font(Res.font.manrope_light)),
+                    fontSize = 11.sp,
+                    lineHeight = 11.sp,
+                    color = Color.Red,
                     modifier = Modifier.padding(start = 3.dp)
                 )
             }

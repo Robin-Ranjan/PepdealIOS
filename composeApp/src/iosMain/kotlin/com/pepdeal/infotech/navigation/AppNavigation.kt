@@ -10,6 +10,7 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.pepdeal.infotech.AboutUsScreen
+import com.pepdeal.infotech.SplashScreen
 import com.pepdeal.infotech.support.SupportScreen
 import com.pepdeal.infotech.yourShop.YourShopScreen
 import com.pepdeal.infotech.categories.CategoriesBottomSheet
@@ -69,9 +70,10 @@ fun AppNavigation() {
             composable<Routes.RegistrationPage> {
                 RegisterScreen()
             }
+
         }
 
-        navigation<SubGraph.MainPage>(startDestination = Routes.MainPage) {
+        navigation<SubGraph.MainPage>(startDestination = Routes.SplashScreenPage) {
             composable<Routes.MainPage> {
                 MainBottomNavigationWithPager()
             }
@@ -164,6 +166,10 @@ fun AppNavigation() {
 
             composable<Routes.AboutUs> {
                 AboutUsScreen()
+            }
+
+            composable<Routes.SplashScreenPage> {
+                SplashScreen()
             }
             dialog(
                 route = Routes.ColorBottomSheet,

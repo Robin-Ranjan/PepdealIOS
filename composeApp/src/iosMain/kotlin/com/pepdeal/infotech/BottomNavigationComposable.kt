@@ -46,14 +46,16 @@ fun MainBottomNavigationWithPager() {
     var selectedItem by remember { mutableStateOf(0) }
 
     // HorizontalPager for "ViewPager2" equivalent
-    val pagerState = rememberPagerState(initialPage = 3, pageCount = { 5 })
+    val pagerState = rememberPagerState(initialPage = 4, pageCount = { 5 })
 
     // Sync selectedItem with pagerState
-    LaunchedEffect(pagerState.currentPage) {
-        if (!pagerState.isScrollInProgress) {
-            selectedItem = pagerState.currentPage
-        }
-    }
+//    LaunchedEffect(pagerState.currentPage) {
+//        if (!pagerState.isScrollInProgress) {
+//            selectedItem = pagerState.currentPage
+//        }
+//    }
+
+    selectedItem = pagerState.currentPage
 
     // Define a scaffold to place the bottom navigation
     MaterialTheme {

@@ -15,6 +15,7 @@ kotlin {
         iosSimulatorArm64()
     ).forEach { iosTarget ->
         iosTarget.binaries.framework {
+//            export(project("io.github.mirzemehdi:kmpnotifier:1.4.0"))
             baseName = "ComposeApp"
             isStatic = true
         }
@@ -34,6 +35,8 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtime.compose)
             api(libs.datastore.preferences)
             api(libs.datastore)
+
+            api("io.github.mirzemehdi:kmpnotifier:1.4.0")
 
             implementation("dev.gitlive:firebase-database:2.1.0")
             implementation("dev.gitlive:firebase-storage:2.1.0")
@@ -72,13 +75,8 @@ kotlin {
     }
 
         iosMain.dependencies {
-//            implementation("dev.gitlive:firebase-database:2.1.0")
-//            implementation("dev.gitlive:firebase-storage:2.1.0")
-//            implementation("dev.gitlive:firebase-crashlytics:2.1.0")
-
             //ktor
             implementation("io.ktor:ktor-client-darwin:3.0.3")
-
         }
     }
 }

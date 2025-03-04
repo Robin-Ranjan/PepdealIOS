@@ -33,6 +33,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -66,6 +67,7 @@ import com.pepdeal.infotech.shop.modal.ShopMaster
 import com.pepdeal.infotech.tickets.TicketMaster
 import com.pepdeal.infotech.util.ColorUtil
 import com.pepdeal.infotech.util.NavigationProvider
+import com.pepdeal.infotech.util.Util
 import com.pepdeal.infotech.util.Util.toDiscountFormat
 import com.pepdeal.infotech.util.Util.toNameFormat
 import com.pepdeal.infotech.util.Util.toRupee
@@ -80,6 +82,8 @@ import kottieAnimation.KottieAnimation
 import kottieComposition.KottieCompositionSpec
 import kottieComposition.animateKottieCompositionAsState
 import kottieComposition.rememberKottieComposition
+import network.chaintech.sdpcomposemultiplatform.sdp
+import network.chaintech.sdpcomposemultiplatform.ssp
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.Font
@@ -114,6 +118,7 @@ fun ProductDetailScreen(
     val snackBar = remember { SnackbarHostState() }
     var showDialog by remember { mutableStateOf(false) }
     var ticket by remember { mutableStateOf(TicketMaster()) }
+
     // observers
     val product by viewModal.product.collectAsStateWithLifecycle()
     val shop by viewModal.shop.collectAsStateWithLifecycle()
@@ -132,7 +137,6 @@ fun ProductDetailScreen(
     )
 
     // launchEffects
-
     LaunchedEffect(product) {
         if (currentUserId != "-1") {
             product?.product?.let {
@@ -181,18 +185,27 @@ fun ProductDetailScreen(
     MaterialTheme {
         Scaffold(
             floatingActionButton = {
-
                 TicketFloatingActionButton(
                     currentUserId = currentUserId,
                     isTicketExists = isTicketExists,
                     scope = scope,
                     snackBar = snackBar,
-                    showDialog = {showDialog = it}
+                    showDialog = { showDialog = it }
                 )
             },
             floatingActionButtonPosition = FabPosition.EndOverlay,
             containerColor = Color.White,
-            snackbarHost = { SnackbarHost(snackBar) }
+            snackbarHost = {
+                SnackbarHost(snackBar) { data ->
+                    Snackbar(
+                        snackbarData = data,
+                        containerColor = Color.White,
+                        contentColor = Color.Black,
+                        shape = RoundedCornerShape(5),
+                        modifier = Modifier.padding(top = 70.dp)
+                    )
+                }
+            }
         ) { paddingValues ->
             Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
                 Column(modifier = Modifier.fillMaxSize()) {
@@ -215,19 +228,18 @@ fun ProductDetailScreen(
                                         },
                                         onLikeClick = {
                                             if (currentUserId != "-1") {
-                                                viewModal.toggleFavoriteStatus(
-                                                    userId = currentUserId,
-                                                    productId = productId,
-                                                    isFavorite = !isFavorite
-                                                )
-                                                isFavorite = !isFavorite
-                                                heartRes =
-                                                    if (isFavorite) Res.drawable.red_heart else Res.drawable.black_heart
-                                            } else {
-                                                scope.launch {
-                                                    snackBar.showSnackbar("Login Please")
-                                                }
+                                                Util.showToast("Login Please")
+                                                return@ProductImagesCarouselWidget
                                             }
+
+                                            viewModal.toggleFavoriteStatus(
+                                                userId = currentUserId,
+                                                productId = productId,
+                                                isFavorite = !isFavorite
+                                            )
+                                            isFavorite = !isFavorite
+                                            heartRes =
+                                                if (isFavorite) Res.drawable.red_heart else Res.drawable.black_heart
                                         }
                                     )
                                 }
@@ -274,17 +286,17 @@ fun ProductDetailScreen(
                     },
                     onSubmitTicket = { newTicket ->
                         println(ticket)
-                       ticket = newTicket.copy(userId = currentUserId)
-                        viewModal.addTicket(currentUserId,ticket){
-                           scope.launch {
-                               if(it.first){
-                                   isTicketExists = true
-                                   snackBar.showSnackbar("Ticket Generated Successfully")
-                               } else {
-                                   snackBar.showSnackbar("Ticket Not Added")
-                                   println(it.second)
-                               }
-                           }
+                        ticket = newTicket.copy(userId = currentUserId)
+                        viewModal.addTicket(currentUserId, ticket) {
+                            scope.launch {
+                                if (it.first) {
+                                    isTicketExists = true
+                                    snackBar.showSnackbar("Ticket Generated Successfully")
+                                } else {
+                                    snackBar.showSnackbar("Ticket Not Added")
+                                    println(it.second)
+                                }
+                            }
                         }
                     }
                 )
@@ -562,7 +574,7 @@ fun TicketFloatingActionButton(
     isTicketExists: Boolean,
     scope: CoroutineScope,
     snackBar: SnackbarHostState,
-    showDialog:(Boolean) ->Unit
+    showDialog: (Boolean) -> Unit
 ) {
     val buttonColor = if (isTicketExists) Color.Gray else Color.White
     val iconColor = if (isTicketExists) Color.LightGray else Color.Black
@@ -571,9 +583,7 @@ fun TicketFloatingActionButton(
         onClick = {
             when {
                 currentUserId == "-1" -> {
-                    scope.launch {
-                        snackBar.showSnackbar("Please Login")
-                    }
+                    Util.showToast("Login Please")
                 }
 
                 isTicketExists -> {

@@ -99,6 +99,7 @@ import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import multiplatform.network.cmptoast.ToastDuration
 import network.chaintech.sdpcomposemultiplatform.sdp
 import network.chaintech.sdpcomposemultiplatform.ssp
 import org.jetbrains.compose.resources.Font
@@ -180,7 +181,7 @@ fun AddNewProductScreen(viewModal: AddNewProductViewModal = ViewModals.addNewPro
             .collectLatest { response ->
                 response?.let {
                     if (it.first) {
-                        snackBar.showSnackbar("Product Registered Successfully")
+                        Util.showToast("Product Registered Successfully")
                         viewModal.reset()
                         navController.popBackStack()
                     } else {
@@ -606,13 +607,6 @@ fun ImageSelector(
             .background(Color.White)
             .border(1.dp, color = Color.Gray)
             .clickable {
-//                val file = FileUtil.selectImage()
-//                file?.let { onImageSelected(it) }
-//                if (file != null) {
-//                    onImageSelected(file)
-//                } else {
-//                    snackBarMessage("Invalid file type! Please select a JPEG, PNG, or WebP image.")
-//                }
                 scope.launch {
                     requestPermission(
                         controller,

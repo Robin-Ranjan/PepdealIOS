@@ -26,42 +26,6 @@ import kotlinx.serialization.json.Json
 
 class ProductRepo {
     private val json = Json{ignoreUnknownKeys =true}
-//    private suspend fun fetchActiveProducts(client: HttpClient): List<ShopItems> {
-//        val response: HttpResponse = client.get("${FirebaseUtil.BASE_URL}product_master.json?orderBy=\"isActive\"&equalTo=\"0\"") {
-//            contentType(ContentType.Application.Json)
-//        }
-//        return if (response.status == HttpStatusCode.OK) {
-//            json.decodeFromString(response.body())
-//        } else {
-//            emptyList()
-//        }
-//    }
-//
-//    private suspend fun fetchShopDetails(client: HttpClient, shopId: String): Boolean {
-//        val response: HttpResponse = client.get("${FirebaseUtil.BASE_URL}shop_master.json?orderBy=\"shopId\"&equalTo=\"$shopId\""){
-//            contentType(ContentType.Application.Json)
-//        }
-//        return if (response.status == HttpStatusCode.OK) {
-//            val shopData = json.decodeFromString<Map<String, String>>(response.body())
-//            shopData["flag"] == "0" && shopData["isActive"] == "0"
-//        } else {
-//            false
-//        }
-//    }
-
-//    private suspend fun fetchProductImage(client: HttpClient, productId: String): String? {
-//        val response: HttpResponse = client.get("${FirebaseUtil.BASE_URL}product_images_master.json?orderBy=\"productId\"&equalTo=\"$productId\"") {
-////            parameter("productId", productId)
-////            parameter("limit", 1)
-//            contentType(ContentType.Application.Json)
-//        }
-//        return if (response.status == HttpStatusCode.OK) {
-//            val images = Json.decodeFromString<List<Map<String, String>>>(response.body())
-//            images.firstOrNull()?.get("productImages")
-//        } else {
-//            null
-//        }
-//    }
 
     fun getAllProductsFlowPagination(startIndex: String?, pageSize: Int): Flow<ShopItems> = channelFlow {
         val client = HttpClient(Darwin){
@@ -197,7 +161,7 @@ class ProductRepo {
 //                val validProducts = productsMap.values.filter { it.isActive == "0" && it.flag == "0" }
                 var validProducts = productsMap.values
 
-                println("valid product 1 : ${validProducts.size.toString()}")
+                println("valid product 1 : ${validProducts.size}")
                 if (validProducts.isEmpty()) {
                     println("No more products available")
                     return@channelFlow

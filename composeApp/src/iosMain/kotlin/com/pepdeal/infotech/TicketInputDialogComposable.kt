@@ -53,6 +53,8 @@ import com.pepdeal.infotech.product.ProductMaster
 import com.pepdeal.infotech.tickets.TicketMaster
 import com.pepdeal.infotech.util.ColorUtil
 import com.pepdeal.infotech.util.Util
+import network.chaintech.sdpcomposemultiplatform.sdp
+import network.chaintech.sdpcomposemultiplatform.ssp
 import kotlin.math.max
 
 @Composable

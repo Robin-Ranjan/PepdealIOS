@@ -76,6 +76,7 @@ import pepdealios.composeapp.generated.resources.Res
 import pepdealios.composeapp.generated.resources.black_heart
 import pepdealios.composeapp.generated.resources.compose_multiplatform
 import pepdealios.composeapp.generated.resources.pepdeal_logo
+import pepdealios.composeapp.generated.resources.place_holder
 import pepdealios.composeapp.generated.resources.red_heart
 import utils.KottieConstants
 
@@ -261,7 +262,7 @@ fun FavoriteProductCard(
                     previewPlaceholder = painterResource(Res.drawable.compose_multiplatform),
                     loading = {
                         Image(
-                            painter = painterResource(Res.drawable.pepdeal_logo), // Show a default placeholder on failure
+                            painter = painterResource(Res.drawable.place_holder), // Show a default placeholder on failure
                             contentDescription = "Placeholder",
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
@@ -269,7 +270,7 @@ fun FavoriteProductCard(
                     },
                     failure = {
                         Image(
-                            painter = painterResource(Res.drawable.pepdeal_logo), // Show a default placeholder on failure
+                            painter = painterResource(Res.drawable.place_holder), // Show a default placeholder on failure
                             contentDescription = "Placeholder",
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop

@@ -7,7 +7,10 @@ import com.pepdeal.infotech.superShop.SuperShopMaster
 import com.pepdeal.infotech.favourite.FavouritesRepo
 import com.pepdeal.infotech.favourite.modal.FavoriteProductMaster
 import com.pepdeal.infotech.product.ProductWithImages
+import com.pepdeal.infotech.shop.modal.ShopStatusMaster
 import com.pepdeal.infotech.util.Util
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -27,6 +30,9 @@ class ShopDetailsViewModal():ViewModel() {
 
     private val _isSuperShop = MutableStateFlow(false)
     val isSuperShop : StateFlow<Boolean> get() = _isSuperShop
+
+    private val _shopServices = MutableStateFlow<ShopStatusMaster?>(null)
+    val shopServices: StateFlow<ShopStatusMaster?> get() = _shopServices
 
     fun fetchShopDetails(shopId:String){
         _shopLoading.value = true
@@ -51,6 +57,18 @@ class ShopDetailsViewModal():ViewModel() {
                 }
         }
 
+    }
+
+    fun fetchShopServices(shopId: String) {
+        try {
+            viewModelScope.launch(Dispatchers.IO) {
+                val shopServiceStatus = repo.fetchShopServices(shopId)
+                _shopServices.value = shopServiceStatus
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            println(e.message)
+        }
     }
 
     fun reset(){

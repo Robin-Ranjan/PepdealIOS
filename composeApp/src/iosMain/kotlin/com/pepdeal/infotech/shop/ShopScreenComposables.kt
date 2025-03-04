@@ -101,6 +101,8 @@ import io.ktor.client.engine.darwin.Darwin
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
+import network.chaintech.sdpcomposemultiplatform.sdp
+import network.chaintech.sdpcomposemultiplatform.ssp
 
 
 @OptIn(FlowPreview::class)
@@ -217,7 +219,7 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
                             .width(130.dp)
                             .height(28.dp)
                             .padding(start = 5.dp),
-                        contentScale = ContentScale.Fit // Adjust based on your needs (e.g., FillBounds, Fit)
+                        contentScale = ContentScale.FillBounds // Adjust based on your needs (e.g., FillBounds, Fit)
                     )
                 }
 
@@ -417,6 +419,14 @@ fun ShopItemView(shopItem: ProductWithImages, onProductClicked: (String) -> Unit
                         ),
                         previewPlaceholder = painterResource(Res.drawable.compose_multiplatform),
                         failure = {
+                            Image(
+                                painter = painterResource(Res.drawable.place_holder), // Show a default placeholder on failure
+                                contentDescription = "Placeholder",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        },
+                        loading = {
                             Image(
                                 painter = painterResource(Res.drawable.place_holder), // Show a default placeholder on failure
                                 contentDescription = "Placeholder",

@@ -3,17 +3,27 @@ package com.pepdeal.infotech.util
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
+import androidx.compose.ui.unit.dp
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.crashlytics.crashlytics
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.convert
+import kotlinx.cinterop.useContents
 import kotlinx.cinterop.usePinned
 import platform.CoreCrypto.CC_SHA256
 import platform.CoreCrypto.CC_SHA256_DIGEST_LENGTH
 import platform.Foundation.*
 import kotlin.math.round
 import kotlinx.datetime.Clock
+import multiplatform.network.cmptoast.ToastDuration
+import multiplatform.network.cmptoast.ToastGravity
+import multiplatform.network.cmptoast.ToastPadding
+import platform.CoreGraphics.CGPointMake
+import platform.CoreGraphics.CGRectMake
+import platform.CoreGraphics.CGSizeMake
 import platform.UIKit.*
 
 
@@ -140,8 +150,10 @@ object Util {
         val discount = discountText.toDoubleOrNull() ?: 0.0
 
         if (discount > 100) {
-            productSale.value = TextFieldValue("0.00")
-            onCallBack()
+            if (productSale.value.text != "0.00") {
+                productSale.value = TextFieldValue("0.00")
+                onCallBack() // Call callback only when crossing the 100 limit
+            }
             return
         } // Reset if discount is greater than 100
 
@@ -236,6 +248,71 @@ object Util {
         val emailRegex =
             "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$".toRegex() // Works on both iOS and Android
         return emailRegex.matches(email)
+    }
+
+    fun showToast(message:String,duration: ToastDuration = ToastDuration.Short){
+      multiplatform.network.cmptoast.showToast(
+            message = message,
+            textColor = Color.White,
+            duration = duration,
+            gravity = ToastGravity.Bottom,
+          backgroundColor = Color.DarkGray,
+          padding = ToastPadding(10,10,20,20),
+          cornerRadius = 3,
+          textSize = TextUnit(13F, TextUnitType.Sp)
+        )
+    }
+
+    @OptIn(ExperimentalForeignApi::class)
+    fun showCompleteToast(message: String) {
+        val window = UIApplication.sharedApplication.keyWindow ?: return
+
+        // Get screen width and height
+        val screenWidth = window.bounds.useContents { size.width }
+        val screenHeight = window.bounds.useContents { size.height }
+
+        // Create Toast View
+        val toastView = UILabel().apply {
+            text = message
+            textAlignment = NSTextAlignmentCenter
+            backgroundColor = UIColor(red = 102.0/255.0, green = 153.0/255.0, blue = 0.0, alpha = 1.0)
+            layer.cornerRadius = 6.0  // ✅ Rounded corners
+            layer.shadowOpacity = 0.3f
+            layer.shadowOffset = CGSizeMake(0.0, 4.0)
+            layer.shadowRadius = 10.0
+            clipsToBounds = false
+            textColor = UIColor.whiteColor
+            setFrame(CGRectMake(25.0, screenHeight - 120, screenWidth - 50.0, 50.0)) // ✅ Adjusted margins
+        }
+
+      // Create Label for Message
+//        val textLabel = UILabel().apply {
+//            text = message
+//            textAlignment = NSTextAlignmentCenter
+//            textColor = UIColor.whiteColor
+//            font = UIFont.boldSystemFontOfSize(18.0)
+//            numberOfLines = 2
+//            sizeToFit() // Auto-size based on text
+//            val textHeight = this.bounds.useContents { size.height } + 20.0 // Add padding
+//            setFrame(CGRectMake(0.0, 0.0, screenWidth - 50, textHeight)) // Fixed width, dynamic height
+//        }
+
+//        toastView.addSubview(textLabel)
+        window.addSubview(toastView)
+
+        // Animate Fade-In and Fade-Out
+        toastView.alpha = 0.0
+        UIView.animateWithDuration(0.3, animations = {
+            toastView.alpha = 1.0
+        }) {
+            NSTimer.scheduledTimerWithTimeInterval(2.0, repeats = false) {
+                UIView.animateWithDuration(0.5, animations = {
+                    toastView.alpha = 0.0
+                }) {
+                    toastView.removeFromSuperview()
+                }
+            }
+        }
     }
 
 }

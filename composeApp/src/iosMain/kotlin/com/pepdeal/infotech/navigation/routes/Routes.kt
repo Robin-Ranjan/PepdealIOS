@@ -66,7 +66,7 @@ sealed class Routes {
     data class ProductDetailsPage(val productId: String) :Routes()
 
     @Serializable
-    object SearchScreenPage : Routes()
+    object SplashScreenPage : Routes()
 
     @Serializable
     data class YourShopScreenPage(val shopId:String) :Routes()

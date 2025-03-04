@@ -53,7 +53,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.datastore.preferences.core.edit
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.attafitamim.krop.core.crop.CropError
 import com.attafitamim.krop.core.crop.CropResult
@@ -62,6 +61,9 @@ import com.attafitamim.krop.core.crop.crop
 import com.attafitamim.krop.core.crop.cropperStyle
 import com.attafitamim.krop.core.crop.rememberImageCropper
 import com.attafitamim.krop.ui.ImageCropperDialog
+import com.mmk.kmpnotifier.notification.NotificationImage
+import com.mmk.kmpnotifier.notification.Notifier
+import com.mmk.kmpnotifier.notification.NotifierManager
 import com.pepdeal.infotech.DataStore
 import com.pepdeal.infotech.ImageCompressor
 import com.pepdeal.infotech.Objects
@@ -70,6 +72,7 @@ import com.pepdeal.infotech.ProfileScreenViewModal
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.product.addProduct.requestPermission
 import com.pepdeal.infotech.util.NavigationProvider
+import com.pepdeal.infotech.util.Util
 import com.pepdeal.infotech.util.Util.toNameFormat
 import com.pepdeal.infotech.util.ViewModals
 import com.skydoves.landscapist.ImageOptions
@@ -99,6 +102,7 @@ import pepdealios.composeapp.generated.resources.shopping_bag
 import pepdealios.composeapp.generated.resources.super_shop_logo
 import pepdealios.composeapp.generated.resources.support
 import pepdealios.composeapp.generated.resources.tickets
+import kotlin.random.Random
 
 
 @Composable
@@ -130,13 +134,25 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
     val picker = remember(factory) { medialPickerFactory.createMediaPickerController() }
     val snackBar = remember { SnackbarHostState() }
 
-    LaunchedEffect(profileImageUrl, currentUserId) {
-        println(profileImageUrl)
+    LaunchedEffect(currentUserId) {
+        println("fetching :- $profileImageUrl")
         if (profileImageUrl?.profilePicUrl.isNullOrEmpty() && currentUserId != "-1") {
             println("Fetching profile picture")
             viewModal.fetchUserProfilePic(currentUserId)
         }
     }
+
+//    val notifier = NotifierManager.getLocalNotifier()
+//    notifier.notify {
+//        id= Random.nextInt(0, Int.MAX_VALUE)
+//        title = "Title from KMPNotifier"
+//        body = "Body message from KMPNotifier"
+//        payloadData = mapOf(
+//            Notifier.KEY_URL to "https://github.com/mirzemehdi/KMPNotifier/",
+//            "extraKey" to "randomValue"
+//        )
+//        image = NotificationImage.Url("https://github.com/user-attachments/assets/a0f38159-b31d-4a47-97a7-cc230e15d30b")
+//    }
 
     LaunchedEffect(userStatus) {
         userStatus.let {
@@ -217,7 +233,7 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                                     snackBar = snackBar,
                                     imageUrl = profileImageUrl?.profilePicUrl ?: "",
                                     imageBitMap = {
-                                        viewModal.uploadNewProfilePic(currentUserId,it)
+                                        viewModal.uploadNewProfilePic(currentUserId, it)
                                     }
                                 )
                             }
@@ -260,48 +276,56 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                         text = "Favorites",
                         icon = Res.drawable.black_heart,
                         onClick = {
-                            if (currentUserId != "-1") {
-                                NavigationProvider.navController.navigate(
-                                    Routes.FavouritesPage(
-                                        currentUserId
-                                    )
-                                )
-                            } else {
-                                scope.launch {
-                                    snackBar.showSnackbar("Please Login")
-                                }
+                            if (currentUserId == "-1") {
+                                Util.showToast("Please Login")
+                                return@ProfileMenuItem
                             }
+                            NavigationProvider.navController.navigate(
+                                Routes.FavouritesPage(
+                                    currentUserId
+                                )
+                            )
                         })
                     ProfileMenuItem(
                         text = "Super Shop",
                         icon = Res.drawable.super_shop_logo,
                         onClick = {
+                            if (currentUserId == "-1") {
+                                Util.showToast("Please Login")
+                                return@ProfileMenuItem
+                            }
+
                             NavigationProvider.navController.navigate(
                                 Routes.SuperShopPage(
                                     userId = currentUserId
                                 )
                             )
                         })
+
                     ProfileMenuItem(
                         text = "Tickets",
                         icon = Res.drawable.tickets,
                         onClick = {
-                            if (currentUserId != "-1") {
-                                NavigationProvider.navController.navigate(
-                                    Routes.CustomerTicketPage(
-                                        currentUserId
-                                    )
-                                )
-                            } else {
-                                scope.launch {
-                                    snackBar.showSnackbar("Login Please")
-                                }
+                            if (currentUserId == "-1") {
+                                Util.showToast("Please Login")
+                                return@ProfileMenuItem
                             }
+
+                            NavigationProvider.navController.navigate(
+                                Routes.CustomerTicketPage(
+                                    currentUserId
+                                )
+                            )
                         })
                     ProfileMenuItem(
                         text = "Saved Shop Video",
                         icon = Res.drawable.super_shop_logo,
                         onClick = {
+                            if (currentUserId == "-1") {
+                                Util.showToast("Please Login")
+                                return@ProfileMenuItem
+                            }
+
                             NavigationProvider.navController.navigate(
                                 Routes.FavoriteShopVideosPage(
                                     currentUserId
@@ -323,13 +347,24 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                         ProfileMenuItem(
                             text = "Open Your Shop",
                             icon = Res.drawable.shopping_bag,
-                            onClick = { NavigationProvider.navController.navigate(Routes.OpenYourShopPage) })
+                            onClick = {
+                                if (currentUserId == "-1") {
+                                    Util.showToast("Please Login")
+                                    return@ProfileMenuItem
+                                }
+                                NavigationProvider.navController.navigate(Routes.OpenYourShopPage)
+                            })
                     }
 
                     ProfileMenuItem(
                         text = "Personal Info",
                         icon = Res.drawable.baseline_person_24,
                         onClick = {
+                            if (currentUserId == "-1") {
+                                Util.showToast("Please Login")
+                                return@ProfileMenuItem
+                            }
+
                             NavigationProvider.navController.navigate(
                                 Routes.PersonalInfoPage(
                                     userId = currentUserId
@@ -347,12 +382,31 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                     ProfileMenuItem(
                         text = "List Product",
                         icon = Res.drawable.shopping_bag,
-                        onClick = { NavigationProvider.navController.navigate(Routes.AddNewProductPage) })
+                        onClick = {
+                            if (currentUserId == "-1") {
+                                Util.showToast("Please Login")
+                                return@ProfileMenuItem
+                            }
+                            if (userStatus != "1") {
+                                Util.showToast("Open Your Shop First")
+                                return@ProfileMenuItem
+                            }
+                            NavigationProvider.navController.navigate(Routes.AddNewProductPage)
+                        })
 
                     ProfileMenuItem(
                         text = "Update Listing",
                         icon = Res.drawable.shopping_bag,
                         onClick = {
+                            if (currentUserId == "-1") {
+                                Util.showToast("Please Login")
+                                return@ProfileMenuItem
+                            }
+                            if (userStatus != "1") {
+                                Util.showToast("Open Your Shop First")
+                                return@ProfileMenuItem
+                            }
+
                             NavigationProvider.navController.navigate(
                                 Routes.ListAllProductPage(
                                     Objects.SHOP_ID
@@ -363,7 +417,17 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                     ProfileMenuItem(
                         text = "Tickets",
                         icon = Res.drawable.tickets,
-                        onClick = { NavigationProvider.navController.navigate(Routes.SellerTicketPage) })
+                        onClick = {
+                            if (currentUserId == "-1") {
+                                Util.showToast("Please Login")
+                                return@ProfileMenuItem
+                            }
+                            if (userStatus != "1") {
+                                Util.showToast("Open Your Shop First")
+                                return@ProfileMenuItem
+                            }
+                            NavigationProvider.navController.navigate(Routes.SellerTicketPage)
+                        })
 
                     ProfileMenuItem(
                         text = "Edit Shop Details",
@@ -381,6 +445,15 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                         text = "Shop Video",
                         icon = Res.drawable.baseline_video,
                         onClick = {
+                            if (currentUserId == "-1") {
+                                Util.showToast("Please Login")
+                                return@ProfileMenuItem
+                            }
+                            if (userStatus != "1") {
+                                Util.showToast("Open Your Shop First")
+                                return@ProfileMenuItem
+                            }
+
                             NavigationProvider.navController.navigate(
                                 Routes.UploadShopVideoPage(
                                     Objects.SHOP_ID
@@ -400,6 +473,11 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                         text = "Support",
                         icon = Res.drawable.support,
                         onClick = {
+                            if (currentUserId == "-1") {
+                                Util.showToast("Please Login")
+                                return@ProfileMenuItem
+                            }
+
                             NavigationProvider.navController.navigate(
                                 Routes.SupportScreenPage(
                                     userName,
@@ -432,9 +510,6 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                                 datastore.edit { it.clear() } // Clear stored user session
                             }
                             viewModal.reset()
-//                            NavigationProvider.navController.navigate(Routes.LoginPage) {
-//                                popUpTo(Routes.MainPage) { inclusive = true }
-//                            }
                         }
                     )
                 }
@@ -526,7 +601,7 @@ fun ProfileImageSelector(
     painter: Painter = painterResource(Res.drawable.baseline_person_24),
     contentScale: ContentScale = ContentScale.Fit,
     imageUrl: String = "",
-    imageBitMap:(ImageBitmap) -> Unit
+    imageBitMap: (ImageBitmap) -> Unit
 ) {
     val scope = rememberCoroutineScope()
     val imageCropper = rememberImageCropper()
@@ -569,7 +644,7 @@ fun ProfileImageSelector(
                                 is CropResult.Success -> result.bitmap
                             }
                             croppedBitmap?.let {
-                                val compressedImage = ImageCompressor().compress(it,60 * 1024)
+                                val compressedImage = ImageCompressor().compress(it, 60 * 1024)
                                 imageState.value = compressedImage
                                 imageBitMap(compressedImage)
                             }

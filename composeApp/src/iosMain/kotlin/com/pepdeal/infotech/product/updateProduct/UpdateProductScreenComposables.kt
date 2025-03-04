@@ -186,7 +186,7 @@ fun UpdateProductScreen(
             .collectLatest { response ->
                 response?.let {
                     if (it.first) {
-                        snackBar.showSnackbar("Product Updated Successfully")
+                        Util.showToast("Product Updated Successfully")
                         viewModal.reset()
                         navController.popBackStack()
                     } else {

@@ -76,6 +76,7 @@ import com.pepdeal.infotech.DataStore
 import com.pepdeal.infotech.PreferencesKeys
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.util.NavigationProvider
+import com.pepdeal.infotech.util.Util
 import com.pepdeal.infotech.util.Util.toDiscountFormat
 import com.pepdeal.infotech.util.Util.toTwoDecimalPlaces
 import com.pepdeal.infotech.util.ViewModals
@@ -87,6 +88,8 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import network.chaintech.sdpcomposemultiplatform.sdp
+import network.chaintech.sdpcomposemultiplatform.ssp
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
@@ -95,6 +98,7 @@ import pepdealios.composeapp.generated.resources.compose_multiplatform
 import pepdealios.composeapp.generated.resources.manrope_light
 import pepdealios.composeapp.generated.resources.manrope_medium
 import pepdealios.composeapp.generated.resources.pepdeal_logo
+import pepdealios.composeapp.generated.resources.place_holder
 import pepdealios.composeapp.generated.resources.red_heart
 
 
@@ -109,7 +113,6 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
     val coroutineScope = rememberCoroutineScope()
     val productNewList by viewModel.products.collectAsStateWithLifecycle()
     val filteredProducts by viewModel.searchedProducts.collectAsStateWithLifecycle()
-    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     var searchQuery by remember { mutableStateOf("") }
     val snackbarHost = remember { SnackbarHostState() }
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -127,22 +130,6 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
     val displayedProductList by derivedStateOf {
         if (searchQuery.isNotEmpty()) filteredProducts else productNewList
     }
-
-    // Observe search query and filter in the background
-//    LaunchedEffect(searchQuery, productNewList) {
-//        withContext(Dispatchers.Default) {
-//            val filtered = productNewList.filter { product ->
-//                // Split product's searchTags by commas
-//                product.searchTag.split(",").any { tag ->
-//                    // Check if any tag matches the searchQuery
-//                    tag.contains(searchQuery, ignoreCase = true)
-//                }
-//            }
-//            withContext(Dispatchers.Main) {
-//                filteredProducts = filtered
-//            }
-//        }
-//    }
 
     LaunchedEffect(searchQuery) {
         snapshotFlow { searchQuery }
@@ -173,7 +160,7 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
     MaterialTheme {
         Scaffold(
             snackbarHost = { SnackbarHost(snackbarHost) }
-        ) { paddingValues->
+        ) { paddingValues ->
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -199,7 +186,7 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
                         searchQuery = it
                     }
 
-                    Text(text = if(searchQuery.isEmpty())productNewList.size.toString() else filteredProducts.size.toString())
+                    Text(text = if (searchQuery.isEmpty()) productNewList.size.toString() else filteredProducts.size.toString())
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(2), // 2 columns
                         modifier = Modifier
@@ -214,7 +201,7 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
                             // Determine the heart icon state
                             val isFavorite = favoriteStates[product.productId] ?: false
                             val heartIcon =
-                                if (isFavorite && currentUserId!=="-1") Res.drawable.red_heart else Res.drawable.black_heart
+                                if (isFavorite && currentUserId !== "-1") Res.drawable.red_heart else Res.drawable.black_heart
 
                             // Check favorite status when the product is displayed
                             LaunchedEffect(product.productId) {
@@ -240,25 +227,29 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
                                     shopItems = product,
                                     heartRes = painterResource(heartIcon),
                                     onLikeClicked = {
-                                        if (currentUserId != "-1") {
-                                            val newFavoriteState = !isFavorite
-                                            favoriteStates[product.productId] = newFavoriteState
-                                            // Call ViewModel to handle like/unlike logic
-                                            coroutineScope.launch {
-                                                viewModel.toggleFavoriteStatus(
-                                                    userId = currentUserId,
-                                                    product.productId,
-                                                    newFavoriteState
-                                                )
-                                            }
-                                        }else{
-                                            coroutineScope.launch {
-                                                snackbarHost.showSnackbar("Login Please")
-                                            }
+                                        if (currentUserId == "-1") {
+                                            Util.showToast("Login Please")
+                                            return@ProductCard
                                         }
+
+                                        val newFavoriteState = !isFavorite
+                                        favoriteStates[product.productId] = newFavoriteState
+
+                                        coroutineScope.launch {
+                                            viewModel.toggleFavoriteStatus(
+                                                userId = currentUserId,
+                                                productId = product.productId,
+                                                isFavorite = newFavoriteState
+                                            )
+                                        }
+
                                     },
                                     onProductClicked = {
-                                        NavigationProvider.navController.navigate(Routes.ProductDetailsPage(it))
+                                        NavigationProvider.navController.navigate(
+                                            Routes.ProductDetailsPage(
+                                                it
+                                            )
+                                        )
                                     })
                             }
                         }
@@ -274,7 +265,7 @@ fun ProductCard(
     shopItems: ShopItems,
     heartRes: Painter,
     onLikeClicked: () -> Unit,
-    onProductClicked:(String) -> Unit
+    onProductClicked: (String) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -309,7 +300,23 @@ fun ProductCard(
                                 setToSaturation(1f)
                             })
                         ),
-                        previewPlaceholder = painterResource(Res.drawable.compose_multiplatform)
+                        previewPlaceholder = painterResource(Res.drawable.compose_multiplatform),
+                        loading = {
+                            Image(
+                                painter = painterResource(Res.drawable.place_holder), // Show a default placeholder on failure
+                                contentDescription = "Placeholder",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        },
+                        failure = {
+                            Image(
+                                painter = painterResource(Res.drawable.place_holder), // Show a default placeholder on failure
+                                contentDescription = "Placeholder",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
                     )
                 }
 

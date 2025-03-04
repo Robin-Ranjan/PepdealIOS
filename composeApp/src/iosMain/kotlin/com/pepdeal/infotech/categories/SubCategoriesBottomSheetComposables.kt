@@ -44,6 +44,8 @@ import com.pepdeal.infotech.util.CategoriesUtil
 import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util.toNameFormat
 import com.pepdeal.infotech.util.ViewModals
+import network.chaintech.sdpcomposemultiplatform.sdp
+import network.chaintech.sdpcomposemultiplatform.ssp
 import org.jetbrains.compose.resources.Font
 import pepdealios.composeapp.generated.resources.Res
 import pepdealios.composeapp.generated.resources.manrope_bold
