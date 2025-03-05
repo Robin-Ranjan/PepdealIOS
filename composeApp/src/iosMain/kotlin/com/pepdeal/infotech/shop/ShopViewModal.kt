@@ -26,6 +26,9 @@ class ShopViewModal : ViewModel() {
     private val _isLoading = MutableStateFlow(false) // Loading state
     val isLoading: StateFlow<Boolean> get() = _isLoading
 
+    private val _isSearchLoading = MutableStateFlow(false) // Loading state
+    val isSearchLoading: StateFlow<Boolean> get() = _isSearchLoading
+
     private var lastShopId: String? = null
     private var lastSearchedShopId: String? = null
     private var lastSearchQuery: String = ""
@@ -53,7 +56,6 @@ class ShopViewModal : ViewModel() {
     }
 
     fun loadMoreSearchedShops(query: String) {
-        println("loadMore Searched  called")
         // If the query is empty, we emit nothing.
         if (query.isEmpty()) {
             _searchedShops.value = emptyList()
@@ -70,9 +72,11 @@ class ShopViewModal : ViewModel() {
         }
 
         // If already loading, simply return.
-        if (_isLoading.value) return
+        if (_isSearchLoading.value) return
 
-        _isLoading.value = true
+        _isSearchLoading.value = true
+
+        println("loadMore Searched  called")
         try {
             viewModelScope.launch {
                 // Call your repository function that returns a Flow<ShopWithProducts>
@@ -89,13 +93,13 @@ class ShopViewModal : ViewModel() {
                             (oldList + newShop).distinctBy { it.shop.shopId }
                         }
 
-                        if(_isLoading.value) _isLoading.value = false
+                        if(_isSearchLoading.value) _isSearchLoading.value = false
                     }
             }
         } catch (e: Exception) {
             e.printStackTrace()
         } finally {
-            _isLoading.value = false
+            _isSearchLoading.value = false
         }
     }
 

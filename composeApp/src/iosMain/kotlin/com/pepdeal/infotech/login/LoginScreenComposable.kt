@@ -99,7 +99,7 @@ fun LoginScreen(
     }
     LaunchedEffect(loginMessage){
         if(loginMessage.isNotBlank()){
-            snackBar.showSnackbar(loginMessage)
+            Util.showToast(loginMessage)
         }
     }
 

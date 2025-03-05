@@ -1,5 +1,7 @@
 package com.pepdeal.infotech.product.producrDetails
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -76,6 +78,7 @@ import com.pepdeal.infotech.util.ViewModals
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil3.CoilImage
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kottieAnimation.KottieAnimation
@@ -470,6 +473,19 @@ fun ProductImagesCarouselWidget(
     val pagerState = rememberPagerState(pageCount = {
         productImages.size
     })
+
+    // Auto-scroll logic
+    LaunchedEffect(pagerState) {
+        while (true) {
+            // Delay of 1 second before auto-swiping
+            delay(1500)
+
+            val nextPage = (pagerState.currentPage + 1) % productImages.size
+            pagerState.animateScrollToPage(page = nextPage,
+                animationSpec = tween(durationMillis = 600, easing = FastOutSlowInEasing)
+            )
+        }
+    }
 
     Box(
         contentAlignment = Alignment.BottomCenter,

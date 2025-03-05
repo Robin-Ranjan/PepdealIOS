@@ -229,7 +229,7 @@ fun RegisterScreen() {
                             modifier = Modifier
                                 .align(Alignment.CenterHorizontally)
                         ) {
-                            Text(text = "Already have an Account")
+                            Text(text = "Already have an Account ?")
                         }
                     }
                 } else {

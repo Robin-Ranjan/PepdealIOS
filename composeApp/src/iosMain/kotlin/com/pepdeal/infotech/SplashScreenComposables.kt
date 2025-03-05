@@ -6,9 +6,9 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -23,12 +23,12 @@ import com.pepdeal.infotech.util.NavigationProvider.navController
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
-import pepdealios.composeapp.generated.resources.pepdeal_logo
+import pepdealios.composeapp.generated.resources.pepdeal_logo_new
 
 @Composable
 fun SplashScreen(){
 
-    val yOffset = remember { Animatable(300f) } // Start off-screen (bottom)
+    val yOffset = remember { Animatable(300f) }
 
     // Trigger animation on launch
     LaunchedEffect(Unit) {
@@ -53,12 +53,12 @@ fun SplashScreen(){
         ) {
             Box(modifier = Modifier.fillMaxSize().padding(it)){
                 Image(
-                    painter = painterResource(Res.drawable.pepdeal_logo),
+                    painter = painterResource(Res.drawable.pepdeal_logo_new),
                     contentDescription = null,
                     modifier = Modifier
-                        .size(300.dp, 80.dp)
+                        .fillMaxWidth()
                         .align(Alignment.Center)
-                        .padding(top = 20.dp)
+                        .padding(top = 20.dp, start = 10.dp, end = 10.dp)
                         .offset(y = yOffset.value.dp)
                 )
             }

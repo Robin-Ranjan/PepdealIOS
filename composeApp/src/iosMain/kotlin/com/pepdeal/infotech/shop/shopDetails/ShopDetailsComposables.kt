@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.runtime.Composable
@@ -85,6 +86,7 @@ import pepdealios.composeapp.generated.resources.compose_multiplatform
 import pepdealios.composeapp.generated.resources.manrope_bold
 import pepdealios.composeapp.generated.resources.manrope_light
 import pepdealios.composeapp.generated.resources.manrope_medium
+import pepdealios.composeapp.generated.resources.place_holder
 import pepdealios.composeapp.generated.resources.red_heart
 import pepdealios.composeapp.generated.resources.super_shop_logo
 import pepdealios.composeapp.generated.resources.super_shop_positive
@@ -360,7 +362,25 @@ fun ShopProductCard(
                                 setToSaturation(1f)
                             })
                         ),
-                        previewPlaceholder = painterResource(Res.drawable.compose_multiplatform)
+                        previewPlaceholder = painterResource(Res.drawable.compose_multiplatform),
+                        loading = {
+                            Image(
+                                painter = painterResource(Res.drawable.place_holder), // Show a default placeholder on failure
+                                contentDescription = "Placeholder",
+                                modifier = Modifier.fillMaxSize()
+                                    .background(color = Color.White),
+                                contentScale = ContentScale.Crop,
+                            )
+                        },
+                        failure = {
+                            Image(
+                                painter = painterResource(Res.drawable.place_holder), // Show a default placeholder on failure
+                                contentDescription = "Placeholder",
+                                modifier = Modifier.fillMaxSize()
+                                    .background(color = Color.White),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
                     )
                 }
 

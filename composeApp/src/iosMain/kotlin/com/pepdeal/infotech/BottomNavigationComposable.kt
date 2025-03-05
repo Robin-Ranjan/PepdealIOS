@@ -34,11 +34,12 @@ import com.pepdeal.infotech.shopVideo.FeedScreen
 import network.chaintech.sdpcomposemultiplatform.sdp
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
+import pepdealios.composeapp.generated.resources.categories_icon_
+import pepdealios.composeapp.generated.resources.categorise
 import pepdealios.composeapp.generated.resources.feed_icon
-import pepdealios.composeapp.generated.resources.place_holder
+import pepdealios.composeapp.generated.resources.product_icon
 import pepdealios.composeapp.generated.resources.profile_tab
 import pepdealios.composeapp.generated.resources.shopping_bag
-
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -46,14 +47,7 @@ fun MainBottomNavigationWithPager() {
     var selectedItem by remember { mutableStateOf(0) }
 
     // HorizontalPager for "ViewPager2" equivalent
-    val pagerState = rememberPagerState(initialPage = 4, pageCount = { 5 })
-
-    // Sync selectedItem with pagerState
-//    LaunchedEffect(pagerState.currentPage) {
-//        if (!pagerState.isScrollInProgress) {
-//            selectedItem = pagerState.currentPage
-//        }
-//    }
+    val pagerState = rememberPagerState(initialPage = 1, pageCount = { 5 })
 
     selectedItem = pagerState.currentPage
 
@@ -73,8 +67,8 @@ fun MainBottomNavigationWithPager() {
                         val items = listOf(
                             "Feed" to painterResource(Res.drawable.feed_icon),
                             "Shop" to painterResource(Res.drawable.shopping_bag),
-                            "Product" to painterResource(Res.drawable.place_holder),
-                            "Categories" to painterResource(Res.drawable.feed_icon),
+                            "Product" to painterResource(Res.drawable.product_icon),
+                            "Categories" to painterResource(Res.drawable.categories_icon_),
                             "Profile" to painterResource(Res.drawable.profile_tab),
                         )
 

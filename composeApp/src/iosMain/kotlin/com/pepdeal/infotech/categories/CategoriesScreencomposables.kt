@@ -1,7 +1,9 @@
 package com.pepdeal.infotech.categories
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -55,16 +57,18 @@ import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
 import pepdealios.composeapp.generated.resources.compose_multiplatform
+import pepdealios.composeapp.generated.resources.place_holder
 
 @Composable
 fun CategoriesScreen(viewModel: CategoriesViewModel = ViewModals.categoriesViewModel) {
-    // Observing categories and subcategories from ViewModel
+
+    // Observable
     val categories by viewModel.categories.collectAsStateWithLifecycle()
     val subCategoriesMap by viewModel.subCategoriesMap.collectAsStateWithLifecycle()
+
+    // variables
     var filteredCategories by remember { mutableStateOf(categories) }
-
     var searchQuery by remember { mutableStateOf("") }
-
     val keyboardController = LocalSoftwareKeyboardController.current
 
     val displayedCategories = remember(searchQuery, categories) {
@@ -83,11 +87,10 @@ fun CategoriesScreen(viewModel: CategoriesViewModel = ViewModals.categoriesViewM
                 ) {
                     category
                 } else {
-                    null // Skip this category if it doesn't match
+                    null
                 }
             }
         }
-
         // If no categories matched, return the original categories list
         filteredCategories = filtered.ifEmpty { categories }
     }
@@ -99,8 +102,11 @@ fun CategoriesScreen(viewModel: CategoriesViewModel = ViewModals.categoriesViewM
                 detectTapGestures(onTap = {
                     keyboardController?.hide()
                 })
+                detectHorizontalDragGestures { _, _ ->
+                    keyboardController?.hide()
+                }
             }) {
-//        SearchBar(searchQuery, onSearchQueryChange)
+
             SearchView("Search Product", searchQuery) {
                 searchQuery = it
             }
@@ -113,8 +119,8 @@ fun CategoriesScreen(viewModel: CategoriesViewModel = ViewModals.categoriesViewM
                         key = { it.id }) { category ->
                         CategoryCard(
                             category,
-                            subCategoriesMap[category.id] ?: emptyList(),
-                            onSubCategoryClickListener = {})
+                            subCategoriesMap[category.id] ?: emptyList()
+                        )
                     }
                 }
             }
@@ -126,8 +132,7 @@ fun CategoriesScreen(viewModel: CategoriesViewModel = ViewModals.categoriesViewM
 @Composable
 fun CategoryCard(
     category: ProductCategories,
-    subCategories: List<SubCategory>,
-    onSubCategoryClickListener: (SubCategory) -> Unit
+    subCategories: List<SubCategory>
 ) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(vertical = 5.dp),
@@ -153,7 +158,7 @@ fun CategoryCard(
                 verticalArrangement = Arrangement.spacedBy(5.dp)
             ) {
                 subCategories.chunked(4).forEach { rowItems ->
-                    // Wrap subcategories in a row
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(5.dp)
@@ -162,8 +167,8 @@ fun CategoryCard(
                         rowItems.forEach { subCategory ->
                             Box(
                                 modifier = Modifier
-                                    .weight(1f) // Distribute width equally
-                                    .fillMaxWidth() // Ensure full width utilization
+                                    .weight(1f)
+                                    .fillMaxWidth()
                             ) {
                                 SubCategoryItem(subCategory, onSubCategoryClickListener = {
                                     NavigationProvider.navController.navigate(
@@ -195,28 +200,44 @@ fun SubCategoryItem(
 ) {
     Column(
         modifier = Modifier
-            .padding(5.dp)
+            .padding(2.dp)
             .clickable { onSubCategoryClickListener(subCategory) },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Card(
-            modifier = Modifier.size(60.dp),
+            modifier = Modifier.size(70.dp),
             shape = RectangleShape,
             elevation = CardDefaults.cardElevation(0.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
-//            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
         ) {
             Box(contentAlignment = Alignment.Center) {
                 CoilImage(
                     modifier = Modifier
                         .fillMaxSize(),
-//                        .clip(CircleShape), // ✅ Ensure proper scaling inside the circle
                     imageModel = { subCategory.imageUrl },
                     imageOptions = ImageOptions(
                         contentScale = ContentScale.Inside,
                         alignment = Alignment.Center
                     ),
-                    previewPlaceholder = painterResource(Res.drawable.compose_multiplatform)
+                    previewPlaceholder = painterResource(Res.drawable.compose_multiplatform),
+                    loading = {
+                        Image(
+                            painter = painterResource(Res.drawable.place_holder), // Show a default placeholder on failure
+                            contentDescription = "Placeholder",
+                            modifier = Modifier.fillMaxSize()
+                                .background(color = Color.White),
+                            contentScale = ContentScale.Crop,
+                        )
+                    },
+                    failure = {
+                        Image(
+                            painter = painterResource(Res.drawable.place_holder), // Show a default placeholder on failure
+                            contentDescription = "Placeholder",
+                            modifier = Modifier.fillMaxSize()
+                                .background(color = Color.White),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
                 )
             }
         }
@@ -226,7 +247,7 @@ fun SubCategoryItem(
         TruncatedText(
             text = subCategory.name,
             maxLines = 2,
-            modifier = Modifier.width(80.dp) // ✅ Ensures text fits under the image
+            modifier = Modifier.width(80.dp)
         )
     }
 }

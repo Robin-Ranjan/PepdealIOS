@@ -36,7 +36,7 @@ class ShopRepo {
     private suspend fun getActiveProductsWithImages(shopId: String): List<ProductWithImages> {
 //        val client = HttpClient(Darwin)
         val productList = mutableListOf<ProductWithImages>()
-        println("product function")
+//        println("product function")
         try {
             val response: HttpResponse = client.get("${FirebaseUtil.BASE_URL}product_master.json?orderBy=\"shopId\"&equalTo=\"$shopId\"") {
                 contentType(ContentType.Application.Json)
@@ -45,14 +45,14 @@ class ShopRepo {
             if (response.status == HttpStatusCode.OK) {
                 val responseBody: String = response.bodyAsText()
                 val productsMap: Map<String, ProductMaster> = json.decodeFromString(responseBody)
-                println("product ${responseBody.length}")
-                println("product response ${responseBody.toString()}")
+//                println("product ${responseBody.length}")
+//                println("product response ${responseBody.toString()}")
                 // Use coroutineScope to launch the product image fetching concurrently
                 coroutineScope {
                     productsMap.values.forEach { product ->
                         if (product.isActive == "0" && product.flag == "0") {
                             async {
-                                println("product ${product.productName}")
+//                                println("product ${product.productName}")
                                 val images = getProductImages(product.productId)
                                 val productWithImages = ProductWithImages(product, images)
                                 productList.add(productWithImages)
@@ -119,7 +119,8 @@ class ShopRepo {
                             getActiveProductsWithImages(shop.shopId ?: "-1")
                         }
                         if (products.isNotEmpty()) {
-                            send(ShopWithProducts(shop, products)) // ✅ Send each result as it's ready
+                            println("emitting:- ${shop.shopName}")
+                            send(ShopWithProducts(shop, products))
                         }
                     }
                 }
@@ -224,6 +225,7 @@ class ShopRepo {
                             getActiveProductsWithImages(shop.shopId ?: "-1")
                         }
                         if (products.isNotEmpty()) {
+                            println("search emitting :- ${shop.shopName}")
                             send(ShopWithProducts(shop, products))
                         }
                     }

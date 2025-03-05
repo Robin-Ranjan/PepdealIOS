@@ -8,34 +8,6 @@ import kotlinx.coroutines.withContext
 
 object CategoriesUtil {
 
-//    fun getSubCategoriesList(categoryName: String): List<SubCategory> {
-//        val matchingCategory =
-//            productCategories.find { it.name.equals(categoryName, ignoreCase = true) }
-//        return matchingCategory?.let { category ->
-//            subCategories.filter { it.categoryId == category.id }
-//        } ?: emptyList()
-//    }
-//
-//    // Function to create the map in a background thread using coroutines
-//    fun createCategorySubCategoryMapAsync(
-//        categories: List<ProductCategories>,
-//        subCategories: List<SubCategory>
-//    ) {
-//        val categoryIdToName = categories.associateBy({ it.id }, { it.name.lowercase() })
-//
-//        subCategories.groupBy { it.categoryId }
-//            .mapKeys { (categoryId, _) -> categoryIdToName[categoryId] ?: "" }
-//            .filterKeys { it.isNotEmpty() }
-//    }
-
-    // Function to get subcategories based on category name using the precomputed map
-//    fun getSubCategoriesByCategoryNameAsync(
-//        categoryName: String,
-//        categorySubCategoryMap: Map<String, List<SubCategory>>
-//    ) {
-//        categorySubCategoryMap[categoryName.lowercase()] ?: emptyList()
-//    }
-
     fun getSubCategoriesListById(categoryId: Int): List<SubCategory> {
         if(categoryId==-1) return emptyList()
         return subCategories.filter { it.categoryId == categoryId }
@@ -126,8 +98,8 @@ object CategoriesUtil {
         SubCategory(50, 7, "Vehicle Repair & Care", "https://images.unsplash.com/photo-1611175694221-7d7d71e392d2"),
 
         // Toys & Games
-        SubCategory(51, 8, "Educational & Learning Toys", "https://images.unsplash.com/photo-1542482374-d33d6a2a6e81"),
-        SubCategory(52, 8, "Action Figures & Collections", "https://images.unsplash.com/photo-1542482374-d33d6a2a6e81"),
+        SubCategory(51, 8, "Educational & Learning Toys", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FToys%20%26%20Games%2FUntitleddesign25_enhance.jpeg?alt=media&token=ae8c435b-3493-4130-b8ff-b958c97519bd"),
+        SubCategory(52, 8, "Action Figures & Collections", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FToys%20%26%20Games%2FUntitleddesign26_enhance.jpeg?alt=media&token=675cfb56-b620-4be9-8136-5a8cb429a2aa"),
         SubCategory(53, 8, "Puzzles", "https://images.unsplash.com/photo-1586810167152-25f5a1b4cd16"),
         SubCategory(54, 8,"Indoor & Board Games", "https://example.com/educational-toys.jpg"),
         SubCategory(55, 8,"Outdoor & Sports Toys", "https://example.com/outdoor-playsets.jpg"),
@@ -135,21 +107,20 @@ object CategoriesUtil {
         SubCategory(57, 8,"Remote Operated Toys", "https://example.com/outdoor-playsets.jpg"),
 
         // Grocery
-        SubCategory(58, 9, "Fruits & Vegetables", "https://images.unsplash.com/photo-1561043433-aaf687c4cf04"),
-        SubCategory(59, 9, "Dairy Products", "https://images.unsplash.com/photo-1573664676428-2827b61d5179"),
-        SubCategory(60, 9, "Snacks", "https://images.unsplash.com/photo-1600654280423-c0f89d9b9dbd"),
-        SubCategory(61, 9, "Beverages", "https://images.unsplash.com/photo-1561794570-b15fe2db78c5"),
-        SubCategory(62, 9, "Frozen Foods", "https://images.unsplash.com/photo-1598224573088-f4e48fbb31f8"),
-        SubCategory(63, 9, "Meat & Seafood", "https://images.unsplash.com/photo-1606096989069-129c6c4b9787"),
+        SubCategory(58, 9, "Fruits & Vegetables", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FGrocery%2FUntitleddesign.jpeg?alt=media&token=a238f1d5-9e11-4b5f-9968-07c327e9ce3e"),
+        SubCategory(59, 9, "Dairy Products", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FGrocery%2F2%20(2).jpeg?alt=media&token=01c13e2c-76fe-4c1c-9788-d219137d54cd"),
+        SubCategory(60, 9, "Snacks", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FGrocery%2FUntitleddesign%20(1).jpeg?alt=media&token=0118660a-8d34-4ec2-844f-813ae47c95d4"),
+        SubCategory(61, 9, "Beverages", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FGrocery%2FUntitleddesign%20(2).jpeg?alt=media&token=c30af120-39f1-4e67-85d5-106e2cc54727"),
+        SubCategory(62, 9, "Frozen Foods", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FGrocery%2F6099878347.jpeg?alt=media&token=e503260e-bc36-4ac8-a839-05c6a60388a0"),
+        SubCategory(63, 9, "Meat & Seafood", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FGrocery%2FUntitleddesign5_enhance.jpeg?alt=media&token=5c34ae6a-f37e-4b92-b983-764c0c8aad0f"),
 
         // Pet Supplies
-        SubCategory(64, 10, "Collars & Leashes", "https://images.unsplash.com/photo-1560807707-8cc77767d783"),
-        SubCategory(65, 10, "Clothes And Grooming", "https://images.unsplash.com/photo-1560807707-8cc77767d783"),
-        SubCategory(66, 10, "Pet Toys", "https://images.unsplash.com/photo-1560807707-8cc77767d783"),
-        SubCategory(67, 10, "Pet Bowls", "https://images.unsplash.com/photo-1560807707-8cc77767d783"),
-        SubCategory(68, 10, "Food & Treats", "https://images.unsplash.com/photo-1560807707-8cc77767d783"),
-        SubCategory(69, 10, "Aquarium & Accessories", "https://images.unsplash.com/photo-1560807707-8cc77767d783"),
-
+        SubCategory(64, 10, "Collars & Leashes", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2Fpet_supplies%2FUntitleddesign6_enhance.jpeg?alt=media&token=d835e5c0-0639-4190-b9a3-736eeaf6ad48"),
+        SubCategory(65, 10, "Clothes And Grooming", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2Fpet_supplies%2FUntitleddesign7_enhance.jpeg?alt=media&token=ea43aa10-f602-48c5-af46-3cd999219b74"),
+        SubCategory(66, 10, "Pet Toys", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2Fpet_supplies%2FUntitleddesign8_enhance.jpeg?alt=media&token=532462a0-086a-4172-bb3c-9628216674f0"),
+        SubCategory(67, 10, "Pet Bowls", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2Fpet_supplies%2FUntitleddesign9_enhance.jpeg?alt=media&token=33945e59-51fb-4f61-85ae-5904f60eac27"),
+        SubCategory(68, 10, "Food & Treats", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2Fpet_supplies%2FUntitleddesign10_enhance.jpeg?alt=media&token=f4dc9140-598f-45c8-89df-4cbecb515dac"),
+        SubCategory(69, 10, "Aquarium & Accessories", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2Fpet_supplies%2FUntitleddesign11_enhance.jpeg?alt=media&token=1f64dc8c-6173-44b8-b0ad-f728dbc47ab8"),
 
         //personalized gift
         SubCategory(70, 11, "Custom Accessories", "https://example.com/custom-jewelry.jpg"),
@@ -158,11 +129,10 @@ object CategoriesUtil {
         SubCategory(73, 11, "Personalized Bags", "https://example.com/personalized-bags.jpg"),
         SubCategory(74, 11, "Custom Pet Items", "https://example.com/custom-pet-items.jpg"),
 
-
         //Stationary
-        SubCategory(75, 12, "General Stationary", "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f"),
-        SubCategory(76, 12, "Office Supplies", "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f"),
-        SubCategory(77, 12, "Art & Craft Supplies", "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f"),
+        SubCategory(75, 12, "General Stationary", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FStationary%2FUntitleddesign13_enhance.jpeg?alt=media&token=06ee29fc-9f1a-4446-94f9-e6c1f6ecb76f"),
+        SubCategory(76, 12, "Office Supplies", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FStationary%2FUntitleddesign14_enhance.jpeg?alt=media&token=1fc3be98-d779-4d25-958d-32573568f3e5"),
+        SubCategory(77, 12, "Art & Craft Supplies", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FStationary%2FUntitleddesign12_enhance.jpeg?alt=media&token=e4c4191b-a4b3-445d-9bd9-dbbacaa4d2a7"),
 
         //Hardware & Paint
         SubCategory(78,13,"Tools & Equipments",""),
@@ -172,19 +142,19 @@ object CategoriesUtil {
         SubCategory(82,13,"Safety & Security",""),
 
         // Food & Beverages
-        SubCategory(83,14,"Sabjis & Curries",""),
-        SubCategory(84,14,"Thalis & Combos",""),
-        SubCategory(85,14,"Chinese Dishes",""),
-        SubCategory(86,14,"South Indian Dishes",""),
+        SubCategory(83,14,"Sabjis & Curries","https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FFood%20%26%20Beverages%2FUntitleddesign15_enhance.jpeg?alt=media&token=acbf9a28-67e5-4b5e-a138-279b4847cf19"),
+        SubCategory(84,14,"Thalis & Combos","https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FFood%20%26%20Beverages%2FUntitleddesign15_enhance.jpeg?alt=media&token=acbf9a28-67e5-4b5e-a138-279b4847cf19"),
+        SubCategory(85,14,"Chinese Dishes","https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FFood%20%26%20Beverages%2FUntitleddesign17_enhance.jpeg?alt=media&token=0008339b-6bee-4b25-9ec4-db0649a72ab0"),
+        SubCategory(86,14,"South Indian Dishes","https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FFood%20%26%20Beverages%2FUntitleddesign18_enhance.jpeg?alt=media&token=bae5ec20-8059-4d49-9e49-4e9f04b4b03a"),
         SubCategory(87,14,"North Indian Dishes",""),
-        SubCategory(88,14,"Mughlai & Biryani",""),
-        SubCategory(89,14,"Fast Food & Snacks",""),
-        SubCategory(90,14,"Pizzas & Pastas",""),
-        SubCategory(91,14,"Burgers & Sandwiches",""),
-        SubCategory(92,14,"Street Food & Chat",""),
-        SubCategory(93,14,"Desserts & Sweets",""),
-        SubCategory(94,14,"Beverages",""),
-        SubCategory(95,14,"Alcoholic Beverages",""),
+        SubCategory(88,14,"Mughlai & Biryani","https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FFood%20%26%20Beverages%2FUntitleddesign19_enhance.jpeg?alt=media&token=cc657ac2-b642-4b7b-a988-7c47015a362d"),
+        SubCategory(89,14,"Fast Food & Snacks","https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FFood%20%26%20Beverages%2FUntitleddesign20_enhance.jpeg?alt=media&token=a2a43ce0-6374-459e-884d-136fc406c868"),
+        SubCategory(90,14,"Pizzas & Pastas","https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FFood%20%26%20Beverages%2FUntitleddesign21_enhance.jpeg?alt=media&token=5e3cb256-5ca4-49da-b8d6-fc3628d71651"),
+        SubCategory(91,14,"Burgers & Sandwiches","https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FFood%20%26%20Beverages%2FUntitleddesign20_enhance.jpeg?alt=media&token=a2a43ce0-6374-459e-884d-136fc406c868"),
+        SubCategory(92,14,"Street Food & Chat","https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FFood%20%26%20Beverages%2FUntitleddesign24_enhance.jpeg?alt=media&token=8761bfd1-1d4d-4399-b9e9-3b74c753d87b"),
+        SubCategory(93,14,"Desserts & Sweets","https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FFood%20%26%20Beverages%2FUntitleddesign23_enhance.jpeg?alt=media&token=1844f0e3-c746-4ffd-8421-a47328bc4090"),
+        SubCategory(94,14,"Beverages","https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FGrocery%2FUntitleddesign%20(2).jpeg?alt=media&token=c30af120-39f1-4e67-85d5-106e2cc54727"),
+        SubCategory(95,14,"Alcoholic Beverages","https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FFood%20%26%20Beverages%2FUntitleddesign22_enhance.jpeg?alt=media&token=f8fad875-ae44-4cc5-a866-402dd9243870"),
     )
 
 }

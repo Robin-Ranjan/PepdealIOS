@@ -9,36 +9,49 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SearchBarColors
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -61,12 +74,15 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -75,6 +91,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pepdeal.infotech.DataStore
 import com.pepdeal.infotech.PreferencesKeys
 import com.pepdeal.infotech.navigation.routes.Routes
+import com.pepdeal.infotech.shop.ShopCardView
 import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util
 import com.pepdeal.infotech.util.Util.toDiscountFormat
@@ -88,8 +105,6 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import network.chaintech.sdpcomposemultiplatform.sdp
-import network.chaintech.sdpcomposemultiplatform.ssp
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
@@ -98,27 +113,36 @@ import pepdealios.composeapp.generated.resources.compose_multiplatform
 import pepdealios.composeapp.generated.resources.manrope_light
 import pepdealios.composeapp.generated.resources.manrope_medium
 import pepdealios.composeapp.generated.resources.pepdeal_logo
+import pepdealios.composeapp.generated.resources.pepdeal_logo_new
 import pepdealios.composeapp.generated.resources.place_holder
 import pepdealios.composeapp.generated.resources.red_heart
 
-
-@OptIn(FlowPreview::class)
+@OptIn(FlowPreview::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
 
+    // dataStore
     val dataStore = DataStore.dataStore
     val currentUserId by dataStore.data.map { it[PreferencesKeys.USERID_KEY] ?: "-1" }
         .collectAsState(initial = "-1")
-    val listState = rememberLazyGridState()
-    val coroutineScope = rememberCoroutineScope()
+
+    // Observables
     val productNewList by viewModel.products.collectAsStateWithLifecycle()
     val filteredProducts by viewModel.searchedProducts.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+
+    val isSearchLoading by viewModel.isSearchLoading.collectAsStateWithLifecycle()
+
+    // Variables
+    val listState = rememberLazyGridState()
+    val coroutineScope = rememberCoroutineScope()
     var searchQuery by remember { mutableStateOf("") }
-    val snackbarHost = remember { SnackbarHostState() }
     val keyboardController = LocalSoftwareKeyboardController.current
+    var isSearchActive by remember { mutableStateOf(false) }
 
     // Track favorite states
     val favoriteStates = remember { mutableStateMapOf<String, Boolean>() }
+
     LaunchedEffect(Unit) {
         if (productNewList.isEmpty()) {
             coroutineScope.launch {
@@ -127,20 +151,15 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
         }
     }
 
-    val displayedProductList by derivedStateOf {
-        if (searchQuery.isNotEmpty()) filteredProducts else productNewList
-    }
-
     LaunchedEffect(searchQuery) {
-        snapshotFlow { searchQuery }
-            .debounce(1000)                     // Wait 300ms after the last change
-            .distinctUntilChanged()              // Only react if the value has actually changed
+        snapshotFlow { searchQuery.trim() }
+            .debounce(1000)
+            .distinctUntilChanged()
             .collectLatest { debouncedQuery ->
                 // Call your viewModel function with the debounced search query
                 viewModel.fetchSearchedItemsPage(debouncedQuery)
             }
     }
-
 
     // Observe scroll position to load more when reaching near the bottom
     LaunchedEffect(listState) {
@@ -150,114 +169,291 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
                 val totalItems = listState.layoutInfo.totalItemsCount
                 if (totalItems > 0 && lastVisibleIndex >= totalItems - 10 && !viewModel.isLoading.value && searchQuery.isEmpty()) {
                     coroutineScope.launch {
-                        viewModel.fetchItemsPage()
                         println("loading more ")
+                        viewModel.fetchItemsPage()
                     }
                 }
             }
     }
 
     MaterialTheme {
-        Scaffold(
-            snackbarHost = { SnackbarHost(snackbarHost) }
-        ) { paddingValues ->
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = Color.White)
-                    .padding(paddingValues)
+                    .background(Color.White)
+                    .padding(horizontal = 3.dp)
                     .pointerInput(Unit) {
                         detectTapGestures(onTap = {
                             keyboardController?.hide()
                         })
                     }
             ) {
-                Column {
-                    Image(
-                        painter = painterResource(Res.drawable.pepdeal_logo),
-                        contentDescription = "Your image description",
-                        modifier = Modifier
-                            .width(130.dp)
-                            .height(28.dp)
-                            .padding(start = 5.dp),
-                        contentScale = ContentScale.Fit // Adjust based on your needs (e.g., FillBounds, Fit)
-                    )
-                    SearchView("Search Product", searchQuery) {
-                        searchQuery = it
+                Column(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+
+                    if (!isSearchActive) {
+                        // App Logo
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)
+                        ) {
+                            Image(
+                                painter = painterResource(Res.drawable.pepdeal_logo_new),
+                                contentDescription = "App Logo",
+                                modifier = Modifier
+                                    .width(130.dp)
+                                    .height(28.dp)
+                                    .padding(start = 5.dp),
+                                contentScale = ContentScale.FillBounds
+                            )
+                        }
                     }
 
-                    Text(text = if (searchQuery.isEmpty()) productNewList.size.toString() else filteredProducts.size.toString())
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(2), // 2 columns
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(5.dp),
-                        horizontalArrangement = Arrangement.spacedBy(5.dp), // Space between columns
-                        verticalArrangement = Arrangement.spacedBy(8.dp), // Space between rows
-                        state = listState
-                    ) {
-                        items(items = displayedProductList,
-                            key = { it.productId }) { product ->
-                            // Determine the heart icon state
-                            val isFavorite = favoriteStates[product.productId] ?: false
-                            val heartIcon =
-                                if (isFavorite && currentUserId !== "-1") Res.drawable.red_heart else Res.drawable.black_heart
-
-                            // Check favorite status when the product is displayed
-                            LaunchedEffect(product.productId) {
-                                if (currentUserId != "-1") {
-                                    viewModel.checkFavoriteExists(
-                                        currentUserId,
-                                        product.productId
-                                    ) { exists ->
-                                        favoriteStates[product.productId] = exists
+                    SearchBar(
+                        modifier = Modifier.fillMaxWidth()
+                            .border(1.dp, Color.Gray, RoundedCornerShape(8.dp)),
+                        colors = SearchBarColors(
+                            containerColor = Color.White,
+                            dividerColor = Color.Gray
+                        ),
+                        shape = RectangleShape,
+                        shadowElevation = SearchBarDefaults.TonalElevation,
+                        inputField = {
+                            SearchBarDefaults.InputField(
+                                query = searchQuery,
+                                onQueryChange = { searchQuery = it },
+                                onSearch = { /* Implement search logic here */ },
+                                expanded = isSearchActive,
+                                onExpandedChange = { isSearchActive = it },
+                                modifier = Modifier.fillMaxWidth().padding(0.dp),
+                                placeholder = {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxHeight()
+                                            .wrapContentHeight(Alignment.CenterVertically)
+                                    ) {
+                                        Text(
+                                            "Search Product",
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.padding(bottom = 2.dp)
+                                        )
                                     }
+                                },
+                                leadingIcon = {
+                                    if (isSearchActive) {
+                                        IconButton(onClick = {
+                                            isSearchActive = false
+                                            searchQuery = ""
+                                        }) {
+                                            Icon(
+                                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                                contentDescription = "Back"
+                                            )
+                                        }
+                                    } else {
+                                        Icon(
+                                            imageVector = Icons.Default.Search,
+                                            contentDescription = "Search Icon"
+                                        )
+                                    }
+                                },
+                                trailingIcon = {
+                                    if (searchQuery.isNotEmpty()) {
+                                        IconButton(onClick = { searchQuery = "" }) {
+                                            Icon(
+                                                imageVector = Icons.Default.Close,
+                                                contentDescription = "Clear Search"
+                                            )
+                                        }
+                                    }
+                                },
+//                            colors = TextFieldColors()
+                            )
+                        },
+                        expanded = isSearchActive,
+                        onExpandedChange = { isSearchActive = it },
+                    ) {
+                        when {
+                            isSearchLoading -> {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .weight(1f), // Keeps it centered properly
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(color = Color.Blue)
                                 }
                             }
 
-                            // Shop Card
-                            AnimatedVisibility(
-                                visible = true, // Replace with your condition if necessary
-                                enter = fadeIn(tween(durationMillis = 300)) + slideInVertically(
-                                    initialOffsetY = { it }),
-                                exit = fadeOut(tween(durationMillis = 300)) + slideOutVertically(
-                                    targetOffsetY = { it })
+                            else -> {
+                                LazyVerticalGrid(
+                                    columns = GridCells.Fixed(2),
+                                    modifier = Modifier.fillMaxSize().padding(5.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+
+                                    if (filteredProducts.isEmpty()) {
+                                        item {
+                                            Text(
+                                                text = "No shops found",
+                                                modifier = Modifier.padding(16.dp),
+                                                color = Color.Gray
+                                            )
+                                        }
+                                    } else {
+                                        items(
+                                            filteredProducts,
+                                            key = { it.productId }) { product ->
+                                            val isFavorite =
+                                                favoriteStates[product.productId] ?: false
+                                            val heartIcon =
+                                                if (isFavorite && currentUserId != "-1") {
+                                                    Res.drawable.red_heart
+                                                } else {
+                                                    Res.drawable.black_heart
+                                                }
+
+                                            // Load Favorite Status for Logged-In Users
+                                            LaunchedEffect(product.productId) {
+                                                if (currentUserId != "-1" && !favoriteStates.containsKey(
+                                                        product.productId
+                                                    )
+                                                ) {
+                                                    viewModel.checkFavoriteExists(
+                                                        currentUserId,
+                                                        product.productId
+                                                    ) { exists ->
+                                                        favoriteStates[product.productId] = exists
+                                                    }
+                                                }
+                                            }
+
+                                            // Product Card with Animation
+                                            AnimatedVisibility(
+                                                visible = true,
+                                                enter = fadeIn(tween(300)) + slideInVertically(
+                                                    initialOffsetY = { it }),
+                                                exit = fadeOut(tween(300)) + slideOutVertically(
+                                                    targetOffsetY = { it })
+                                            ) {
+                                                ProductCard(
+                                                    shopItems = product,
+                                                    heartRes = painterResource(heartIcon),
+                                                    onLikeClicked = {
+                                                        if (currentUserId == "-1") {
+                                                            Util.showToast("Login Please")
+                                                        } else {
+                                                            val newFavoriteState = !isFavorite
+                                                            favoriteStates[product.productId] =
+                                                                newFavoriteState
+                                                            coroutineScope.launch {
+                                                                viewModel.toggleFavoriteStatus(
+                                                                    userId = currentUserId,
+                                                                    productId = product.productId,
+                                                                    isFavorite = newFavoriteState
+                                                                )
+                                                            }
+                                                        }
+                                                    },
+                                                    onProductClicked = {
+                                                        NavigationProvider.navController.navigate(
+                                                            Routes.ProductDetailsPage(it)
+                                                        )
+                                                    }
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Product Grid
+                    when {
+                        isLoading && productNewList.isEmpty() -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
                             ) {
-                                ProductCard(
-                                    shopItems = product,
-                                    heartRes = painterResource(heartIcon),
-                                    onLikeClicked = {
-                                        if (currentUserId == "-1") {
-                                            Util.showToast("Login Please")
-                                            return@ProductCard
-                                        }
+                                CircularProgressIndicator(color = Color.Blue)
+                            }
+                        }
 
-                                        val newFavoriteState = !isFavorite
-                                        favoriteStates[product.productId] = newFavoriteState
+                        else -> {
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(2),
+                                modifier = Modifier.fillMaxSize().padding(5.dp),
+                                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                state = listState
+                            ) {
+                                items(productNewList, key = { it.productId }) { product ->
+                                    val isFavorite = favoriteStates[product.productId] ?: false
+                                    val heartIcon = if (isFavorite && currentUserId != "-1") {
+                                        Res.drawable.red_heart
+                                    } else {
+                                        Res.drawable.black_heart
+                                    }
 
-                                        coroutineScope.launch {
-                                            viewModel.toggleFavoriteStatus(
-                                                userId = currentUserId,
-                                                productId = product.productId,
-                                                isFavorite = newFavoriteState
+                                    // Load Favorite Status for Logged-In Users
+                                    LaunchedEffect(product.productId) {
+                                        if (currentUserId != "-1" && !favoriteStates.containsKey(
+                                                product.productId
                                             )
+                                        ) {
+                                            viewModel.checkFavoriteExists(
+                                                currentUserId,
+                                                product.productId
+                                            ) { exists ->
+                                                favoriteStates[product.productId] = exists
+                                            }
                                         }
+                                    }
 
-                                    },
-                                    onProductClicked = {
-                                        NavigationProvider.navController.navigate(
-                                            Routes.ProductDetailsPage(
-                                                it
-                                            )
+                                    // Product Card with Animation
+                                    AnimatedVisibility(
+                                        visible = true,
+                                        enter = fadeIn(tween(300)) + slideInVertically(
+                                            initialOffsetY = { it }),
+                                        exit = fadeOut(tween(300)) + slideOutVertically(
+                                            targetOffsetY = { it })
+                                    ) {
+                                        ProductCard(
+                                            shopItems = product,
+                                            heartRes = painterResource(heartIcon),
+                                            onLikeClicked = {
+                                                if (currentUserId == "-1") {
+                                                    Util.showToast("Login Please")
+                                                } else {
+                                                    val newFavoriteState = !isFavorite
+                                                    favoriteStates[product.productId] =
+                                                        newFavoriteState
+                                                    coroutineScope.launch {
+                                                        viewModel.toggleFavoriteStatus(
+                                                            userId = currentUserId,
+                                                            productId = product.productId,
+                                                            isFavorite = newFavoriteState
+                                                        )
+                                                    }
+                                                }
+                                            },
+                                            onProductClicked = {
+                                                NavigationProvider.navController.navigate(
+                                                    Routes.ProductDetailsPage(it)
+                                                )
+                                            }
                                         )
-                                    })
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
         }
-    }
+//    }
 }
 
 @Composable
@@ -300,24 +496,43 @@ fun ProductCard(
                                 setToSaturation(1f)
                             })
                         ),
-                        previewPlaceholder = painterResource(Res.drawable.compose_multiplatform),
+                        previewPlaceholder = painterResource(Res.drawable.place_holder),
                         loading = {
                             Image(
                                 painter = painterResource(Res.drawable.place_holder), // Show a default placeholder on failure
                                 contentDescription = "Placeholder",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
+                                modifier = Modifier.fillMaxSize()
+                                    .background(color = Color.White),
+                                contentScale = ContentScale.Crop,
                             )
                         },
                         failure = {
                             Image(
                                 painter = painterResource(Res.drawable.place_holder), // Show a default placeholder on failure
                                 contentDescription = "Placeholder",
-                                modifier = Modifier.fillMaxSize(),
+                                modifier = Modifier.fillMaxSize()
+                                    .background(color = Color.White),
                                 contentScale = ContentScale.Crop
                             )
                         }
                     )
+                }
+
+                // Discount Badge (Top-Left)
+                if (shopItems.discountMrp.isNotEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .background(Color.Yellow, shape = RoundedCornerShape(bottomEnd = 8.dp))
+                            .padding(horizontal = 6.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "${shopItems.discountMrp.toDiscountFormat()} OFF",
+                            color = Color.Black,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
 
                 IconButton(
@@ -360,7 +575,7 @@ fun ProductCard(
                         text = shopItems.sellingPrice.toTwoDecimalPlaces(),
                         fontFamily = FontFamily(Font(Res.font.manrope_light)),
                         fontSize = 11.sp,
-                        lineHeight = 10.sp,
+                        lineHeight = 11.sp,
                         color = Color.Black
                     )
 
@@ -373,21 +588,22 @@ fun ProductCard(
                         modifier = Modifier.padding(horizontal = 5.dp)
                     )
 
-                    Text(
-                        text = shopItems.discountMrp.toDiscountFormat(),
-                        fontFamily = FontFamily(Font(Res.font.manrope_light)), fontSize = 10.sp,
-                        lineHeight = 10.sp,
-                        color = Color.Red,
-                        modifier = Modifier.padding(start = 3.dp)
-                    )
+//                    Text(
+//                        text = shopItems.discountMrp.toDiscountFormat(),
+//                        fontFamily = FontFamily(Font(Res.font.manrope_light)), fontSize = 10.sp,
+//                        lineHeight = 10.sp,
+//                        color = Color.Red,
+//                        modifier = Modifier.padding(start = 3.dp)
+//                    )
                 }
             } else {
                 Text(
                     text = "On Call",
-                    fontFamily = FontFamily(Font(Res.font.manrope_light)), fontSize = 10.sp,
-                    lineHeight = 10.sp,
-                    color = Color.Black,
-                    modifier = Modifier.padding(start = 3.dp)
+                    fontFamily = FontFamily(Font(Res.font.manrope_light)),
+                    fontSize = 11.sp,
+                    lineHeight = 11.sp,
+                    color = Color.Red,
+                    modifier = Modifier.padding(start = 5.dp)
                 )
             }
         }

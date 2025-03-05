@@ -79,9 +79,9 @@ fun YourShopScreen(
     shopId: String,
     viewModal: YourShopViewModal = ViewModals.yourShopViewModal
 ) {
-    val datastore = DataStore.dataStore
-    val currentUserId by datastore.data.map { it[PreferencesKeys.USERID_KEY] ?: "-1" }
-        .collectAsState(initial = "-1")
+//    val datastore = DataStore.dataStore
+//    val currentUserId by datastore.data.map { it[PreferencesKeys.USERID_KEY] ?: "-1" }
+//        .collectAsState(initial = "-1")
 
     val shopDetails by viewModal.shopDetails.collectAsStateWithLifecycle()
     val shopLoading by viewModal.shopLoading.collectAsStateWithLifecycle()

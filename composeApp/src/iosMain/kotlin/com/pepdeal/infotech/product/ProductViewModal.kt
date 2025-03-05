@@ -23,6 +23,11 @@ class ProductViewModal() : ViewModel() {
 
     private val _isLoading = MutableStateFlow(false) // Loading state
     val isLoading: StateFlow<Boolean> get() = _isLoading
+
+    private val _isSearchLoading = MutableStateFlow(false) // Loading state
+    val isSearchLoading: StateFlow<Boolean> get() = _isSearchLoading
+
+
     private var lastSearchQuery: String = ""
 
     // Define this at the ViewModel level
@@ -84,9 +89,9 @@ class ProductViewModal() : ViewModel() {
         }
 
         // If already loading, simply return.
-        if (_isLoading.value) return
+        if (_isSearchLoading.value) return
 
-        _isLoading.value = true
+        _isSearchLoading.value = true
 
         viewModelScope.launch {
             var itemCount = 0 // Track how many items are loaded
@@ -100,6 +105,7 @@ class ProductViewModal() : ViewModel() {
                             (oldList + newProduct).distinctBy { it.productId }
                         }
                         itemCount++
+                        _isSearchLoading.value = false
                     }
             } catch (e: Exception) {
                 e.printStackTrace()
