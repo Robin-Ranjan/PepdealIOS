@@ -200,12 +200,12 @@ fun SubCategoryItem(
 ) {
     Column(
         modifier = Modifier
-            .padding(2.dp)
+            .padding(vertical = 5.dp, horizontal = 2.dp)
             .clickable { onSubCategoryClickListener(subCategory) },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Card(
-            modifier = Modifier.size(70.dp),
+            modifier = Modifier.size(80.dp),
             shape = RectangleShape,
             elevation = CardDefaults.cardElevation(0.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),

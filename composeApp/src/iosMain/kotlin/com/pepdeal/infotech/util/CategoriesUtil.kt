@@ -35,10 +35,10 @@ object CategoriesUtil {
         SubCategory(1, 1, "Mobiles & Accessories", "https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-14-pro.jpg"),
         SubCategory(2, 1, "Computer & Laptop", "https://pngimg.com/uploads/laptop/laptop_PNG101763.png"),
 //        SubCategory(3, 1, "Home & Kitchen Appliances", "https://pngimg.com/uploads/photo_camera/photo_camera_PNG7828.png"),
-        SubCategory(3, 1, "Home & Kitchen Appliances", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FElectronics%2Fcompressed_png-clipart-home-appliance-refrigerator-graphy-cooking-ranges-small-appliance-home-appliances-kitchen-electronics-removebg-preview.png?alt=media&token=048ce61b-91c0-47b9-ac5f-a9526c8d70a6"),
+        SubCategory(3, 1, "Home & Kitchen Appliances", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FElectronics%2FUntitleddesign44_enhance.jpeg?alt=media&token=be60a147-6017-4387-813d-e8ed5a6dfd1e"),
         SubCategory(4, 1, "Tv,Audio & Entertainment", "https://www.freepngimg.com/thumb/tv/22378-2-tv.png"),
-        SubCategory(5, 1, "Gaming & Accessories", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FElectronics%2Fcompressed_pngtree-holding-a-controller-png-image_2664577-removebg-preview.png?alt=media&token=7396dd03-b3d4-4910-b03f-6e524fd1645c"),
-        SubCategory(6, 1, "Smart Gadgets & Wearables", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FElectronics%2Fcompressed_pngtree-ai-powered-health-gadgets-improving-diagnostics-accuracy-png-image_14888216.png?alt=media&token=a906b46d-61fe-47af-8b27-ada14f43041d"),
+        SubCategory(5, 1, "Gaming & Accessories", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FElectronics%2FUntitleddesign42_enhance.jpeg?alt=media&token=ca70a0be-ac55-48c4-be37-473c39ba2b20"),
+        SubCategory(6, 1, "Smart Gadgets & Wearables", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FElectronics%2FUntitleddesign43_enhance.jpeg?alt=media&token=5f7e544c-66df-4390-b0fd-28cee9671fa4"),
 
 
         // Fashion
@@ -75,17 +75,17 @@ object CategoriesUtil {
         SubCategory(30, 5, "Fiction Books", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2Fbooks%2Ffiction_books.jpeg?alt=media&token=4cd13d64-fb62-4ac2-9c78-8004d76a2847"),
         SubCategory(32, 5, "Non-fiction Books", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2Fbooks%2F2%20(1).jpeg?alt=media&token=d0f9cc4f-2592-45a1-add5-4585310745f6"),
         SubCategory(33, 5, "Academics Books", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2Fbooks%2Facademin_boo.jpeg?alt=media&token=56ab538b-4957-47db-a055-c8bed110cdac"),
-        SubCategory(34, 5, "Magazines & Comics", "https://images.unsplash.com/photo-1561234468-2d3605e0b41a"),
-        SubCategory(35, 5, "Hobby & Special Interest", "https://images.unsplash.com/photo-1511974035430-5de47d3b95da"),
-        SubCategory(36, 5, "Note Books", "https://images.unsplash.com/photo-1553798395-2ea636b7f374"),
+        SubCategory(34, 5, "Magazines & Comics", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2Fbooks%2FUntitleddesign39_enhance.jpeg?alt=media&token=4ed1a85f-d30e-4bb8-b544-52a0f93be367"),
+        SubCategory(35, 5, "Hobby & Special Interest", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2Fbooks%2FUntitleddesign40_enhance.jpeg?alt=media&token=25de97d4-8c68-4b46-a2f1-75c3183c624f"),
+        SubCategory(36, 5, "Note Books", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2Fbooks%2FUntitleddesign41_enhance.jpeg?alt=media&token=2ba3197e-1b36-4318-895d-231f68c3cfa2"),
 
         // Health & Beauty
-        SubCategory(37, 6, "Makeup", "https://images.unsplash.com/photo-1556228724-4a381e7d7b42"),
-        SubCategory(38, 6, "Skincare", "https://images.unsplash.com/photo-1586816879429-35c0841dd8df"),
-        SubCategory(39, 6, "Haircare", "https://images.unsplash.com/photo-1617118617150-62d7eec13f83"),
-        SubCategory(40, 6, "Personal Care", "https://images.unsplash.com/photo-1619947680853-a1df87dc13e4"),
-        SubCategory(41, 6, "Perfumes", "https://images.unsplash.com/photo-1574273974281-48c0c0d88a27"),
-        SubCategory(42, 6, "Vitamins & Supplements", "https://images.unsplash.com/photo-1598970434795-0c54fe7c0642"),
+        SubCategory(37, 6, "Makeup", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FHealth%20%26%20Beauty%2FUntitleddesign33_enhance.jpeg?alt=media&token=51716cf6-d924-4103-b05e-f6eeb5abc587"),
+        SubCategory(38, 6, "Skincare", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FHealth%20%26%20Beauty%2FUntitleddesign34_enhance.jpeg?alt=media&token=2fdcfbf6-d96d-43af-8091-262f00ceadf6"),
+        SubCategory(39, 6, "Haircare", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FHealth%20%26%20Beauty%2FUntitleddesign35_enhance.jpeg?alt=media&token=e9af972a-768d-462d-9d3d-54817a973cdc"),
+        SubCategory(40, 6, "Personal Care", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FHealth%20%26%20Beauty%2FUntitleddesign38_enhance.jpeg?alt=media&token=5018e695-c04b-4ef8-8a71-c3d543d61efb"),
+        SubCategory(41, 6, "Perfumes", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FHealth%20%26%20Beauty%2FUntitleddesign36_enhance.jpeg?alt=media&token=725b9d61-874d-41b8-9889-b90095e74f68"),
+        SubCategory(42, 6, "Vitamins & Supplements", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FHealth%20%26%20Beauty%2FUntitleddesign37_enhance.jpeg?alt=media&token=6c890547-4e71-4418-853f-af39a7b62ef8"),
         SubCategory(43, 6, "Surgical", "https://images.unsplash.com/photo-1519010764707-63697fcf92e3"),
         SubCategory(44, 6, "Medicines & Others", "https://images.unsplash.com/photo-1556228724-4a381e7d7b42"),
         SubCategory(45, 6, "Ayurvedic & Homeopathic Medicines", "https://images.unsplash.com/photo-1517840545241-cfe78c01d273"),
@@ -94,17 +94,17 @@ object CategoriesUtil {
         // Automotive
         SubCategory(47, 7, "Car Accessories", "https://images.unsplash.com/photo-1601025792213-c2d08d3d8b5c"),
         SubCategory(48, 7, "Motorbike Accessories", "https://images.unsplash.com/photo-1600986603720-e7b7f21e19cf"),
-        SubCategory(49, 7, "Tools & Equipment", "https://images.unsplash.com/photo-1556761175-129418cb2dfe"),
+        SubCategory(49, 7, "Tools & Equipment", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FAutomotive%2FUntitleddesign32_enhance.jpeg?alt=media&token=beeaa201-c7c8-4581-aa99-6aa2b5819823"),
         SubCategory(50, 7, "Vehicle Repair & Care", "https://images.unsplash.com/photo-1611175694221-7d7d71e392d2"),
 
         // Toys & Games
         SubCategory(51, 8, "Educational & Learning Toys", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FToys%20%26%20Games%2FUntitleddesign25_enhance.jpeg?alt=media&token=ae8c435b-3493-4130-b8ff-b958c97519bd"),
         SubCategory(52, 8, "Action Figures & Collections", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FToys%20%26%20Games%2FUntitleddesign26_enhance.jpeg?alt=media&token=675cfb56-b620-4be9-8136-5a8cb429a2aa"),
-        SubCategory(53, 8, "Puzzles", "https://images.unsplash.com/photo-1586810167152-25f5a1b4cd16"),
-        SubCategory(54, 8,"Indoor & Board Games", "https://example.com/educational-toys.jpg"),
-        SubCategory(55, 8,"Outdoor & Sports Toys", "https://example.com/outdoor-playsets.jpg"),
-        SubCategory(56, 8,"Soft Toys & Role Play", "https://example.com/outdoor-playsets.jpg"),
-        SubCategory(57, 8,"Remote Operated Toys", "https://example.com/outdoor-playsets.jpg"),
+        SubCategory(53, 8, "Puzzles", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FToys%20%26%20Games%2FUntitleddesign27_enhance.jpeg?alt=media&token=d0fe2790-ef95-4f63-bcef-65603c2ebe07"),
+        SubCategory(54, 8,"Indoor & Board Games", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FToys%20%26%20Games%2FUntitleddesign28_enhance.jpeg?alt=media&token=823e5ca4-d7a5-4a0c-9e27-032f902af135"),
+        SubCategory(55, 8,"Outdoor & Sports Toys", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FToys%20%26%20Games%2FUntitleddesign29_enhance.jpeg?alt=media&token=b0b899d1-fa73-495a-9a8e-3a56998d20c1"),
+        SubCategory(56, 8,"Soft Toys & Role Play", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FToys%20%26%20Games%2FUntitleddesign30_enhance.jpeg?alt=media&token=d6fcc3d0-6ed7-4dc3-a6b4-8155121b330a"),
+        SubCategory(57, 8,"Remote Operated Toys", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FToys%20%26%20Games%2FUntitleddesign31_enhance.jpeg?alt=media&token=29e68f9d-d2da-48e4-803c-b5032c11fbe7"),
 
         // Grocery
         SubCategory(58, 9, "Fruits & Vegetables", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FGrocery%2FUntitleddesign.jpeg?alt=media&token=a238f1d5-9e11-4b5f-9968-07c327e9ce3e"),
