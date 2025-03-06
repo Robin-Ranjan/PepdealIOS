@@ -96,10 +96,8 @@ import dev.icerock.moko.permissions.PermissionsController
 import dev.icerock.moko.permissions.RequestCanceledException
 import dev.icerock.moko.permissions.compose.BindEffect
 import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import multiplatform.network.cmptoast.ToastDuration
 import network.chaintech.sdpcomposemultiplatform.sdp
 import network.chaintech.sdpcomposemultiplatform.ssp
 import org.jetbrains.compose.resources.Font
@@ -254,7 +252,6 @@ fun AddNewProductScreen(viewModal: AddNewProductViewModal = ViewModals.addNewPro
                         })
                     }
             ) {
-
                 Box(Modifier.fillMaxSize()) {
                     LazyColumn(
                         modifier = Modifier

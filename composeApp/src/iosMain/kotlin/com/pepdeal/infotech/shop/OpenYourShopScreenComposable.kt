@@ -4,6 +4,7 @@ import Notification
 import NotificationDuration
 import Notify
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -29,6 +31,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -41,6 +44,8 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldColors
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -91,18 +96,20 @@ import org.jetbrains.compose.resources.FontResource
 import pepdealios.composeapp.generated.resources.Res
 import pepdealios.composeapp.generated.resources.manrope_bold
 import pepdealios.composeapp.generated.resources.manrope_medium
+import platform.posix.err
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OpenYourShopScreen(viewModel: OpenYourShopViewModal = ViewModals.openYOurShopViewModal) {
+fun OpenYourShopScreen(shopPhoneNo :String,viewModel: OpenYourShopViewModal = ViewModals.openYOurShopViewModal) {
     val shopName = remember { mutableStateOf(TextFieldValue()) }
     val shopAddress = remember { mutableStateOf(TextFieldValue()) }
     val signBoardAddress = remember { mutableStateOf(TextFieldValue()) }
     val shopState = remember { mutableStateOf(TextFieldValue()) }
     val shopCity = remember { mutableStateOf(TextFieldValue()) }
     val shopArea = remember { mutableStateOf(TextFieldValue()) }
-    val shopPhoneNumber = remember { mutableStateOf(TextFieldValue()) }
+//    val shopPhoneNumber = remember { mutableStateOf(TextFieldValue(shopPhoneNo.replaceFirst("+91","").trim())) }
+    val shopPhoneNumber = remember { mutableStateOf(TextFieldValue("1234567890")) }
     val searchTag = remember { mutableStateOf(TextFieldValue()) }
     val shopBoardBackgroundColorName = remember { mutableStateOf(TextFieldValue()) }
     val shopBoardBackgroundColorCode = remember { mutableStateOf(TextFieldValue()) }
@@ -192,7 +199,6 @@ fun OpenYourShopScreen(viewModel: OpenYourShopViewModal = ViewModals.openYOurSho
                     },
                     navigationIcon = {
                         IconButton(onClick = {
-                            Notify("Toast",NotificationDuration.SHORT)
                             viewModel.reset()
                             navController.popBackStack()
                         }) {
@@ -288,7 +294,11 @@ fun OpenYourShopScreen(viewModel: OpenYourShopViewModal = ViewModals.openYOurSho
                         label = "Shop Phone Number",
                         state = shopPhoneNumber,
                         maxLength = 10,
-                        inputType = KeyboardType.Number
+                        inputType = KeyboardType.Number,
+                        isEditable = false,
+                        prefix = {
+                            Text("+91", color = Color.Black)
+                        }
                     )
 
                     Row(
@@ -340,29 +350,47 @@ fun OpenYourShopScreen(viewModel: OpenYourShopViewModal = ViewModals.openYOurSho
                     )
 
                     TextFieldWithLabel(
-                        label = "shop Board BackGround Color",
+                        label = "Shop Board BackGround Color",
                         state = shopBoardBackgroundColorName,
                         onClick = {
                             navController.navigate(Routes.ColorBottomSheet)
                             viewModel.updateTheTypeOfColor("shop_board_color")
                         },
                         isEditable = false,
-                        color = if (shopBoardBackgroundColorName.value.text.isNotEmpty()) Color.fromHex(
-                            shopBoardBackgroundColorCode.value.text
-                        ) else Color.Black
+                        prefix = {
+                            Card(modifier = Modifier
+                                .size(24.dp),
+                                shape = RoundedCornerShape(2.dp),
+                                colors = CardDefaults.cardColors(containerColor = if (shopBoardBackgroundColorName.value.text.isNotEmpty()) Color.fromHex(
+                                    shopBoardBackgroundColorCode.value.text
+                                ) else Color.Black),
+                                border = BorderStroke(0.5.dp, color = Color.Black)
+                            ){
+
+                            }
+                        }
                     )
 
                     TextFieldWithLabel(
-                        label = "shop Font Color",
+                        label = "Shop Font Color",
                         state = shopBoardFontColorName,
                         onClick = {
                             navController.navigate(Routes.ColorBottomSheet)
                             viewModel.updateTheTypeOfColor("shop_font_color")
                         },
                         isEditable = false,
-                        color = if (shopBoardFontColorName.value.text.isNotEmpty()) Color.fromHex(
-                            shopBoardFontColorCode.value.text
-                        ) else Color.Black
+                        prefix = {
+                            Card(modifier = Modifier
+                                .size(24.dp),
+                                shape = RoundedCornerShape(2.dp),
+                                colors = CardDefaults.cardColors(containerColor = if (shopBoardFontColorName.value.text.isNotEmpty()) Color.fromHex(
+                                    shopBoardFontColorCode.value.text
+                                ) else Color.Black),
+                                border = BorderStroke(0.5.dp, color = Color.Black)
+                            ){
+
+                            }
+                        }
                     )
 
                     TextFieldWithLabel(
@@ -388,7 +416,7 @@ fun OpenYourShopScreen(viewModel: OpenYourShopViewModal = ViewModals.openYOurSho
                                             "Shop State" to shopState.value.text,
                                             "Shop City" to shopCity.value.text,
                                             "Shop Area" to shopArea.value.text,
-                                            "Shop Phone Number" to shopPhoneNumber.value.text,
+                                            "Shop Phone Number" to shopPhoneNo,
                                             "Search Tag" to searchTag.value.text,
                                             "Shop Board Background" to shopBoardBackgroundColorCode.value.text,
                                             "Shop Board Font Colour" to shopBoardFontColorName.value.text,
@@ -398,37 +426,41 @@ fun OpenYourShopScreen(viewModel: OpenYourShopViewModal = ViewModals.openYOurSho
                                             "Latitude" to latitude.value.text
                                         ),
                                         setError = { error ->
+                                            Util.showToast(error)
                                             errorMessage = error
                                         },
                                         status = { status ->
-                                            viewModel.registerShop(
-                                                shopMaster = ShopMaster(
-                                                    shopId = "",
-                                                    userId = Objects.USER_ID,
-                                                    shopName = shopName.value.text,
-                                                    shopMobileNo = "+91${shopPhoneNumber.value.text}",
-                                                    shopAddress = shopAddress.value.text,
-                                                    shopAddress2 = signBoardAddress.value.text,
-                                                    shopArea = shopArea.value.text,
-                                                    city = shopCity.value.text,
-                                                    state = shopState.value.text,
-                                                    shopDescription = aboutShop.value.text,
-                                                    bgColourId = shopBoardBackgroundColorCode.value.text,
-                                                    fontSizeId = "",
-                                                    fontStyleId = shopBoardFontStyle.value.text,
-                                                    fontColourId = shopBoardFontColorCode.value.text,
-                                                    isActive = "1",
-                                                    flag = "1",
-                                                    latitude = "",
-                                                    longitude = "",
-                                                    shopStatus = "",
-                                                    searchTag = searchTag.value.text,
-                                                    isVerified = "1",
-                                                    createdAt = Util.getCurrentTimeStamp(),
-                                                    updatedAt = Util.getCurrentTimeStamp(),
-                                                    showNumber = if (showNumber) "0" else "1"
+                                            if(status){
+                                                viewModel.registerShop(
+                                                    shopMaster = ShopMaster(
+                                                        shopId = "",
+                                                        userId = Objects.USER_ID,
+                                                        shopName = shopName.value.text,
+//                                                        shopMobileNo = shopPhoneNo,
+                                                        shopMobileNo = shopPhoneNumber.value.text,
+                                                        shopAddress = shopAddress.value.text,
+                                                        shopAddress2 = signBoardAddress.value.text,
+                                                        shopArea = shopArea.value.text,
+                                                        city = shopCity.value.text,
+                                                        state = shopState.value.text,
+                                                        shopDescription = aboutShop.value.text,
+                                                        bgColourId = shopBoardBackgroundColorCode.value.text,
+                                                        fontSizeId = "",
+                                                        fontStyleId = shopBoardFontStyle.value.text,
+                                                        fontColourId = shopBoardFontColorCode.value.text,
+                                                        isActive = "1",
+                                                        flag = "1",
+                                                        latitude = latitude.value.text,
+                                                        longitude = longitude.value.text,
+                                                        shopStatus = "",
+                                                        searchTag = searchTag.value.text,
+                                                        isVerified = "1",
+                                                        createdAt = Util.getCurrentTimeStamp(),
+                                                        updatedAt = Util.getCurrentTimeStamp(),
+                                                        showNumber = if (showNumber) "0" else "1"
+                                                    )
                                                 )
-                                            )
+                                            }
                                         }
                                     )
                                 } catch (e: Exception) {
@@ -450,18 +482,20 @@ fun OpenYourShopScreen(viewModel: OpenYourShopViewModal = ViewModals.openYOurSho
                     }
                 }
             }
-
-            if(showShopAddressUI){
-                PlacesSearchScreen(
-                    addressDetails = { placeDetails ->
-                        shopAddress.value = TextFieldValue(placeDetails.address)
-                        latitude.value = TextFieldValue(placeDetails.latitude.toString())
-                        longitude.value = TextFieldValue(placeDetails.longitude.toString())
-                    }, onDismiss = {
-                        showShopAddressUI = false
-                    }
-                )
-            }
+        }
+        if(showShopAddressUI){
+            PlacesSearchScreen(
+                addressDetails = { placeDetails ->
+                    shopAddress.value = TextFieldValue(placeDetails.address)
+                    latitude.value = TextFieldValue(placeDetails.latitude.toString())
+                    longitude.value = TextFieldValue(placeDetails.longitude.toString())
+                    shopArea.value = TextFieldValue(placeDetails.area)
+                    shopCity.value = TextFieldValue(placeDetails.city)
+                    shopState.value = TextFieldValue(placeDetails.state)
+                }, onDismiss = {
+                    showShopAddressUI = false
+                }
+            )
         }
     }
 }
@@ -479,7 +513,8 @@ fun TextFieldWithLabel(
     modifier: Modifier = Modifier.fillMaxWidth(),
     onValueChange: (TextFieldValue) -> Unit = {},
     color: Color = Color.Black,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
+    prefix: (@Composable () -> Unit)? = null // Optional suffix
 ) {
 
     OutlinedTextField(
@@ -514,6 +549,25 @@ fun TextFieldWithLabel(
             keyboardType = inputType
         ),
         readOnly = !isEditable,
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = Color.Transparent,
+            unfocusedContainerColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent,
+            errorContainerColor = Color.Transparent,
+            focusedIndicatorColor = Color.Black,  // Black when focused
+            unfocusedIndicatorColor = Color.Black, // Black when not focused
+            disabledIndicatorColor = Color.Black, // Black when disabled
+            errorIndicatorColor = Color.Red // Optional: Red when there's an error
+        ),
+        prefix = {
+            if (prefix != null) {
+                Row(
+                    modifier = Modifier.padding(end = 8.dp) // Add space between prefix and text
+                ) {
+                    prefix()
+                }
+            }
+        }
     )
 }
 

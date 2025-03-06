@@ -8,6 +8,7 @@ ktor = "2.3.7"
 foundationAndroid = "1.7.7"
 datastore ="1.1.1"
 alertKmp = "2.0.0"
+compass = "1.2.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -20,6 +21,10 @@ datastore = { module = "androidx.datastore:datastore", version.ref = "datastore"
 datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 alert-kmp = { module = "io.github.khubaibkhan4:alert-kmp", version.ref = "alertKmp" }
 
+compass-geolocation = { module = "dev.jordond.compass:geolocation", version.ref = "compass" }
+compass-geolocation-mobile = { module = "dev.jordond.compass:geolocation-mobile", version.ref = "compass" }
+compass-geocoder = { module = "dev.jordond.compass:geocoder", version.ref = "compass" }
+compass-geocoder-mobile = { module = "dev.jordond.compass:geocoder-mobile", version.ref = "compass" }
 
 [plugins]
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }

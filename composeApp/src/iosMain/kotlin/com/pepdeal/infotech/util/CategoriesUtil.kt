@@ -3,8 +3,6 @@ package com.pepdeal.infotech.util
 
 import com.pepdeal.infotech.categories.ProductCategories
 import com.pepdeal.infotech.categories.SubCategory
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 object CategoriesUtil {
 
@@ -42,25 +40,25 @@ object CategoriesUtil {
 
 
         // Fashion
-        SubCategory(7, 2, "Men's Clothing", "https://images.unsplash.com/photo-1512436991641-6745cdb1723f"),
-        SubCategory(8, 2, "Women's Clothing", "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c"),
-        SubCategory(9, 2, "Kid's Clothing", "https://images.freeimages.com/images/large-previews/fb0/shoes-1420565.jpg"),
-        SubCategory(10, 2, "Accessories", "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b"),
-        SubCategory(11, 2, "Footwear", "https://images.unsplash.com/photo-1512436991641-6745cdb1723f"),
-        SubCategory(12, 2, "Sportswear", "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f"),
-        SubCategory(13, 2, "Swimwear", "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f"),
+        SubCategory(7, 2, "Men's Clothing", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FFashion%2FUntitleddesign45_enhance.jpeg?alt=media&token=d3235cf3-e745-4bd1-a087-78cccdf14776"),
+        SubCategory(8, 2, "Women's Clothing", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FFashion%2FUntitleddesign46_enhance.jpeg?alt=media&token=4d3a986c-bc2a-4a91-a9d7-9f3efdcf604b"),
+        SubCategory(9, 2, "Kid's Clothing", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FFashion%2FUntitleddesign47_enhance.jpeg?alt=media&token=2116166d-ff3e-4d75-91db-eb90006c13da"),
+        SubCategory(10, 2, "Accessories", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FFashion%2FUntitleddesign48_enhance.jpeg?alt=media&token=5f7c0264-e02e-4822-9de2-3594a63b45b3"),
+        SubCategory(11, 2, "Footwear", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FFashion%2FUntitleddesign49_enhance.jpeg?alt=media&token=13942e4e-22cb-4be3-a117-35f4a5bece3d"),
+        SubCategory(12, 2, "Sportswear", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FFashion%2FUntitleddesign50_enhance.jpeg?alt=media&token=6e2cc556-a68a-427a-aad8-d95ffb2aec4c"),
+        SubCategory(13, 2, "Swimwear", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FFashion%2FUntitleddesign51_enhance.jpeg?alt=media&token=ef74c047-5669-4c7a-a97f-4dbe9fb18cf6"),
         SubCategory(14, 2, "Materials", "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f"),
 
 
         // Home & Kitchen
-        SubCategory(15, 3, "Kitchen ware", "https://images.unsplash.com/photo-1582495617764-67583f1d7215"),
-        SubCategory(16, 3, "Home Decor & Furnishings", "https://images.unsplash.com/photo-1505692794403-eab5e3adf1b2"),
-        SubCategory(17, 3, "Lighting", "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2"),
-        SubCategory(18, 3, "Gardening", "https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0"),
-        SubCategory(19, 3, "Furniture & Storage", "https://images.unsplash.com/photo-1592194996308-7d757625fe36"),
-        SubCategory(20, 3, "Cleaning & Household Supplies", "https://images.unsplash.com/photo-1616627787931-3c29c86578ff"),
-        SubCategory(21, 3, "Kitchen & Dining Essentials", "https://images.unsplash.com/photo-1570561571408-11db3dfba1d7"),
-        SubCategory(22, 3, "Bath Accessories", "https://images.unsplash.com/photo-1597767780401-3c84e4e3b8f4"),
+        SubCategory(15, 3, "Kitchen ware", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FHome%20%26%20Kitchen%2FUntitleddesign52_enhance.jpeg?alt=media&token=8d507eb8-10ab-446c-aac8-dc5df62c81f6"),
+        SubCategory(16, 3, "Home Decor & Furnishings", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FHome%20%26%20Kitchen%2FUntitleddesign53_enhance.jpeg?alt=media&token=a85ee352-f1c9-427a-a960-68ca2823de57"),
+        SubCategory(17, 3, "Lighting", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FHome%20%26%20Kitchen%2FUntitleddesign54_enhance.jpeg?alt=media&token=511d2c82-1d56-445e-b9e3-5d953fe1113e"),
+        SubCategory(18, 3, "Gardening", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FHome%20%26%20Kitchen%2FUntitleddesign55_enhance.jpeg?alt=media&token=cdd9b4e6-646c-440c-96e9-1b6814740b8a"),
+        SubCategory(19, 3, "Furniture & Storage", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FHome%20%26%20Kitchen%2FUntitleddesign56_enhance.jpeg?alt=media&token=a8a7a9f3-8f63-48f5-b543-34438c310704"),
+        SubCategory(20, 3, "Cleaning & Household Supplies", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FHome%20%26%20Kitchen%2FUntitleddesign57_enhance.jpeg?alt=media&token=7b61b00d-83a5-45c2-a0f6-db63a0bdc201"),
+        SubCategory(21, 3, "Kitchen & Dining Essentials", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FHome%20%26%20Kitchen%2FUntitleddesign58_enhance.jpeg?alt=media&token=f19677d4-0c4c-4c1b-94cd-53a7f4f0e2f1"),
+        SubCategory(22, 3, "Bath Accessories", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FHome%20%26%20Kitchen%2FUntitleddesign59_enhance.jpeg?alt=media&token=22131b5c-6916-442f-b70b-9649fa82ef1e"),
 
         // Sports & Fitness
         SubCategory(23, 4, "Sports Equipment", "https://images.unsplash.com/photo-1599058917217-fbe4d4da0837"),

@@ -5,8 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.pepdeal.infotech.favourite.FavouritesRepo
 import com.pepdeal.infotech.favourite.modal.FavoriteProductMaster
 import com.pepdeal.infotech.util.Util
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -28,7 +30,11 @@ class ProductViewModal() : ViewModel() {
     val isSearchLoading: StateFlow<Boolean> get() = _isSearchLoading
 
 
-    private var lastSearchQuery: String = ""
+    private var lastSearchQuery = MutableStateFlow("")
+
+//    private var lastSearchQuery: String = ""
+    private var searchJob: Job? = null  // Track the ongoing search job
+
 
     // Define this at the ViewModel level
     private var currentPage = 0  // Page counter
@@ -72,31 +78,32 @@ class ProductViewModal() : ViewModel() {
     }
 
     fun fetchSearchedItemsPage(query: String) {
-        println("📌 Search fetchItemsPage() called")  // ✅ Add this
-
         if (query.isEmpty()) {
             _searchedProducts.value = emptyList()
-//            lastSearchedShopId = null
-            lastSearchQuery = ""
+            lastSearchQuery.value = ""
             return
         }
 
-        // If the query has changed from the previous one, clear the old results and reset pagination.
-        if (query != lastSearchQuery) {
+        // If the query has changed, reset search results and pagination.
+        if (query != lastSearchQuery.value.trim()) {
+
+            println("query :- $query")
+            println("lastSearchQuery :- ${lastSearchQuery.value}")
             _searchedProducts.value = emptyList()
-//            lastSearchedShopId = null
-            lastSearchQuery = query
+            lastSearchQuery.value = query
+        }else {
+            return
         }
 
-        // If already loading, simply return.
-        if (_isSearchLoading.value) return
-
         _isSearchLoading.value = true
+        // **Cancel any ongoing search before starting a new one**
+        searchJob?.cancel()
 
-        viewModelScope.launch {
+        searchJob = viewModelScope.launch {
+            println("📌 Search fetchItemsPage() called with query: $query")
             var itemCount = 0 // Track how many items are loaded
-            val lastProductId =
-                _searchedProducts.value.lastOrNull()?.productId // ✅ Update pagination index
+            val lastProductId = _searchedProducts.value.lastOrNull()?.productId // Pagination index
+
             try {
                 productRepo.getAllProductsSearchFlowPagination(lastProductId, pageSize, query)
                     .collect { newProduct ->

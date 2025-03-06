@@ -46,6 +46,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -70,6 +71,7 @@ import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util
 import com.pepdeal.infotech.util.Util.fromHex
 import com.pepdeal.infotech.util.Util.toDiscountFormat
+import com.pepdeal.infotech.util.Util.toRupee
 import com.pepdeal.infotech.util.Util.toTwoDecimalPlaces
 import com.pepdeal.infotech.yourShop.ShopServicesRow
 import com.skydoves.landscapist.ImageOptions
@@ -86,6 +88,7 @@ import pepdealios.composeapp.generated.resources.compose_multiplatform
 import pepdealios.composeapp.generated.resources.manrope_bold
 import pepdealios.composeapp.generated.resources.manrope_light
 import pepdealios.composeapp.generated.resources.manrope_medium
+import pepdealios.composeapp.generated.resources.manrope_semibold
 import pepdealios.composeapp.generated.resources.place_holder
 import pepdealios.composeapp.generated.resources.red_heart
 import pepdealios.composeapp.generated.resources.super_shop_logo
@@ -110,7 +113,7 @@ fun ShopDetailsWithProductPage(
     val scope = rememberCoroutineScope()
 
     // Track favorite states
-    val favoriteStates = remember { mutableStateMapOf<String, Boolean>() }
+    val favoriteStates = rememberSaveable { mutableStateMapOf<String, Boolean>() }
     LaunchedEffect(shopId) {
         if (shopProducts.isEmpty()) {
             viewModal.fetchShopDetails(shopId)
@@ -384,6 +387,23 @@ fun ShopProductCard(
                     )
                 }
 
+                // Discount Badge (Top-Left)
+                if (shopItems.product.discountMrp.isNotEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .background(Color(0xFFFF9800).copy(alpha = 0.8f), shape = RoundedCornerShape(bottomEnd = 8.dp))
+                            .padding(horizontal = 8.dp, vertical = 6.dp)
+                    ) {
+                        Text(
+                            text = shopItems.product.discountMrp.toDiscountFormat(),
+                            color = Color.Black,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
                 IconButton(
                     onClick = {
                         onLikeClicked()
@@ -422,37 +442,31 @@ fun ShopProductCard(
                 ) {
                     Text(
                         text = shopItems.product.sellingPrice.toTwoDecimalPlaces(),
-                        fontFamily = FontFamily(Font(Res.font.manrope_light)),
-                        fontSize = 11.sp,
-                        lineHeight = 11.sp,
+                        fontFamily = FontFamily(Font(Res.font.manrope_semibold)),
+                        fontSize = 12.sp,
+                        lineHeight = 12.sp,
                         color = Color.Black
                     )
 
                     Text(
-                        text = shopItems.product.mrp.toTwoDecimalPlaces(),
-                        fontFamily = FontFamily(Font(Res.font.manrope_light)), fontSize = 10.sp,
-                        lineHeight = 10.sp,
+                        text = shopItems.product.mrp.toTwoDecimalPlaces().toRupee(),
+                        fontFamily = FontFamily(Font(Res.font.manrope_medium)),
+                        fontSize = 11.sp,
+                        lineHeight = 11.sp,
                         color = Color.Gray,
                         textDecoration = TextDecoration.LineThrough,
                         modifier = Modifier.padding(horizontal = 5.dp)
-                    )
-
-                    Text(
-                        text = shopItems.product.discountMrp.toDiscountFormat(),
-                        fontFamily = FontFamily(Font(Res.font.manrope_light)), fontSize = 10.sp,
-                        lineHeight = 10.sp,
-                        color = Color.Red,
-                        modifier = Modifier.padding(start = 3.dp)
+                            .align(Alignment.CenterVertically)
                     )
                 }
             } else {
                 Text(
                     text = "On Call",
-                    fontFamily = FontFamily(Font(Res.font.manrope_light)),
-                    fontSize = 11.sp,
-                    lineHeight = 11.sp,
+                    fontSize = 12.sp,
+                    lineHeight = 12.sp,
+                    fontFamily = FontFamily(Font(Res.font.manrope_medium)),
                     color = Color.Red,
-                    modifier = Modifier.padding(start = 3.dp)
+                    modifier = Modifier.padding(start = 5.dp)
                 )
             }
         }

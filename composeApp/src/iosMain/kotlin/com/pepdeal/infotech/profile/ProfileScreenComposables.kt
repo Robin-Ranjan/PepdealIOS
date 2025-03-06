@@ -38,6 +38,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -61,9 +62,6 @@ import com.attafitamim.krop.core.crop.crop
 import com.attafitamim.krop.core.crop.cropperStyle
 import com.attafitamim.krop.core.crop.rememberImageCropper
 import com.attafitamim.krop.ui.ImageCropperDialog
-import com.mmk.kmpnotifier.notification.NotificationImage
-import com.mmk.kmpnotifier.notification.Notifier
-import com.mmk.kmpnotifier.notification.NotifierManager
 import com.pepdeal.infotech.DataStore
 import com.pepdeal.infotech.ImageCompressor
 import com.pepdeal.infotech.Objects
@@ -102,7 +100,6 @@ import pepdealios.composeapp.generated.resources.shopping_bag
 import pepdealios.composeapp.generated.resources.super_shop_logo
 import pepdealios.composeapp.generated.resources.support
 import pepdealios.composeapp.generated.resources.tickets
-import kotlin.random.Random
 
 
 @Composable
@@ -135,24 +132,11 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
     val snackBar = remember { SnackbarHostState() }
 
     LaunchedEffect(currentUserId) {
-        println("fetching :- $profileImageUrl")
         if (profileImageUrl?.profilePicUrl.isNullOrEmpty() && currentUserId != "-1") {
             println("Fetching profile picture")
             viewModal.fetchUserProfilePic(currentUserId)
         }
     }
-
-//    val notifier = NotifierManager.getLocalNotifier()
-//    notifier.notify {
-//        id= Random.nextInt(0, Int.MAX_VALUE)
-//        title = "Title from KMPNotifier"
-//        body = "Body message from KMPNotifier"
-//        payloadData = mapOf(
-//            Notifier.KEY_URL to "https://github.com/mirzemehdi/KMPNotifier/",
-//            "extraKey" to "randomValue"
-//        )
-//        image = NotificationImage.Url("https://github.com/user-attachments/assets/a0f38159-b31d-4a47-97a7-cc230e15d30b")
-//    }
 
     LaunchedEffect(userStatus) {
         userStatus.let {
@@ -332,6 +316,7 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                                 )
                             )
                         })
+
                     if (userStatus == "1") {
                         ProfileMenuItem(
                             text = "Your Shop",
@@ -352,7 +337,7 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                                     Util.showToast("Please Login")
                                     return@ProfileMenuItem
                                 }
-                                NavigationProvider.navController.navigate(Routes.OpenYourShopPage)
+                                NavigationProvider.navController.navigate(Routes.OpenYourShopPage(userPhone))
                             })
                     }
 
@@ -371,6 +356,7 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                                 )
                             )
                         })
+
                     Text(
                         text = "Seller Page",
                         color = Color.DarkGray,
@@ -433,9 +419,19 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                         text = "Edit Shop Details",
                         icon = Res.drawable.shopping_bag,
                         onClick = {
+
+                            if (currentUserId == "-1") {
+                                Util.showToast("Please Login")
+                                return@ProfileMenuItem
+                            }
+                            if (userStatus != "1") {
+                                Util.showToast("Open Your Shop First")
+                                return@ProfileMenuItem
+                            }
+
                             NavigationProvider.navController.navigate(
                                 Routes.EditShopDetails(
-                                    "-OG9iDx7RKUPZ6RHwsIA",
+                                    shopId,
                                     currentUserId
                                 )
                             )
@@ -456,7 +452,7 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
 
                             NavigationProvider.navController.navigate(
                                 Routes.UploadShopVideoPage(
-                                    Objects.SHOP_ID
+                                    shopId
                                 )
                             )
                         })
@@ -502,12 +498,13 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                             NavigationProvider.navController.navigate(Routes.LoginPage) {
                                 popUpTo(Routes.MainPage) {
                                     inclusive = true
-                                } // Clears MainPage and navigates fresh to Login
+                                }
                             }
                         },
                         onLogout = {
                             scope.launch {
-                                datastore.edit { it.clear() } // Clear stored user session
+                                // Clear stored user session
+                                datastore.edit { it.clear() }
                             }
                             viewModal.reset()
                         }
@@ -556,7 +553,6 @@ fun ProfileMenuItem(text: String, icon: DrawableResource, onClick: () -> Unit = 
 
 @Composable
 fun LogoutCard(userId: String, onClick: (Boolean) -> Unit, onLogout: () -> Unit) {
-//    val userId = preferences[PreferencesKeys.USERID_KEY] ?: "-1"  // Directly observe
 
     Card(
         modifier = Modifier
@@ -601,7 +597,8 @@ fun ProfileImageSelector(
     painter: Painter = painterResource(Res.drawable.baseline_person_24),
     contentScale: ContentScale = ContentScale.Fit,
     imageUrl: String = "",
-    imageBitMap: (ImageBitmap) -> Unit
+    imageBitMap: (ImageBitmap) -> Unit,
+    userId: String = "-1"
 ) {
     val scope = rememberCoroutineScope()
     val imageCropper = rememberImageCropper()
@@ -624,34 +621,38 @@ fun ProfileImageSelector(
 
     // Consolidated click handler: Request permission, pick image, crop it, and update imageState.
     val onImageClick = {
-        scope.launch {
-            requestPermission(
-                controller = controller,
-                permission = Permission.GALLERY,
-                snackBarHostState = snackBar,
-                picker = picker,
-                imageState = { newImage ->
-                    scope.launch {
-                        newImage.let { image ->
-                            // Launch cropper with desired max size.
-                            val result = imageCropper.crop(
-                                maxResultSize = IntSize(1200, 1200),
-                                bmp = image
-                            )
-                            val croppedBitmap = when (result) {
-                                CropResult.Cancelled -> null
-                                is CropError -> null
-                                is CropResult.Success -> result.bitmap
-                            }
-                            croppedBitmap?.let {
-                                val compressedImage = ImageCompressor().compress(it, 60 * 1024)
-                                imageState.value = compressedImage
-                                imageBitMap(compressedImage)
+        if (userId != "-1" && userId.isNotEmpty()) {
+            scope.launch {
+                requestPermission(
+                    controller = controller,
+                    permission = Permission.GALLERY,
+                    snackBarHostState = snackBar,
+                    picker = picker,
+                    imageState = { newImage ->
+                        scope.launch {
+                            newImage.let { image ->
+                                // Launch cropper with desired max size.
+                                val result = imageCropper.crop(
+                                    maxResultSize = IntSize(1200, 1200),
+                                    bmp = image
+                                )
+                                val croppedBitmap = when (result) {
+                                    CropResult.Cancelled -> null
+                                    is CropError -> null
+                                    is CropResult.Success -> result.bitmap
+                                }
+                                croppedBitmap?.let {
+                                    val compressedImage = ImageCompressor().compress(it, 60 * 1024)
+                                    imageState.value = compressedImage
+                                    imageBitMap(compressedImage)
+                                }
                             }
                         }
                     }
-                }
-            )
+                )
+            }
+        } else {
+            Util.showToast("Please Login")
         }
     }
 

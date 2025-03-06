@@ -7,17 +7,18 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
@@ -27,8 +28,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -37,15 +38,15 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarColors
 import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -56,7 +57,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -79,8 +79,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pepdeal.infotech.BannerCarouselWidget
 import com.pepdeal.infotech.Objects
+import com.pepdeal.infotech.checkPermission
 import com.pepdeal.infotech.fonts.FontUtils.getFontResourceByName
-import com.pepdeal.infotech.locationPermissionController
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.product.ProductWithImages
 import com.pepdeal.infotech.shop.modal.ShopWithProducts
@@ -93,8 +93,14 @@ import com.pepdeal.infotech.util.Util.toTwoDecimalPlaces
 import com.pepdeal.infotech.util.ViewModals
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil3.CoilImage
+import dev.icerock.moko.permissions.Permission
 import dev.icerock.moko.permissions.compose.BindEffect
 import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
+import dev.jordond.compass.geocoder.MobileGeocoder
+import dev.jordond.compass.geocoder.placeOrNull
+import dev.jordond.compass.geolocation.Geolocator
+import dev.jordond.compass.geolocation.GeolocatorResult
+import dev.jordond.compass.geolocation.mobile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.IO
@@ -108,7 +114,7 @@ import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
 import pepdealios.composeapp.generated.resources.compose_multiplatform
 import pepdealios.composeapp.generated.resources.manrope_bold
-import pepdealios.composeapp.generated.resources.pepdeal_logo
+import pepdealios.composeapp.generated.resources.manrope_medium
 import pepdealios.composeapp.generated.resources.pepdeal_logo_new
 import pepdealios.composeapp.generated.resources.place_holder
 
@@ -132,12 +138,39 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
     val bannerList by viewModel.bannerList.collectAsStateWithLifecycle()
 
     // variables
-    var searchQuery by remember { mutableStateOf("") }
+    var searchQuery by rememberSaveable { mutableStateOf("") }
     val columnState = rememberLazyListState()
-    var locationName by remember { mutableStateOf("") }
-    var isSearchActive by remember { mutableStateOf(false) }
+    var locationName: String? by rememberSaveable { mutableStateOf(null) }
+    var isSearchActive by rememberSaveable { mutableStateOf(false) }
     val latestShopList = rememberUpdatedState(shopListNew)
+    val geoLocation = rememberSaveable { Geolocator.mobile() }
 
+
+    LaunchedEffect(Unit) {
+        if (locationName == null) {
+            when (val result = geoLocation.current()) {
+                is GeolocatorResult.Success -> {
+                    println("LOCATION: ${result.data.coordinates}")
+                    println(
+                        "LOCATION NAME: ${
+                            MobileGeocoder()
+                                .placeOrNull(result.data.coordinates)?.subLocality
+                        }"
+                    )
+                    locationName =
+                        MobileGeocoder().placeOrNull(result.data.coordinates)?.subLocality
+                }
+
+                is GeolocatorResult.Error -> when (result) {
+                    is GeolocatorResult.NotSupported -> println("LOCATION ERROR: ${result.message}")
+                    is GeolocatorResult.NotFound -> println("LOCATION ERROR: ${result.message}")
+                    is GeolocatorResult.PermissionError -> println("LOCATION ERROR: ${result.message}")
+                    is GeolocatorResult.GeolocationFailed -> println("LOCATION ERROR: ${result.message}")
+                    else -> println("LOCATION ERROR: ${result.message}")
+                }
+            }
+        }
+    }
 
     LaunchedEffect(latestShopList.value.isEmpty()) {
         if (latestShopList.value.isEmpty()) {
@@ -161,7 +194,9 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
             .distinctUntilChanged()
             .collectLatest { debouncedQuery ->
                 // Call your viewModel function with the debounced search query
-                viewModel.loadMoreSearchedShops(debouncedQuery)
+                if (debouncedQuery.isNotEmpty()) {
+                    viewModel.loadMoreSearchedShops(debouncedQuery)
+                }
             }
     }
 
@@ -179,13 +214,17 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
     }
 
     LaunchedEffect(Unit) {
-        scope.launch {
-            locationPermissionController(
-                controller,
-                snackBar = snackBar,
-                scope
-            )
-        }
+        checkPermission(
+            permission = Permission.LOCATION,
+            controller = controller,
+            snackBarHostState = snackBar
+        )
+        checkPermission(
+            permission = Permission.REMOTE_NOTIFICATION,
+            controller = controller,
+            snackBarHostState = snackBar
+        )
+
     }
 
     // Outer CardView
@@ -200,182 +239,205 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
     @OptIn(ExperimentalMaterial3Api::class)
     MaterialTheme {
         BindEffect(controller)
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White)
-                .padding(horizontal = 3.dp)
-                .pointerInput(Unit) {
-                    detectTapGestures(onTap = {
-                        keyboardController?.hide()
-                    })
-                }
+        Scaffold(
+            snackbarHost = { SnackbarHost(snackBar) }
         ) {
-            Column(modifier = Modifier.fillMaxSize()) {
-
-                if (!isSearchActive) {
-                    // App Logo
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)
-                    ) {
-                        Image(
-                            painter = painterResource(Res.drawable.pepdeal_logo_new),
-                            contentDescription = "App Logo",
-                            modifier = Modifier
-                                .width(130.dp)
-                                .height(28.dp)
-                                .padding(start = 5.dp),
-                            contentScale = ContentScale.FillBounds
-                        )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White)
+                    .padding(horizontal = 3.dp)
+                    .pointerInput(Unit) {
+                        detectTapGestures(onTap = {
+                            keyboardController?.hide()
+                        })
                     }
-                }
+            ) {
+                Column(modifier = Modifier.fillMaxSize()) {
 
-                SearchBar(
-                    modifier = Modifier.fillMaxWidth()
-                        .border(1.dp, Color.Gray, RoundedCornerShape(8.dp)),
-                    colors = SearchBarColors(
-                        containerColor = Color.White,
-                        dividerColor = Color.Gray
-                    ),
-                    shape = RectangleShape,
-                    shadowElevation = SearchBarDefaults.TonalElevation,
-                    inputField = {
-                        SearchBarDefaults.InputField(
-                            query = searchQuery,
-                            onQueryChange = { searchQuery = it },
-                            onSearch = { /* Implement search logic here */ },
-                            expanded = isSearchActive,
-                            onExpandedChange = { isSearchActive = it },
-                            modifier = Modifier.fillMaxWidth().padding(0.dp),
-                            placeholder = {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxHeight()
-                                        .wrapContentHeight(Alignment.CenterVertically)
-                                ) {
-                                    Text(
-                                        "Search Shop",
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.padding(bottom = 2.dp)
-                                    )
-                                }
-                            },
-                            leadingIcon = {
-                                if (isSearchActive) {
-                                    IconButton(onClick = {
-                                        isSearchActive = false
-                                        searchQuery = ""
-                                    }) {
-                                        Icon(
-                                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                            contentDescription = "Back"
-                                        )
-                                    }
-                                } else {
-                                    Icon(
-                                        imageVector = Icons.Default.Search,
-                                        contentDescription = "Search Icon"
-                                    )
-                                }
-                            },
-                            trailingIcon = {
-                                if (searchQuery.isNotEmpty()) {
-                                    IconButton(onClick = { searchQuery = "" }) {
-                                        Icon(
-                                            imageVector = Icons.Default.Close,
-                                            contentDescription = "Clear Search"
-                                        )
-                                    }
-                                }
-                            },
-//                            colors = TextFieldColors()
-                        )
-                    },
-                    expanded = isSearchActive,
-                    onExpandedChange = { isSearchActive = it }, // Handles search activation
-                ) {
-                    when {
-                        isSearchLoading -> {
-                            Box(
+                    if (!isSearchActive) {
+                        // App Logo
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically // Align items properly
+                        ) {
+                            Image(
+                                painter = painterResource(Res.drawable.pepdeal_logo_new),
+                                contentDescription = "App Logo",
                                 modifier = Modifier
-                                    .fillMaxSize()
-                                    .weight(1f), // Keeps it centered properly
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator(color = Color.Blue)
-                            }
-                        }
+                                    .width(130.dp)
+                                    .height(28.dp)
+                                    .padding(start = 5.dp),
+                                contentScale = ContentScale.FillBounds
+                            )
 
-                        else -> {
-                            LazyColumn(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 5.dp)
-                                    .weight(1f)
-                                    .heightIn(max = 300.dp)
-                                    .background(Color.White)
-                                    .pointerInput(Unit) {
-                                        detectTapGestures(onTap = {
-                                            keyboardController?.hide()
-                                        })
-                                        detectHorizontalDragGestures { _, _ ->
-                                            keyboardController?.hide()
-                                        }
-                                    }
-                            ) {
-                                if (searchedShopList.isEmpty()) {
-                                    item {
-                                        Text(
-                                            text = "No shops found",
-                                            modifier = Modifier.padding(16.dp),
-                                            color = Color.Gray
-                                        )
-                                    }
-                                } else {
-                                    items(searchedShopList) { shop ->
-                                        ShopCardView(shop)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                            // Push the next elements to the end of the Row
+                            Spacer(modifier = Modifier.weight(1f))
 
-                // Show Loading Indicator if Needed
-                if (isLoading && shopListNew.isEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .weight(1f), // Keeps it centered properly
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(color = Color.Blue)
-                    }
-                } else {
-                    // Shop List (Properly Weighted)
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .weight(1f)
-                            .nestedScroll(nestedScrollConnection)
-                            .padding(top = 5.dp)
-                            .pointerInput(Unit) {
-                                detectTapGestures(onTap = {
-                                    keyboardController?.hide()
-                                })
-                            },
-                        state = columnState
-                    ) {
-                        if (bannerList.isNotEmpty()) {
-                            item {
-                                BannerCarouselWidget(
-                                    bannerList,
-                                    modifier = Modifier.fillMaxWidth()
+                            // Location Icon with Text
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(end = 10.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Place,
+                                    contentDescription = "Location",
+                                    tint = Color.DarkGray,
+                                    modifier = Modifier.size(20.dp)
+                                )
+
+                                Spacer(modifier = Modifier.width(4.dp))
+
+                                Text(
+                                    text = locationName?.toNameFormat() ?: "Fetching...",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Black
                                 )
                             }
                         }
-                        items(shopListNew, key = { it.shop.shopId!! }) { shop ->
-                            ShopCardView(shop)
+                    }
+
+                    SearchBar(
+                        modifier = Modifier.fillMaxWidth()
+                            .border(1.dp, Color.Gray, RoundedCornerShape(8.dp)),
+                        colors = SearchBarColors(
+                            containerColor = Color.White,
+                            dividerColor = Color.Gray
+                        ),
+                        shape = RectangleShape,
+                        shadowElevation = SearchBarDefaults.TonalElevation,
+                        inputField = {
+                            SearchBarDefaults.InputField(
+                                query = searchQuery,
+                                onQueryChange = { searchQuery = it },
+                                onSearch = { /* Implement search logic here */ },
+                                expanded = isSearchActive,
+                                onExpandedChange = { isSearchActive = it },
+                                modifier = Modifier.fillMaxWidth().padding(0.dp),
+                                placeholder = {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxHeight()
+                                            .wrapContentHeight(Alignment.CenterVertically)
+                                    ) {
+                                        Text(
+                                            "Search Shop",
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.padding(bottom = 2.dp)
+                                        )
+                                    }
+                                },
+                                leadingIcon = {
+                                    if (isSearchActive) {
+                                        IconButton(onClick = {
+                                            isSearchActive = false
+                                            searchQuery = ""
+                                        }) {
+                                            Icon(
+                                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                                contentDescription = "Back"
+                                            )
+                                        }
+                                    } else {
+                                        Icon(
+                                            imageVector = Icons.Default.Search,
+                                            contentDescription = "Search Icon"
+                                        )
+                                    }
+                                },
+                                trailingIcon = {
+                                    if (searchQuery.isNotEmpty()) {
+                                        IconButton(onClick = { searchQuery = "" }) {
+                                            Icon(
+                                                imageVector = Icons.Default.Close,
+                                                contentDescription = "Clear Search"
+                                            )
+                                        }
+                                    }
+                                },
+//                            colors = TextFieldColors()
+                            )
+                        },
+                        expanded = isSearchActive,
+                        onExpandedChange = { isSearchActive = it }, // Handles search activation
+                    ) {
+                        when {
+                            isSearchLoading -> {
+
+                            }
+
+                            else -> {
+                                LazyColumn(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 5.dp)
+                                        .weight(1f)
+                                        .heightIn(max = 300.dp)
+                                        .background(Color.White)
+                                        .pointerInput(Unit) {
+                                            detectTapGestures(onTap = {
+                                                keyboardController?.hide()
+                                            })
+                                            detectHorizontalDragGestures { _, _ ->
+                                                keyboardController?.hide()
+                                            }
+                                        }
+                                ) {
+                                    if (searchedShopList.isEmpty()) {
+                                        item {
+                                            Text(
+                                                text = "No shops found",
+                                                modifier = Modifier.padding(16.dp),
+                                                color = Color.Gray
+                                            )
+                                        }
+                                    } else {
+                                        items(searchedShopList) { shop ->
+                                            ShopCardView(shop)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Show Loading Indicator if Needed
+                    if (isLoading && shopListNew.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .weight(1f), // Keeps it centered properly
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = Color.Blue)
+                        }
+                    } else {
+                        // Shop List (Properly Weighted)
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .weight(1f)
+                                .nestedScroll(nestedScrollConnection)
+                                .padding(top = 5.dp)
+                                .pointerInput(Unit) {
+                                    detectTapGestures(onTap = {
+                                        keyboardController?.hide()
+                                    })
+                                },
+                            state = columnState
+                        ) {
+                            if (bannerList.isNotEmpty()) {
+                                item {
+                                    BannerCarouselWidget(
+                                        bannerList,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                            }
+                            items(shopListNew, key = { it.shop.shopId!! }) { shop ->
+                                ShopCardView(shop)
+                            }
                         }
                     }
                 }
@@ -552,11 +614,13 @@ fun ShopItemView(shopItem: ProductWithImages, onProductClicked: (String) -> Unit
                     Box(
                         modifier = Modifier
                             .align(Alignment.TopStart)
-                            .background(Color(0xFFFF9800), shape = RoundedCornerShape(bottomEnd = 8.dp))
+                            .background(
+                                Color(0xFFFF9800).copy(alpha = 0.8f),
+                                shape = RoundedCornerShape(bottomEnd = 8.dp)
+                            )
                             .padding(horizontal = 6.dp, vertical = 4.dp)
                     ) {
                         Text(
-//                            text = "${shopItem.product.discountMrp.toDiscountFormat()} OFF",
                             text = shopItem.product.discountMrp.toDiscountFormat(),
                             color = Color.Black,
                             fontSize = 12.sp,
@@ -568,9 +632,10 @@ fun ShopItemView(shopItem: ProductWithImages, onProductClicked: (String) -> Unit
 
             Text(
                 text = shopItem.product.productName.toNameFormat(),
-                fontSize = 11.sp,
-                lineHeight = 11.sp,
+                fontSize = 13.sp,
+                lineHeight = 13.sp,
                 color = Color.Black,
+                fontFamily = FontFamily(Font(Res.font.manrope_bold)),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
@@ -589,34 +654,27 @@ fun ShopItemView(shopItem: ProductWithImages, onProductClicked: (String) -> Unit
                 ) {
                     Text(
                         text = shopItem.product.sellingPrice.toTwoDecimalPlaces().toRupee(),
-                        fontSize = 11.sp,
-                        lineHeight = 11.sp,
+                        fontSize = 12.sp,
+                        lineHeight = 12.sp,
+                        fontFamily = FontFamily(Font(Res.font.manrope_medium)),
                         color = Color.Black,
-                        modifier = Modifier.padding(0.dp)
                     )
 
                     Text(
                         text = shopItem.product.mrp.toTwoDecimalPlaces().toRupee(),
-                        fontSize = 10.sp,
-                        lineHeight = 10.sp,
+                        fontSize = 11.sp,
+                        lineHeight = 11.sp,
                         color = Color.Gray,
                         textDecoration = TextDecoration.LineThrough,
-                        modifier = Modifier.padding(start = 5.dp)
+                        modifier = Modifier.padding(start = 5.dp).align(Alignment.CenterVertically)
                     )
-
-//                    Text(
-//                        text = shopItem.product.discountMrp.toDiscountFormat(),
-//                        fontSize = 10.sp,
-//                        lineHeight = 10.sp,
-//                        color = Color.Red,
-//                        modifier = Modifier.padding(start = 5.dp)
-//                    )
                 }
             } else {
                 Text(
                     text = "On Call",
-                    fontSize = 11.sp,
-                    lineHeight = 11.sp,
+                    fontSize = 12.sp,
+                    lineHeight = 12.sp,
+                    fontFamily = FontFamily(Font(Res.font.manrope_medium)),
                     color = Color.Black,
                     modifier = Modifier.padding(start = 3.dp, end = 0.dp, top = 5.dp)
                 )

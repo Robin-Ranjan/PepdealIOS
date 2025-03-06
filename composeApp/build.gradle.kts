@@ -72,6 +72,13 @@ kotlin {
 
             implementation("network.chaintech:cmptoast:1.0.4")
 
+            // Geolocation
+            implementation(libs.compass.geolocation)
+            implementation(libs.compass.geolocation.mobile)
+
+            // Geocoding
+            implementation(libs.compass.geocoder)
+            implementation(libs.compass.geocoder.mobile)
     }
 
         iosMain.dependencies {
@@ -80,6 +87,7 @@ kotlin {
         }
     }
 }
+
 dependencies{
     commonMainImplementation("androidx.core:core:1.10.1")
     commonMainApi("dev.icerock.moko:mvvm-core:0.16.1")

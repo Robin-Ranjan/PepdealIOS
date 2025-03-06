@@ -21,7 +21,7 @@ sealed class Routes {
     object RegistrationPage : Routes()
 
     @Serializable
-    object OpenYourShopPage : Routes()
+    data class OpenYourShopPage(val shopPhoneNo:String) : Routes()
 
     @Serializable
     object AddNewProductPage : Routes()

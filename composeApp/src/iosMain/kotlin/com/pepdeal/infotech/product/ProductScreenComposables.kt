@@ -64,6 +64,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -95,6 +96,8 @@ import com.pepdeal.infotech.shop.ShopCardView
 import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util
 import com.pepdeal.infotech.util.Util.toDiscountFormat
+import com.pepdeal.infotech.util.Util.toNameFormat
+import com.pepdeal.infotech.util.Util.toRupee
 import com.pepdeal.infotech.util.Util.toTwoDecimalPlaces
 import com.pepdeal.infotech.util.ViewModals
 import com.skydoves.landscapist.ImageOptions
@@ -110,8 +113,10 @@ import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
 import pepdealios.composeapp.generated.resources.black_heart
 import pepdealios.composeapp.generated.resources.compose_multiplatform
+import pepdealios.composeapp.generated.resources.manrope_bold
 import pepdealios.composeapp.generated.resources.manrope_light
 import pepdealios.composeapp.generated.resources.manrope_medium
+import pepdealios.composeapp.generated.resources.manrope_semibold
 import pepdealios.composeapp.generated.resources.pepdeal_logo
 import pepdealios.composeapp.generated.resources.pepdeal_logo_new
 import pepdealios.composeapp.generated.resources.place_holder
@@ -128,20 +133,19 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
 
     // Observables
     val productNewList by viewModel.products.collectAsStateWithLifecycle()
-    val filteredProducts by viewModel.searchedProducts.collectAsStateWithLifecycle()
+    val filteredProducts by  viewModel.searchedProducts.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
-
     val isSearchLoading by viewModel.isSearchLoading.collectAsStateWithLifecycle()
 
     // Variables
     val listState = rememberLazyGridState()
     val coroutineScope = rememberCoroutineScope()
-    var searchQuery by remember { mutableStateOf("") }
+    var searchQuery by rememberSaveable { mutableStateOf("") }
     val keyboardController = LocalSoftwareKeyboardController.current
-    var isSearchActive by remember { mutableStateOf(false) }
+    var isSearchActive by rememberSaveable { mutableStateOf(false) }
 
     // Track favorite states
-    val favoriteStates = remember { mutableStateMapOf<String, Boolean>() }
+    val favoriteStates = rememberSaveable { mutableStateMapOf<String, Boolean>() }
 
     LaunchedEffect(Unit) {
         if (productNewList.isEmpty()) {
@@ -157,7 +161,9 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
             .distinctUntilChanged()
             .collectLatest { debouncedQuery ->
                 // Call your viewModel function with the debounced search query
-                viewModel.fetchSearchedItemsPage(debouncedQuery)
+                if(debouncedQuery.isNotEmpty()){
+                    viewModel.fetchSearchedItemsPage(debouncedQuery)
+                }
             }
     }
 
@@ -177,204 +183,108 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
     }
 
     MaterialTheme {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.White)
-                    .padding(horizontal = 3.dp)
-                    .pointerInput(Unit) {
-                        detectTapGestures(onTap = {
-                            keyboardController?.hide()
-                        })
-                    }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White)
+                .padding(horizontal = 3.dp)
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = {
+                        keyboardController?.hide()
+                    })
+                }
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize()
             ) {
-                Column(
-                    modifier = Modifier.fillMaxSize()
-                ) {
 
-                    if (!isSearchActive) {
-                        // App Logo
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)
-                        ) {
-                            Image(
-                                painter = painterResource(Res.drawable.pepdeal_logo_new),
-                                contentDescription = "App Logo",
-                                modifier = Modifier
-                                    .width(130.dp)
-                                    .height(28.dp)
-                                    .padding(start = 5.dp),
-                                contentScale = ContentScale.FillBounds
-                            )
-                        }
-                    }
-
-                    SearchBar(
-                        modifier = Modifier.fillMaxWidth()
-                            .border(1.dp, Color.Gray, RoundedCornerShape(8.dp)),
-                        colors = SearchBarColors(
-                            containerColor = Color.White,
-                            dividerColor = Color.Gray
-                        ),
-                        shape = RectangleShape,
-                        shadowElevation = SearchBarDefaults.TonalElevation,
-                        inputField = {
-                            SearchBarDefaults.InputField(
-                                query = searchQuery,
-                                onQueryChange = { searchQuery = it },
-                                onSearch = { /* Implement search logic here */ },
-                                expanded = isSearchActive,
-                                onExpandedChange = { isSearchActive = it },
-                                modifier = Modifier.fillMaxWidth().padding(0.dp),
-                                placeholder = {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .wrapContentHeight(Alignment.CenterVertically)
-                                    ) {
-                                        Text(
-                                            "Search Product",
-                                            textAlign = TextAlign.Center,
-                                            modifier = Modifier.padding(bottom = 2.dp)
-                                        )
-                                    }
-                                },
-                                leadingIcon = {
-                                    if (isSearchActive) {
-                                        IconButton(onClick = {
-                                            isSearchActive = false
-                                            searchQuery = ""
-                                        }) {
-                                            Icon(
-                                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                                contentDescription = "Back"
-                                            )
-                                        }
-                                    } else {
-                                        Icon(
-                                            imageVector = Icons.Default.Search,
-                                            contentDescription = "Search Icon"
-                                        )
-                                    }
-                                },
-                                trailingIcon = {
-                                    if (searchQuery.isNotEmpty()) {
-                                        IconButton(onClick = { searchQuery = "" }) {
-                                            Icon(
-                                                imageVector = Icons.Default.Close,
-                                                contentDescription = "Clear Search"
-                                            )
-                                        }
-                                    }
-                                },
-//                            colors = TextFieldColors()
-                            )
-                        },
-                        expanded = isSearchActive,
-                        onExpandedChange = { isSearchActive = it },
+                if (!isSearchActive) {
+                    // App Logo
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)
                     ) {
-                        when {
-                            isSearchLoading -> {
+                        Image(
+                            painter = painterResource(Res.drawable.pepdeal_logo_new),
+                            contentDescription = "App Logo",
+                            modifier = Modifier
+                                .width(130.dp)
+                                .height(28.dp)
+                                .padding(start = 5.dp),
+                            contentScale = ContentScale.FillBounds
+                        )
+                    }
+                }
+
+                SearchBar(
+                    modifier = Modifier.fillMaxWidth()
+                        .border(1.dp, Color.Gray, RoundedCornerShape(8.dp)),
+                    colors = SearchBarColors(
+                        containerColor = Color.White,
+                        dividerColor = Color.Gray
+                    ),
+                    shape = RectangleShape,
+                    shadowElevation = SearchBarDefaults.TonalElevation,
+                    inputField = {
+                        SearchBarDefaults.InputField(
+                            query = searchQuery,
+                            onQueryChange = { searchQuery = it },
+                            onSearch = { /* Implement search logic here */ },
+                            expanded = isSearchActive,
+                            onExpandedChange = { isSearchActive = it },
+                            modifier = Modifier.fillMaxWidth().padding(0.dp),
+                            placeholder = {
                                 Box(
                                     modifier = Modifier
-                                        .fillMaxSize()
-                                        .weight(1f), // Keeps it centered properly
-                                    contentAlignment = Alignment.Center
+                                        .fillMaxHeight()
+                                        .wrapContentHeight(Alignment.CenterVertically)
                                 ) {
-                                    CircularProgressIndicator(color = Color.Blue)
+                                    Text(
+                                        "Search Product",
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.padding(bottom = 2.dp)
+                                    )
                                 }
-                            }
-
-                            else -> {
-                                LazyVerticalGrid(
-                                    columns = GridCells.Fixed(2),
-                                    modifier = Modifier.fillMaxSize().padding(5.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(5.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-
-                                    if (filteredProducts.isEmpty()) {
-                                        item {
-                                            Text(
-                                                text = "No shops found",
-                                                modifier = Modifier.padding(16.dp),
-                                                color = Color.Gray
-                                            )
-                                        }
-                                    } else {
-                                        items(
-                                            filteredProducts,
-                                            key = { it.productId }) { product ->
-                                            val isFavorite =
-                                                favoriteStates[product.productId] ?: false
-                                            val heartIcon =
-                                                if (isFavorite && currentUserId != "-1") {
-                                                    Res.drawable.red_heart
-                                                } else {
-                                                    Res.drawable.black_heart
-                                                }
-
-                                            // Load Favorite Status for Logged-In Users
-                                            LaunchedEffect(product.productId) {
-                                                if (currentUserId != "-1" && !favoriteStates.containsKey(
-                                                        product.productId
-                                                    )
-                                                ) {
-                                                    viewModel.checkFavoriteExists(
-                                                        currentUserId,
-                                                        product.productId
-                                                    ) { exists ->
-                                                        favoriteStates[product.productId] = exists
-                                                    }
-                                                }
-                                            }
-
-                                            // Product Card with Animation
-                                            AnimatedVisibility(
-                                                visible = true,
-                                                enter = fadeIn(tween(300)) + slideInVertically(
-                                                    initialOffsetY = { it }),
-                                                exit = fadeOut(tween(300)) + slideOutVertically(
-                                                    targetOffsetY = { it })
-                                            ) {
-                                                ProductCard(
-                                                    shopItems = product,
-                                                    heartRes = painterResource(heartIcon),
-                                                    onLikeClicked = {
-                                                        if (currentUserId == "-1") {
-                                                            Util.showToast("Login Please")
-                                                        } else {
-                                                            val newFavoriteState = !isFavorite
-                                                            favoriteStates[product.productId] =
-                                                                newFavoriteState
-                                                            coroutineScope.launch {
-                                                                viewModel.toggleFavoriteStatus(
-                                                                    userId = currentUserId,
-                                                                    productId = product.productId,
-                                                                    isFavorite = newFavoriteState
-                                                                )
-                                                            }
-                                                        }
-                                                    },
-                                                    onProductClicked = {
-                                                        NavigationProvider.navController.navigate(
-                                                            Routes.ProductDetailsPage(it)
-                                                        )
-                                                    }
-                                                )
-                                            }
-                                        }
+                            },
+                            leadingIcon = {
+                                if (isSearchActive) {
+                                    IconButton(onClick = {
+                                        isSearchActive = false
+                                        searchQuery = ""
+                                    }) {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                            contentDescription = "Back"
+                                        )
+                                    }
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.Search,
+                                        contentDescription = "Search Icon"
+                                    )
+                                }
+                            },
+                            trailingIcon = {
+                                if (searchQuery.isNotEmpty()) {
+                                    IconButton(onClick = { searchQuery = "" }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = "Clear Search"
+                                        )
                                     }
                                 }
-                            }
-                        }
-                    }
-
-                    // Product Grid
+                            },
+//                            colors = TextFieldColors()
+                        )
+                    },
+                    expanded = isSearchActive,
+                    onExpandedChange = { isSearchActive = it },
+                ) {
                     when {
-                        isLoading && productNewList.isEmpty() -> {
+                        isSearchLoading -> {
                             Box(
-                                modifier = Modifier.fillMaxSize(),
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .weight(1f), // Keeps it centered properly
                                 contentAlignment = Alignment.Center
                             ) {
                                 CircularProgressIndicator(color = Color.Blue)
@@ -386,66 +296,161 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
                                 columns = GridCells.Fixed(2),
                                 modifier = Modifier.fillMaxSize().padding(5.dp),
                                 horizontalArrangement = Arrangement.spacedBy(5.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
-                                state = listState
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                items(productNewList, key = { it.productId }) { product ->
-                                    val isFavorite = favoriteStates[product.productId] ?: false
-                                    val heartIcon = if (isFavorite && currentUserId != "-1") {
-                                        Res.drawable.red_heart
-                                    } else {
-                                        Res.drawable.black_heart
-                                    }
 
-                                    // Load Favorite Status for Logged-In Users
-                                    LaunchedEffect(product.productId) {
-                                        if (currentUserId != "-1" && !favoriteStates.containsKey(
-                                                product.productId
-                                            )
-                                        ) {
-                                            viewModel.checkFavoriteExists(
-                                                currentUserId,
-                                                product.productId
-                                            ) { exists ->
-                                                favoriteStates[product.productId] = exists
-                                            }
-                                        }
-                                    }
-
-                                    // Product Card with Animation
-                                    AnimatedVisibility(
-                                        visible = true,
-                                        enter = fadeIn(tween(300)) + slideInVertically(
-                                            initialOffsetY = { it }),
-                                        exit = fadeOut(tween(300)) + slideOutVertically(
-                                            targetOffsetY = { it })
-                                    ) {
-                                        ProductCard(
-                                            shopItems = product,
-                                            heartRes = painterResource(heartIcon),
-                                            onLikeClicked = {
-                                                if (currentUserId == "-1") {
-                                                    Util.showToast("Login Please")
-                                                } else {
-                                                    val newFavoriteState = !isFavorite
-                                                    favoriteStates[product.productId] =
-                                                        newFavoriteState
-                                                    coroutineScope.launch {
-                                                        viewModel.toggleFavoriteStatus(
-                                                            userId = currentUserId,
-                                                            productId = product.productId,
-                                                            isFavorite = newFavoriteState
-                                                        )
-                                                    }
-                                                }
-                                            },
-                                            onProductClicked = {
-                                                NavigationProvider.navController.navigate(
-                                                    Routes.ProductDetailsPage(it)
-                                                )
-                                            }
+                                if (filteredProducts.isEmpty()) {
+                                    item {
+                                        Text(
+                                            text = "No shops found",
+                                            modifier = Modifier.padding(16.dp),
+                                            color = Color.Gray
                                         )
                                     }
+                                } else {
+                                    items(
+                                        filteredProducts,
+                                        key = { it.productId }) { product ->
+                                        val isFavorite =
+                                            favoriteStates[product.productId] ?: false
+                                        val heartIcon =
+                                            if (isFavorite && currentUserId != "-1") {
+                                                Res.drawable.red_heart
+                                            } else {
+                                                Res.drawable.black_heart
+                                            }
+
+                                        // Load Favorite Status for Logged-In Users
+                                        LaunchedEffect(product.productId) {
+                                            if (currentUserId != "-1" && !favoriteStates.containsKey(
+                                                    product.productId
+                                                )
+                                            ) {
+                                                viewModel.checkFavoriteExists(
+                                                    currentUserId,
+                                                    product.productId
+                                                ) { exists ->
+                                                    favoriteStates[product.productId] = exists
+                                                }
+                                            }
+                                        }
+
+                                        // Product Card with Animation
+                                        AnimatedVisibility(
+                                            visible = true,
+                                            enter = fadeIn(tween(300)) + slideInVertically(
+                                                initialOffsetY = { it }),
+                                            exit = fadeOut(tween(300)) + slideOutVertically(
+                                                targetOffsetY = { it })
+                                        ) {
+                                            ProductCard(
+                                                shopItems = product,
+                                                heartRes = painterResource(heartIcon),
+                                                onLikeClicked = {
+                                                    if (currentUserId == "-1") {
+                                                        Util.showToast("Login Please")
+                                                    } else {
+                                                        val newFavoriteState = !isFavorite
+                                                        favoriteStates[product.productId] =
+                                                            newFavoriteState
+                                                        coroutineScope.launch {
+                                                            viewModel.toggleFavoriteStatus(
+                                                                userId = currentUserId,
+                                                                productId = product.productId,
+                                                                isFavorite = newFavoriteState
+                                                            )
+                                                        }
+                                                    }
+                                                },
+                                                onProductClicked = {
+                                                    NavigationProvider.navController.navigate(
+                                                        Routes.ProductDetailsPage(it)
+                                                    )
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Product Grid
+                when {
+                    isLoading && productNewList.isEmpty() -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = Color.Blue)
+                        }
+                    }
+
+                    else -> {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            modifier = Modifier.fillMaxSize().padding(5.dp),
+                            horizontalArrangement = Arrangement.spacedBy(5.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            state = listState
+                        ) {
+                            items(productNewList, key = { it.productId }) { product ->
+                                val isFavorite = favoriteStates[product.productId] ?: false
+                                val heartIcon = if (isFavorite && currentUserId != "-1") {
+                                    Res.drawable.red_heart
+                                } else {
+                                    Res.drawable.black_heart
+                                }
+
+                                // Load Favorite Status for Logged-In Users
+                                LaunchedEffect(product.productId) {
+                                    if (currentUserId != "-1" && !favoriteStates.containsKey(
+                                            product.productId
+                                        )
+                                    ) {
+                                        viewModel.checkFavoriteExists(
+                                            currentUserId,
+                                            product.productId
+                                        ) { exists ->
+                                            favoriteStates[product.productId] = exists
+                                        }
+                                    }
+                                }
+
+                                // Product Card with Animation
+                                AnimatedVisibility(
+                                    visible = true,
+                                    enter = fadeIn(tween(300)) + slideInVertically(
+                                        initialOffsetY = { it }),
+                                    exit = fadeOut(tween(300)) + slideOutVertically(
+                                        targetOffsetY = { it })
+                                ) {
+                                    ProductCard(
+                                        shopItems = product,
+                                        heartRes = painterResource(heartIcon),
+                                        onLikeClicked = {
+                                            if (currentUserId == "-1") {
+                                                Util.showToast("Login Please")
+                                            } else {
+                                                val newFavoriteState = !isFavorite
+                                                favoriteStates[product.productId] =
+                                                    newFavoriteState
+                                                coroutineScope.launch {
+                                                    viewModel.toggleFavoriteStatus(
+                                                        userId = currentUserId,
+                                                        productId = product.productId,
+                                                        isFavorite = newFavoriteState
+                                                    )
+                                                }
+                                            }
+                                        },
+                                        onProductClicked = {
+                                            NavigationProvider.navController.navigate(
+                                                Routes.ProductDetailsPage(it)
+                                            )
+                                        }
+                                    )
                                 }
                             }
                         }
@@ -453,7 +458,7 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
                 }
             }
         }
-//    }
+    }
 }
 
 @Composable
@@ -523,11 +528,13 @@ fun ProductCard(
                     Box(
                         modifier = Modifier
                             .align(Alignment.TopStart)
-                            .background(Color.Yellow, shape = RoundedCornerShape(bottomEnd = 8.dp))
-                            .padding(horizontal = 6.dp, vertical = 4.dp)
+                            .background(
+                                Color(0xFFFF9800).copy(alpha = 0.8f),
+                                shape = RoundedCornerShape(bottomEnd = 8.dp))
+                            .padding(horizontal = 8.dp, vertical = 6.dp)
                     ) {
                         Text(
-                            text = "${shopItems.discountMrp.toDiscountFormat()} OFF",
+                            text = shopItems.discountMrp.toDiscountFormat(),
                             color = Color.Black,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
@@ -554,12 +561,12 @@ fun ProductCard(
             }
 
             Text(
-                text = shopItems.productName,
-                fontFamily = FontFamily(Font(Res.font.manrope_medium)),
-                fontSize = 12.sp,
-                lineHeight = 12.sp,
+                text = shopItems.productName.toNameFormat(),
+                fontSize = 13.sp,
+                lineHeight = 13.sp,
                 color = Color.Black,
                 maxLines = 1,
+                fontFamily = FontFamily(Font(Res.font.manrope_bold)),
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
                     .padding(start = 5.dp)
@@ -572,36 +579,30 @@ fun ProductCard(
                     modifier = Modifier.padding(start = 5.dp, bottom = 5.dp)
                 ) {
                     Text(
-                        text = shopItems.sellingPrice.toTwoDecimalPlaces(),
-                        fontFamily = FontFamily(Font(Res.font.manrope_light)),
-                        fontSize = 11.sp,
-                        lineHeight = 11.sp,
+                        text = shopItems.sellingPrice.toTwoDecimalPlaces().toRupee(),
+                        fontFamily = FontFamily(Font(Res.font.manrope_semibold)),
+                        fontSize = 12.sp,
+                        lineHeight = 12.sp,
                         color = Color.Black
                     )
 
                     Text(
-                        text = shopItems.mrp.toTwoDecimalPlaces(),
-                        fontFamily = FontFamily(Font(Res.font.manrope_light)), fontSize = 10.sp,
-                        lineHeight = 10.sp,
+                        text = shopItems.mrp.toTwoDecimalPlaces().toRupee(),
+                        fontFamily = FontFamily(Font(Res.font.manrope_medium)),
+                        fontSize = 11.sp,
+                        lineHeight = 11.sp,
                         color = Color.Gray,
                         textDecoration = TextDecoration.LineThrough,
                         modifier = Modifier.padding(horizontal = 5.dp)
+                            .align(Alignment.CenterVertically)
                     )
-
-//                    Text(
-//                        text = shopItems.discountMrp.toDiscountFormat(),
-//                        fontFamily = FontFamily(Font(Res.font.manrope_light)), fontSize = 10.sp,
-//                        lineHeight = 10.sp,
-//                        color = Color.Red,
-//                        modifier = Modifier.padding(start = 3.dp)
-//                    )
                 }
             } else {
                 Text(
                     text = "On Call",
-                    fontFamily = FontFamily(Font(Res.font.manrope_light)),
-                    fontSize = 11.sp,
-                    lineHeight = 11.sp,
+                    fontSize = 12.sp,
+                    lineHeight = 12.sp,
+                    fontFamily = FontFamily(Font(Res.font.manrope_medium)),
                     color = Color.Red,
                     modifier = Modifier.padding(start = 5.dp)
                 )

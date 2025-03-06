@@ -8,6 +8,7 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
@@ -39,6 +40,8 @@ val httpClient = HttpClient {
     }
 }
 
+val jsonParser = Json { ignoreUnknownKeys = true }
+
 @Serializable
 data class PlacePrediction(
     val placeId: String,
@@ -46,7 +49,10 @@ data class PlacePrediction(
     val address: String,
     val latitude: Double = 0.0,
     val longitude: Double = 0.0,
-    val sessionToken: String
+    val city: String = "",
+    val area: String = "",
+    val state: String = "",
+    val sessionToken: String = ""
 )
 
 @Serializable
@@ -60,10 +66,10 @@ data class PlacePredictionApiResponse(
     @SerialName("place_id") val placeId: String
 )
 
-@Serializable
-data class PlaceDetailsResponse(
-    @SerialName("result") val result: PlaceDetailsResult?
-)
+//@Serializable
+//data class PlaceDetailsResponse(
+//    @SerialName("result") val result: PlaceDetailsResult?
+//)
 
 @Serializable
 data class PlaceDetailsResult(
@@ -79,6 +85,44 @@ data class PlaceGeometry(
 data class PlaceLocation(
     @SerialName("lat") val lat: Double,
     @SerialName("lng") val lng: Double
+)
+
+// ✅ Data Model for API Response
+@Serializable
+data class PlaceDetailsResponse(
+    val result: PlaceResult?
+)
+
+@Serializable
+data class PlaceResult(
+    val name: String?,
+
+    @SerialName("formatted_address")
+    val formattedAddress: String?,
+
+    val geometry: Geometry?,
+
+    @SerialName("address_components")
+    val addressComponents: List<AddressComponent>?
+)
+
+@Serializable
+data class Geometry(
+    val location: Location
+)
+
+@Serializable
+data class Location(
+    val lat: Double,
+    val lng: Double
+)
+
+@Serializable
+data class AddressComponent(
+    @SerialName("long_name")
+    val longName: String,
+
+    val types: List<String>
 )
 
 @OptIn(BetaInteropApi::class)
@@ -121,26 +165,46 @@ suspend fun fetchPlacePredictions(query: String, apiKey: String): List<PlacePred
     }
 }
 
+// ✅ Function to Fetch Place Details
 suspend fun fetchPlaceDetails(
     placeId: String,
     apiKey: String,
     sessionToken: String
 ): PlacePrediction? {
-    val url =
-        "https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=$apiKey&sessiontoken=$sessionToken&fields=geometry/location"
+    val url = "https://maps.googleapis.com/maps/api/place/details/json" +
+            "?place_id=$placeId&key=$apiKey&sessiontoken=$sessionToken&fields=name,formatted_address,geometry/location,address_components"
 
     return try {
         val response: HttpResponse = httpClient.get(url)
         if (response.status == HttpStatusCode.OK) {
-            val detailsResponse: PlaceDetailsResponse = response.body()
+            val jsonResponse = response.bodyAsText()
+            val detailsResponse: PlaceDetailsResponse = jsonParser.decodeFromString(jsonResponse)
+
             val location = detailsResponse.result?.geometry?.location
+            val addressComponents = detailsResponse.result?.addressComponents
+
+            var city: String? = null
+            var area: String? = null
+            var state: String? = null
+
+            addressComponents?.forEach { component ->
+                when {
+                    "locality" in component.types -> city = component.longName // City
+                    "sublocality" in component.types -> area = component.longName // Area
+                    "administrative_area_level_1" in component.types -> state = component.longName // State
+                }
+            }
+
             location?.let {
                 PlacePrediction(
                     placeId = placeId,
-                    name = "",
-                    address = "",
+                    name = detailsResponse.result.name ?: "",
+                    address = detailsResponse.result.formattedAddress ?: "",
                     latitude = it.lat,
                     longitude = it.lng,
+                    city = city ?: "",
+                    area = area ?: "",
+                    state = state ?: "",
                     sessionToken = sessionToken
                 )
             }
@@ -149,10 +213,11 @@ suspend fun fetchPlaceDetails(
             null
         }
     } catch (e: Exception) {
-        println("Exception in fetchPlaceDetails: ${e.message}")
+        println("Error fetching place details: ${e.message}")
         null
     }
 }
+
 
 
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)

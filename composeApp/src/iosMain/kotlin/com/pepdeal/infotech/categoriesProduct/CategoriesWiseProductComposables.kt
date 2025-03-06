@@ -36,6 +36,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -72,17 +73,17 @@ fun CategoryWiseProductScreen(
     subCategoryName: String,
     viewModal: CategoryWiseProductViewModal = ViewModals.categoryWiseProductViewModal
 ) {
-
+    // datastore
     val dataStore = DataStore.dataStore
     val currentUserId by dataStore.data.map { it[PreferencesKeys.USERID_KEY] ?: "-1" }
         .collectAsState(initial = "-1")
+
     val listState = rememberLazyGridState()
     val coroutineScope = rememberCoroutineScope()
     val snackBar = remember { SnackbarHostState() }
-    var searchQuery by remember { mutableStateOf("") }
-    var filteredProducts by remember { mutableStateOf<List<ShopItems>>(emptyList()) }
+
     // Track favorite states
-    val favoriteStates = remember { mutableStateMapOf<String, Boolean>() }
+    val favoriteStates = rememberSaveable { mutableStateMapOf<String, Boolean>() }
 
     //observer
     val productList by viewModal.products.collectAsStateWithLifecycle()
@@ -110,14 +111,10 @@ fun CategoryWiseProductScreen(
         isPlaying = true
     )
 
-
-    // filtering
-    val displayedProductList = remember(searchQuery, productList) {
-        if (searchQuery.isNotEmpty()) filteredProducts else productList
-    }
-
     LaunchedEffect(subCategoryName) {
-        viewModal.fetchCategoryProducts(subCategoryName)
+        if (productList.isEmpty()) {
+            viewModal.fetchCategoryProducts(subCategoryName)
+        }
     }
 
     MaterialTheme {
@@ -188,7 +185,7 @@ fun CategoryWiseProductScreen(
                             verticalArrangement = Arrangement.spacedBy(8.dp), // Space between rows
                             state = listState
                         ) {
-                            items(items = displayedProductList,
+                            items(items = productList,
                                 key = { it.productId }) { product ->
                                 // Determine the heart icon state
                                 val isFavorite = favoriteStates[product.productId] ?: false
@@ -233,7 +230,11 @@ fun CategoryWiseProductScreen(
                                             }
                                         },
                                         onProductClicked = {
-                                            NavigationProvider.navController.navigate(Routes.ProductDetailsPage(it))
+                                            NavigationProvider.navController.navigate(
+                                                Routes.ProductDetailsPage(
+                                                    it
+                                                )
+                                            )
                                         })
                                 }
                             }

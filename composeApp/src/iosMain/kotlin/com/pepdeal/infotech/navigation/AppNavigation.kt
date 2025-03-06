@@ -79,7 +79,8 @@ fun AppNavigation() {
             }
 
             composable<Routes.OpenYourShopPage> {
-                OpenYourShopScreen()
+                val shopPhoneNo = it.toRoute<Routes.OpenYourShopPage>().shopPhoneNo
+                OpenYourShopScreen(shopPhoneNo)
             }
 
             composable<Routes.AddNewProductPage> {

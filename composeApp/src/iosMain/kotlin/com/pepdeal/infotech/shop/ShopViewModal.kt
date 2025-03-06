@@ -6,6 +6,7 @@ import com.pepdeal.infotech.banner.BannerMaster
 import com.pepdeal.infotech.shop.modal.ShopWithProducts
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,6 +33,8 @@ class ShopViewModal : ViewModel() {
     private var lastShopId: String? = null
     private var lastSearchedShopId: String? = null
     private var lastSearchQuery: String = ""
+
+    private var searchJob: Job? = null  // Track the ongoing search job
 
     fun loadMoreShops() {
         if (_isLoading.value) return
@@ -69,16 +72,17 @@ class ShopViewModal : ViewModel() {
             _searchedShops.value = emptyList()
             lastSearchedShopId = null
             lastSearchQuery = query
+        } else {
+            return
         }
-
-        // If already loading, simply return.
-        if (_isSearchLoading.value) return
 
         _isSearchLoading.value = true
 
+        searchJob?.cancel()
+
         println("loadMore Searched  called")
         try {
-            viewModelScope.launch {
+            searchJob = viewModelScope.launch {
                 // Call your repository function that returns a Flow<ShopWithProducts>
                 shopRepo.getActiveSearchedShopsFlowPagination(
                     lastSearchedShopId,
@@ -93,7 +97,7 @@ class ShopViewModal : ViewModel() {
                             (oldList + newShop).distinctBy { it.shop.shopId }
                         }
 
-                        if(_isSearchLoading.value) _isSearchLoading.value = false
+                        if (_isSearchLoading.value) _isSearchLoading.value = false
                     }
             }
         } catch (e: Exception) {
@@ -105,7 +109,8 @@ class ShopViewModal : ViewModel() {
 
     fun getTheBannerList() {
         viewModelScope.launch {
-            val bannerList = shopRepo.getActiveBannerImages()
+            val bannerList = shopRepo.getActiveBannerImages().toMutableList()
+            bannerList[0] = bannerList[1].also { bannerList[1] = bannerList[0] }
             _bannerList.value = bannerList
         }
     }

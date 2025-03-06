@@ -37,10 +37,14 @@ class CategoryWiseProductViewModal():ViewModel() {
                     _isEmpty.value = true
                     println("Error: ${e.message}")
                 }
-                .collect { productList ->
+                .collect { newProduct ->
                     _isLoading.value = false
-                    _isEmpty.value = productList.isEmpty()
-                    _products.update { it + productList }
+                    _isEmpty.value = newProduct == null
+                    if(newProduct!=null){
+                        _products.update { oldList ->
+                            (oldList + newProduct).distinctBy { it.productId }
+                        }
+                    }
                 }
         }
     }
