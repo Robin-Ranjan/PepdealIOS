@@ -107,11 +107,16 @@ class ProductViewModal() : ViewModel() {
             try {
                 productRepo.getAllProductsSearchFlowPagination(lastProductId, pageSize, query)
                     .collect { newProduct ->
-                        println("📌 New product received: ${newProduct.productName}")
-                        _searchedProducts.update { oldList ->
-                            (oldList + newProduct).distinctBy { it.productId }
+                        newProduct?.let {
+                            _searchedProducts.update { oldList ->
+                                (oldList + newProduct).distinctBy { it.productId }
+                            }
+                        } ?: run {
+                            _isSearchLoading.value = false
+                            _searchedProducts.value = emptyList()
                         }
-                        itemCount++
+
+//                        itemCount++
                         _isSearchLoading.value = false
                     }
             } catch (e: Exception) {

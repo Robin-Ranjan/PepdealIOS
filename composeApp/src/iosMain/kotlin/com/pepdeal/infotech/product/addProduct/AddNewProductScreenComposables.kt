@@ -4,6 +4,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -247,9 +249,10 @@ fun AddNewProductScreen(viewModal: AddNewProductViewModal = ViewModals.addNewPro
                     .background(Color.White)
                     .padding(paddingValue)
                     .pointerInput(Unit) {
-                        detectTapGestures(onTap = {
+                        awaitEachGesture {
+                            awaitFirstDown()
                             keyboardController?.hide()
-                        })
+                        }
                     }
             ) {
                 Box(Modifier.fillMaxSize()) {
@@ -611,7 +614,6 @@ fun ImageSelector(
                         snackBar,
                         picker,
                         imageState = { imageBitMap ->
-//                            imageState.value
                             scope.launch {
                                 imageBitMap.let {
                                     val result = imageCropper.crop(
@@ -680,28 +682,6 @@ suspend fun requestPermission(
     if (isGranted) {
         try {
             val result = picker.pickImage(MediaSource.GALLERY)
-//            result.let { pickedImage->
-//                val originalBitmap = pickedImage.toImageBitmap()
-//
-//                // Crop the image explicitly with max size 1200x1200
-//                val cropResult = imageCropper.crop(maxResultSize = IntSize(1200, 1200), bmp = originalBitmap)
-//
-//                // Extract the cropped bitmap if successful
-//                val croppedBitmap = when (cropResult) {
-//                    CropResult.Cancelled -> {
-//                        snackBarHostState.showSnackbar("Canceled to crop image", duration = SnackbarDuration.Short)
-//                        null
-//                    }// No action if user cancels
-//                    is CropError -> {
-//                        snackBarHostState.showSnackbar("Failed to crop image", duration = SnackbarDuration.Short)
-//                        null // Ensure consistency by returning null
-//                    }
-//                    is CropResult.Success -> cropResult.bitmap // Extract cropped bitmap
-//                }
-//
-//                // Assign the cropped image to state
-//                croppedBitmap?.let { imageState.value = it }
-//            }
             imageState.invoke(result.toImageBitmap())
         } catch (e: CanceledException) {
             snackBarHostState.showSnackbar("No image Selected", duration = SnackbarDuration.Short)

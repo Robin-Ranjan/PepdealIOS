@@ -38,7 +38,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -88,6 +87,7 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
+import pepdealios.composeapp.generated.resources.aboutus_icon
 import pepdealios.composeapp.generated.resources.arrow_forward
 import pepdealios.composeapp.generated.resources.baseline_edit_document_24
 import pepdealios.composeapp.generated.resources.baseline_person_24
@@ -95,11 +95,14 @@ import pepdealios.composeapp.generated.resources.baseline_power_settings_new_24
 import pepdealios.composeapp.generated.resources.baseline_video
 import pepdealios.composeapp.generated.resources.black_heart
 import pepdealios.composeapp.generated.resources.compose_multiplatform
+import pepdealios.composeapp.generated.resources.list_product_icon
 import pepdealios.composeapp.generated.resources.manrope_semibold
+import pepdealios.composeapp.generated.resources.open_ur_shop_icon
 import pepdealios.composeapp.generated.resources.shopping_bag
 import pepdealios.composeapp.generated.resources.super_shop_logo
 import pepdealios.composeapp.generated.resources.support
 import pepdealios.composeapp.generated.resources.tickets
+import pepdealios.composeapp.generated.resources.update_product_icon
 
 
 @Composable
@@ -303,7 +306,7 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                         })
                     ProfileMenuItem(
                         text = "Saved Shop Video",
-                        icon = Res.drawable.super_shop_logo,
+                        icon = Res.drawable.baseline_video,
                         onClick = {
                             if (currentUserId == "-1") {
                                 Util.showToast("Please Login")
@@ -331,7 +334,7 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                     } else {
                         ProfileMenuItem(
                             text = "Open Your Shop",
-                            icon = Res.drawable.shopping_bag,
+                            icon = Res.drawable.open_ur_shop_icon,
                             onClick = {
                                 if (currentUserId == "-1") {
                                     Util.showToast("Please Login")
@@ -367,7 +370,7 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                     Spacer(Modifier.height(5.dp))
                     ProfileMenuItem(
                         text = "List Product",
-                        icon = Res.drawable.shopping_bag,
+                        icon = Res.drawable.list_product_icon,
                         onClick = {
                             if (currentUserId == "-1") {
                                 Util.showToast("Please Login")
@@ -382,7 +385,7 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
 
                     ProfileMenuItem(
                         text = "Update Listing",
-                        icon = Res.drawable.shopping_bag,
+                        icon = Res.drawable.update_product_icon,
                         onClick = {
                             if (currentUserId == "-1") {
                                 Util.showToast("Please Login")
@@ -484,11 +487,11 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                     ProfileMenuItem(
                         text = "Legal",
                         icon = Res.drawable.baseline_edit_document_24,
-                        onClick = { println("Favorites") })
+                        onClick = { Util.openUrlInBrowser() })
 
                     ProfileMenuItem(
                         text = "About Us",
-                        icon = Res.drawable.support,
+                        icon = Res.drawable.aboutus_icon,
                         onClick = { NavigationProvider.navController.navigate(Routes.AboutUs) })
 
                     // Logout Card

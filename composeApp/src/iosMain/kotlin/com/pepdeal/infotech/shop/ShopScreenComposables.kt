@@ -5,6 +5,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -117,6 +119,7 @@ import pepdealios.composeapp.generated.resources.manrope_bold
 import pepdealios.composeapp.generated.resources.manrope_medium
 import pepdealios.composeapp.generated.resources.pepdeal_logo_new
 import pepdealios.composeapp.generated.resources.place_holder
+import platform.Foundation.NSUUID
 
 
 @OptIn(FlowPreview::class, ExperimentalMaterial3Api::class)
@@ -145,18 +148,17 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
     val latestShopList = rememberUpdatedState(shopListNew)
     val geoLocation = rememberSaveable { Geolocator.mobile() }
 
-
     LaunchedEffect(Unit) {
         if (locationName == null) {
             when (val result = geoLocation.current()) {
                 is GeolocatorResult.Success -> {
-                    println("LOCATION: ${result.data.coordinates}")
-                    println(
-                        "LOCATION NAME: ${
-                            MobileGeocoder()
-                                .placeOrNull(result.data.coordinates)?.subLocality
-                        }"
-                    )
+//                    println("LOCATION: ${result.data.coordinates}")
+//                    println(
+//                        "LOCATION NAME: ${
+//                            MobileGeocoder()
+//                                .placeOrNull(result.data.coordinates)?.subLocality
+//                        }"
+//                    )
                     locationName =
                         MobileGeocoder().placeOrNull(result.data.coordinates)?.subLocality
                 }
@@ -248,9 +250,10 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
                     .background(Color.White)
                     .padding(horizontal = 3.dp)
                     .pointerInput(Unit) {
-                        detectTapGestures(onTap = {
+                        awaitEachGesture {
+                            awaitFirstDown()
                             keyboardController?.hide()
-                        })
+                        }
                     }
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
@@ -435,7 +438,7 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
                                     )
                                 }
                             }
-                            items(shopListNew, key = { it.shop.shopId!! }) { shop ->
+                            items(shopListNew, key = { it.shop.shopId ?: NSUUID.UUID().toString() }) { shop ->
                                 ShopCardView(shop)
                             }
                         }
@@ -615,7 +618,7 @@ fun ShopItemView(shopItem: ProductWithImages, onProductClicked: (String) -> Unit
                         modifier = Modifier
                             .align(Alignment.TopStart)
                             .background(
-                                Color(0xFFFF9800).copy(alpha = 0.8f),
+                                Color(0xFFFF9800).copy(alpha = 0.7f),
                                 shape = RoundedCornerShape(bottomEnd = 8.dp)
                             )
                             .padding(horizontal = 6.dp, vertical = 4.dp)

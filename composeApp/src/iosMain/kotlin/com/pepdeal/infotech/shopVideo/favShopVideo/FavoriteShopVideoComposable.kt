@@ -17,14 +17,15 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
-import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -42,7 +43,6 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -55,7 +55,6 @@ import chaintech.videoplayer.model.PlayerSpeed
 import chaintech.videoplayer.model.ScreenResize
 import chaintech.videoplayer.model.VideoPlayerConfig
 import chaintech.videoplayer.ui.video.VideoPlayerComposable
-import com.pepdeal.infotech.Objects
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.shopVideo.ShopVideoWithShopDetail
 import com.pepdeal.infotech.util.NavigationProvider
@@ -64,6 +63,11 @@ import com.pepdeal.infotech.util.ViewModals
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil3.CoilImage
 import kotlinx.coroutines.launch
+import kottieAnimation.KottieAnimation
+import kottieComposition.KottieCompositionSpec
+import kottieComposition.animateKottieCompositionAsState
+import kottieComposition.rememberKottieComposition
+import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
@@ -71,31 +75,53 @@ import pepdealios.composeapp.generated.resources.compose_multiplatform
 import pepdealios.composeapp.generated.resources.manrope_light
 import pepdealios.composeapp.generated.resources.manrope_medium
 import pepdealios.composeapp.generated.resources.super_shop_positive
+import utils.KottieConstants
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalResourceApi::class)
 @Composable
 fun FavoriteShopVideoScreen(
     userId: String,
     viewModal: FavoriteShopVideoViewModal = ViewModals.favoriteShopVideoViewModal
 ) {
+    // observables
+    val shopVideos by viewModal.shopVideos.collectAsStateWithLifecycle()
+    val isLoading by viewModal.isLoading.collectAsStateWithLifecycle(initialValue = false)
+    val isEmpty by viewModal.isEmpty.collectAsStateWithLifecycle(initialValue = false)
 
-    val keyboardController = LocalSoftwareKeyboardController.current
-    val shopVideos by viewModal.shopVideos.collectAsStateWithLifecycle(initialValue = emptyList())
+    // variables
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     var currentlyPlayingIndex by remember { mutableStateOf(-1) }
 
     LaunchedEffect(Unit) {
-        viewModal.fetchShopVideos(userId)
+        if (shopVideos.isEmpty()) {
+            viewModal.fetchShopVideos(userId)
+        }
     }
 
+    var animation by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        try {
+            animation = Res.readBytes("files/empty_list.json").decodeToString()
+        } catch (e: Exception) {
+            println(e.message)
+        }
+    }
+
+    val composition = rememberKottieComposition(
+        spec = KottieCompositionSpec.JsonString(animation)
+    )
+
+    val animationState by animateKottieCompositionAsState(
+        composition = composition,
+        iterations = KottieConstants.IterateForever,
+        isPlaying = true
+    )
+
     MaterialTheme {
-        Scaffold {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.White)
-            ) {
+        Scaffold(
+            topBar = {
                 TopAppBar(
                     title = {
                         Text(
@@ -120,43 +146,72 @@ fun FavoriteShopVideoScreen(
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.White,  // Background color
-                        titleContentColor = Color.Black,  // Title color
-                        navigationIconContentColor = Color.Black,  // Back button color
-                        actionIconContentColor = Color.Unspecified
+                        containerColor = Color.White,
+                        titleContentColor = Color.Black,
+                        navigationIconContentColor = Color.Black
                     ),
-                    modifier = Modifier.shadow(4.dp),
-                    expandedHeight = 50.dp
+                    modifier = Modifier.shadow(4.dp)
                 )
+            }
+        ) { paddingValues ->
+            Box(
+                modifier = Modifier.fillMaxSize()
+                    .background(Color.White)
+                    .padding(paddingValues)
+            ) {
+                when {
+                    isLoading -> {
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    }
 
-                Box(modifier = Modifier.fillMaxSize()) {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(0.dp)
-                            .pointerInput(Unit) {
-                                detectVerticalDragGestures { change, dragAmount ->
+                    isEmpty -> {
+                        // Lottie Animation for Empty State
+                        KottieAnimation(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(top = 50.dp),
+                            composition = composition,
+                            progress = { animationState.progress }
+                        )
+                    }
 
-                                }
-                            },
-                        state = listState
-                    ) {
-                        itemsIndexed(items = shopVideos) { index, shopVideo ->
-                            val isPlaying = index == currentlyPlayingIndex
+                    else -> {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(0.dp)
+                                .pointerInput(Unit) {
+                                    detectVerticalDragGestures { _, _ ->
 
-                            FavoriteShopVideCard(shopVideo,
-                                isPlaying = isPlaying,
-                                onSaveVideoClicked = {
-                                    coroutineScope.launch {
-                                        viewModal.removeFavVideo(
-                                            userId,
-                                            shopVideo.shopVideosMaster.shopId
-                                        )
                                     }
                                 },
-                                onVideoClicked = {
-                                    currentlyPlayingIndex = index
-                                })
+                            state = listState
+                        ) {
+                            itemsIndexed(items = shopVideos) { index, shopVideo ->
+                                val isPlaying = index == currentlyPlayingIndex
+
+                                FavoriteShopVideCard(shopVideo,
+                                    isPlaying = isPlaying,
+                                    onSaveVideoClicked = {
+                                        coroutineScope.launch {
+                                            viewModal.removeFavVideo(
+                                                userId,
+                                                shopVideo.shopVideosMaster.shopId
+                                            )
+                                        }
+                                    },
+                                    onVideoClicked = {
+                                        currentlyPlayingIndex = index
+                                    },
+                                    onShopDetailsClick = {
+                                        NavigationProvider.navController.navigate(
+                                            Routes.ShopDetails(
+                                                shopVideo.shopsMaster.shopId ?: "",
+                                                userId
+                                            )
+                                        )
+                                    })
+                            }
                         }
                     }
                 }
@@ -170,9 +225,9 @@ fun FavoriteShopVideCard(
     shopVideo: ShopVideoWithShopDetail,
     isPlaying: Boolean,
     onSaveVideoClicked: () -> Unit,
-    onVideoClicked: () -> Unit
+    onVideoClicked: () -> Unit,
+    onShopDetailsClick: () -> Unit
 ) {
-
     // Player Host for VideoPlayerComposable
     val playerHost = remember {
         MediaPlayerHost(
@@ -196,7 +251,6 @@ fun FavoriteShopVideCard(
     // Set up the URL
     playerHost.loadUrl(shopVideo.shopVideosMaster.videoUrl)
 
-    // Card Layout in Compose
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -255,15 +309,10 @@ fun FavoriteShopVideCard(
             ) {
                 Column(
                     modifier = Modifier.weight(1f)
-                        .clickable {
-                            NavigationProvider.navController.navigate(
-                                Routes.ShopDetails(
-                                    shopVideo.shopsMaster.shopId ?: "",
-                                    Objects.USER_ID
-                                )
-                            )
-                        }
                         .padding(start = 8.dp, top = 3.dp, bottom = 3.dp)
+                        .clickable {
+                            onShopDetailsClick()
+                        }
                 ) {
                     Text(
                         text = shopVideo.shopsMaster.shopName?.toNameFormat() ?: "",

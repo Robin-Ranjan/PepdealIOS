@@ -3,7 +3,8 @@ package com.pepdeal.infotech.shopVideo
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -63,15 +64,13 @@ import com.pepdeal.infotech.util.ViewModals
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil3.CoilImage
 import kotlinx.coroutines.launch
-import network.chaintech.sdpcomposemultiplatform.sdp
-import network.chaintech.sdpcomposemultiplatform.ssp
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
 import pepdealios.composeapp.generated.resources.compose_multiplatform
 import pepdealios.composeapp.generated.resources.manrope_light
 import pepdealios.composeapp.generated.resources.manrope_medium
-import pepdealios.composeapp.generated.resources.pepdeal_logo
+import pepdealios.composeapp.generated.resources.pepdeal_logo_new
 import pepdealios.composeapp.generated.resources.super_shop_logo
 import pepdealios.composeapp.generated.resources.super_shop_positive
 import kotlin.math.abs
@@ -94,7 +93,6 @@ fun FeedScreen(viewModal: ShopVideosViewModal = ViewModals.shopVideosViewModal) 
         currentlyPlayingIndex = centerIndex
     }
 
-
     MaterialTheme {
         Box(
             modifier = Modifier
@@ -102,9 +100,10 @@ fun FeedScreen(viewModal: ShopVideosViewModal = ViewModals.shopVideosViewModal) 
                 .background(color = Color.White)
                 .padding(horizontal = 3.dp, vertical = 3.dp)
                 .pointerInput(Unit) {
-                    detectTapGestures(onTap = {
+                    awaitEachGesture {
+                        awaitFirstDown()
                         keyboardController?.hide()
-                    })
+                    }
                 }
         ) {
             Column {
@@ -113,13 +112,13 @@ fun FeedScreen(viewModal: ShopVideosViewModal = ViewModals.shopVideosViewModal) 
                         .fillMaxWidth()
                 ) {
                     Image(
-                        painter = painterResource(Res.drawable.pepdeal_logo),
+                        painter = painterResource(Res.drawable.pepdeal_logo_new),
                         contentDescription = "Your image description",
                         modifier = Modifier
                             .width(130.dp)
                             .height(28.dp)
                             .padding(start = 5.dp),
-                        contentScale = ContentScale.Fit // Adjust based on your needs (e.g., FillBounds, Fit)
+                        contentScale = ContentScale.Fit
                     )
                 }
 

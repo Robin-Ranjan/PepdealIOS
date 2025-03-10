@@ -4,6 +4,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -254,9 +256,10 @@ fun UpdateProductScreen(
                     .background(Color.White)
                     .padding(paddingValue)
                     .pointerInput(Unit) {
-                        detectTapGestures(onTap = {
+                        awaitEachGesture {
+                            awaitFirstDown()
                             keyboardController?.hide()
-                        })
+                        }
                     }
             ) {
 
@@ -572,8 +575,10 @@ fun UpdateProductScreen(
                                                                 productName = productName.value.text,
                                                                 brandId = "",
                                                                 brandName = brandName.value.text,
-                                                                categoryId = productCategory.value.text.toNameFormat().trim(),
-                                                                subCategoryId = productSubCategory.value.text.toNameFormat().trim(),
+                                                                categoryId = productCategory.value.text.toNameFormat()
+                                                                    .trim(),
+                                                                subCategoryId = productSubCategory.value.text.toNameFormat()
+                                                                    .trim(),
                                                                 description = productDescription.value.text,
                                                                 description2 = productDescription2.value.text,
                                                                 specification = productSpecification.value.text,
@@ -592,7 +597,8 @@ fun UpdateProductScreen(
                                                                 updatedAt = Util.getCurrentTimeStamp()
                                                             ),
                                                             isImageEdited = isImageUpdated,
-                                                            newUriList = imageFileList.filterNotNull().toMutableList()
+                                                            newUriList = imageFileList.filterNotNull()
+                                                                .toMutableList()
                                                         )
                                                     }
                                                 }

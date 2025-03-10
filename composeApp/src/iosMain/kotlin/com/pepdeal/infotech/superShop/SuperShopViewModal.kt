@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.pepdeal.infotech.product.FavProductWithImages
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -14,10 +15,10 @@ class SuperShopViewModal():ViewModel() {
     val superShop : StateFlow<List<SuperShopsWithProduct>> get() = _superShop
 
     private val _isLoading = MutableStateFlow(false) // Loading state
-    val isLoading: StateFlow<Boolean> get() = _isLoading
+    val isLoading: StateFlow<Boolean> get() = _isLoading.asStateFlow()
 
     private val _isEmpty = MutableStateFlow(false)
-    val isEmpty: StateFlow<Boolean> get() = _isEmpty
+    val isEmpty: StateFlow<Boolean> get() = _isEmpty.asStateFlow()
 
     private var currentSuperShopList: MutableList<SuperShopsWithProduct> = mutableListOf()
 
@@ -30,12 +31,8 @@ class SuperShopViewModal():ViewModel() {
                         newShop?.let {
                             currentSuperShopList.add(newShop)
                             _superShop.value = currentSuperShopList.toList()
-//                            _superShop.update { oldList->
-//                                (oldList + newShop).distinctBy { it.shop.shopId }
-//                            }
                             if(_isLoading.value) _isLoading.value = false
                         } ?: run {
-                            println("isEmpty true")
                             _isLoading.value = false
                             _isEmpty.value = true
                         }

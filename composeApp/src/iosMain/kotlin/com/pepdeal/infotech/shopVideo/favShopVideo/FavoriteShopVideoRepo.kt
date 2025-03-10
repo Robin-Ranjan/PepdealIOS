@@ -52,17 +52,20 @@ class FavoriteShopVideoRepo {
         }
     }
 
-    fun getFavoriteShopVideoForUserFlow(userId: String): Flow<ShopVideoWithShopDetail> = channelFlow {
+    fun getFavoriteShopVideoForUserFlow(userId: String): Flow<ShopVideoWithShopDetail?> = channelFlow {
         try {
             val favouriteShopVideos = fetchFavoriteShopVideo(userId)
                 .sortedByDescending { it.createdAt.toLongOrNull() ?: 0L }
 
-            println("Favorite videos found: ${favouriteShopVideos.size}")
+            if(favouriteShopVideos.isEmpty()){
+                send(null)
+                return@channelFlow
+            }
 
             favouriteShopVideos.forEach { favoriteVideo ->
                 launch {
                     try {
-                        val json = Json { ignoreUnknownKeys = true } // ✅ Ignore unknown fields
+                        val json = Json { ignoreUnknownKeys = true }
 
                         // Fetch shop details
                         val shopDetailsResponse: HttpResponse =
@@ -87,7 +90,7 @@ class FavoriteShopVideoRepo {
                         } else null
 
                         if (shopDetails != null && shopVideo != null) {
-                            send(ShopVideoWithShopDetail(shopVideo, shopDetails)) // ✅ Use send() instead of emit()
+                            send(ShopVideoWithShopDetail(shopVideo, shopDetails))
                         }
                     } catch (e: Exception) {
                         println("Error fetching shop data: ${e.message}")
@@ -96,6 +99,7 @@ class FavoriteShopVideoRepo {
             }
         } catch (e: Exception) {
             println("Flow Error: ${e.message}")
+            send(null)
         }
     }.flowOn(Dispatchers.IO)
 

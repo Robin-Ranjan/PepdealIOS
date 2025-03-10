@@ -1,6 +1,5 @@
 package com.pepdeal.infotech.registration
 
-import com.pepdeal.infotech.user.UserMaster
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -39,18 +38,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.pepdeal.infotech.navigation.routes.Routes
+import com.pepdeal.infotech.user.UserMaster
 import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import network.chaintech.sdpcomposemultiplatform.sdp
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
-import pepdealios.composeapp.generated.resources.pepdeal_logo
+import pepdealios.composeapp.generated.resources.pepdeal_logo_new
 
 @Composable
 fun RegisterScreen() {
@@ -108,7 +109,7 @@ fun RegisterScreen() {
                     ) {
                         // First View (Logo and Text Fields)
                         Image(
-                            painter = painterResource(Res.drawable.pepdeal_logo),
+                            painter = painterResource(Res.drawable.pepdeal_logo_new),
                             contentDescription = null,
                             modifier = Modifier
                                 .size(300.dp, 80.dp)
@@ -186,8 +187,9 @@ fun RegisterScreen() {
                                 color = Color.Red,
                                 modifier = Modifier
                                     .clickable {
-                                        // Handle Term & Conditions Click
-                                    }
+                                        Util.openUrlInBrowser()
+                                    },
+                                style = TextStyle(textDecoration = TextDecoration.Underline)
                             )
                         }
 

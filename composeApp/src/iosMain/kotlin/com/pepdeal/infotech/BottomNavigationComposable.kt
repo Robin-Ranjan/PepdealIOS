@@ -34,6 +34,7 @@ import com.pepdeal.infotech.shopVideo.FeedScreen
 import network.chaintech.sdpcomposemultiplatform.sdp
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
+import pepdealios.composeapp.generated.resources.categories_icon
 import pepdealios.composeapp.generated.resources.categories_icon_
 import pepdealios.composeapp.generated.resources.categorise
 import pepdealios.composeapp.generated.resources.feed_icon
@@ -68,7 +69,7 @@ fun MainBottomNavigationWithPager() {
                             "Feed" to painterResource(Res.drawable.feed_icon),
                             "Shop" to painterResource(Res.drawable.shopping_bag),
                             "Product" to painterResource(Res.drawable.product_icon),
-                            "Categories" to painterResource(Res.drawable.categories_icon_),
+                            "Categories" to painterResource(Res.drawable.categories_icon),
                             "Profile" to painterResource(Res.drawable.profile_tab),
                         )
 

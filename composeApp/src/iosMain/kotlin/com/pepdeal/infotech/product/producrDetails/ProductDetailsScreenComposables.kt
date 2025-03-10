@@ -26,6 +26,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.PlusOne
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -53,9 +55,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -180,8 +185,6 @@ fun ProductDetailScreen(
                 println(isFav)
             }
         }
-
-        println(currentUserId)
     }
 
 
@@ -215,7 +218,9 @@ fun ProductDetailScreen(
 
                     when {
                         isLoading -> {
-                            CircularProgressIndicator()
+                            Box(modifier = Modifier.fillMaxSize()) {
+                                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                            }
                         }
 
                         product != null -> {
@@ -309,41 +314,6 @@ fun ProductDetailScreen(
 }
 
 @Composable
-fun ProductShopInfoSection(shopMaster: ShopMaster) {
-    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-        Text(
-            text = "Shop Details",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            fontFamily = FontFamily(
-                Font(Res.font.manrope_bold)
-            ),
-            lineHeight = 16.sp
-        )
-        Text(
-            text = shopMaster.shopName?.toNameFormat() ?: "",
-            fontSize = 12.sp,
-            color = Color.Gray,
-            fontFamily = FontFamily(Font(Res.font.manrope_regular))
-        )
-
-        Text(
-            text = shopMaster.shopMobileNo ?: "",
-            fontSize = 12.sp,
-            color = Color.Gray,
-            fontFamily = FontFamily(Font(Res.font.manrope_regular))
-        )
-
-        Text(
-            text = shopMaster.shopAddress ?: "",
-            fontSize = 12.sp,
-            color = Color.Gray,
-            fontFamily = FontFamily(Font(Res.font.manrope_regular))
-        )
-    }
-}
-
-@Composable
 fun ProductInfoSection(product: ProductMaster) {
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
         Text(
@@ -400,32 +370,54 @@ fun WarrantySection(product: ProductMaster) {
         Text(
             text = "Warranty:${product.warranty}",
             fontSize = 13.sp,
-            color = Color.Gray,
-            lineHeight = 13.sp
+            color = Color.DarkGray,
+            lineHeight = 15.sp
         )
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 painter = painterResource(Res.drawable.original),
                 contentDescription = "Original",
-//                modifier = Modifier.size(24.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Column {
                 colorNames?.let {
                     Text(
-                        text = "Color: $it",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
+                        text = buildAnnotatedString {
+                            withStyle(style = SpanStyle(color = Color.Black, fontWeight = FontWeight.Bold)) {
+                                append("Color: ")
+                            }
+                            withStyle(style = SpanStyle(color = Color.DarkGray)) {
+                                append(it.toNameFormat())
+                            }
+                        },
+                        fontSize = 14.sp
                     )
                 }
                 if (product.brandId.isNotEmpty() && product.brandId.isNotEmpty() && product.brandId != "-") {
                     Text(
-                        text = "Brand:${product.brandId.toNameFormat()}",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
+                        text = buildAnnotatedString {
+                            withStyle(style = SpanStyle(color = Color.Black, fontWeight = FontWeight.Bold)) {
+                                append("Brand: ")
+                            }
+                            withStyle(style = SpanStyle(color = Color.DarkGray)) {
+                                append(product.brandId.toNameFormat())
+                            }
+                        },
+                        fontSize = 14.sp
                     )
                 }
-                Text(text = "Category:${product.categoryId.toNameFormat()}", fontSize = 14.sp)
+
+                Text(
+                    text = buildAnnotatedString {
+                        withStyle(style = SpanStyle(color = Color.Black, fontWeight = FontWeight.Bold)) {
+                            append("Category: ")
+                        }
+                        withStyle(style = SpanStyle(color = Color.DarkGray)) {
+                            append(product.categoryId.toNameFormat())
+                        }
+                    },
+                    fontSize = 14.sp
+                )
             }
         }
     }
@@ -445,22 +437,78 @@ fun AdditionalDetailsSection(product: ProductMaster) {
         Text(
             text = product.description.toNameFormat(),
             fontSize = 12.sp,
-            color = Color.Gray,
+            color = Color.DarkGray,
             fontFamily = FontFamily(Font(Res.font.manrope_regular))
         )
 
         Spacer(modifier = Modifier.height(8.dp))
         Text(text = "Product Specifications", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-        Text(text = product.specification.toNameFormat(), fontSize = 12.sp, color = Color.Gray)
+        Text(text = product.specification.toNameFormat(), fontSize = 12.sp, color = Color.DarkGray)
 
         if (product.description2.isNotEmpty() || product.description2.isNotBlank()) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(text = "Additional Details", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            Text(text = product.description2.toNameFormat(), fontSize = 12.sp, color = Color.Gray)
+            Text(text = product.description2.toNameFormat(), fontSize = 12.sp, color = Color.DarkGray)
         }
     }
 }
 
+@Composable
+fun ProductShopInfoSection(shopMaster: ShopMaster) {
+    Spacer(modifier = Modifier.height(8.dp))
+    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+        Text(
+            text = "Shop Details",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            fontFamily = FontFamily(
+                Font(Res.font.manrope_bold)
+            ),
+            lineHeight = 18.sp
+        )
+        Text(
+            text = shopMaster.shopName?.toNameFormat() ?: "",
+            fontSize = 12.sp,
+            color = Color.DarkGray,
+            lineHeight = 14.sp,
+            fontFamily = FontFamily(Font(Res.font.manrope_bold))
+        )
+
+        // Row for Mobile Number with Call Icon
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+               imageVector = Icons.Default.Call,
+                contentDescription = "Call",
+                tint = Color.DarkGray,
+                modifier = Modifier.size(16.dp).padding(end = 4.dp)
+            )
+            Text(
+                text = shopMaster.shopMobileNo ?: "",
+                fontSize = 12.sp,
+                lineHeight = 14.sp,
+                color = Color.DarkGray,
+                fontFamily = FontFamily(Font(Res.font.manrope_regular))
+            )
+        }
+
+        // Row for Address with Location Icon
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+               imageVector = Icons.Default.MyLocation,
+                contentDescription = "Location",
+                tint = Color.DarkGray,
+                modifier = Modifier.size(16.dp).padding(end = 4.dp)
+            )
+            Text(
+                text = shopMaster.shopAddress ?: "",
+                fontSize = 12.sp,
+                lineHeight = 14.sp,
+                color = Color.DarkGray,
+                fontFamily = FontFamily(Font(Res.font.manrope_regular))
+            )
+        }
+    }
+}
 
 @Composable
 fun ProductImagesCarouselWidget(
@@ -481,7 +529,8 @@ fun ProductImagesCarouselWidget(
             delay(1500)
 
             val nextPage = (pagerState.currentPage + 1) % productImages.size
-            pagerState.animateScrollToPage(page = nextPage,
+            pagerState.animateScrollToPage(
+                page = nextPage,
                 animationSpec = tween(durationMillis = 600, easing = FastOutSlowInEasing)
             )
         }
@@ -566,7 +615,6 @@ fun ProductImagesCarouselWidget(
         }
     }
 }
-
 
 @Composable
 fun ProductImageWidget(

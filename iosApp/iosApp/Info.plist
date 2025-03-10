@@ -52,6 +52,8 @@
 	<string>To Access the Product and Profile Pic</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string> To Access the user Current Location to show the shop accordingly.</string>
+	<key>CFBundleDisplayName</key>
+	<string></string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>

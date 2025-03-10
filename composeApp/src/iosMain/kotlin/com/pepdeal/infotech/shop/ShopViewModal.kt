@@ -24,10 +24,10 @@ class ShopViewModal : ViewModel() {
     private val _bannerList = MutableStateFlow<List<BannerMaster>>(emptyList())
     val bannerList: StateFlow<List<BannerMaster>> = _bannerList.asStateFlow()
 
-    private val _isLoading = MutableStateFlow(false) // Loading state
+    private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> get() = _isLoading
 
-    private val _isSearchLoading = MutableStateFlow(false) // Loading state
+    private val _isSearchLoading = MutableStateFlow(false)
     val isSearchLoading: StateFlow<Boolean> get() = _isSearchLoading
 
     private var lastShopId: String? = null
@@ -110,7 +110,7 @@ class ShopViewModal : ViewModel() {
     fun getTheBannerList() {
         viewModelScope.launch {
             val bannerList = shopRepo.getActiveBannerImages().toMutableList()
-            bannerList[0] = bannerList[1].also { bannerList[1] = bannerList[0] }
+            bannerList[0] = bannerList[2].also { bannerList[2] = bannerList[0] }
             _bannerList.value = bannerList
         }
     }

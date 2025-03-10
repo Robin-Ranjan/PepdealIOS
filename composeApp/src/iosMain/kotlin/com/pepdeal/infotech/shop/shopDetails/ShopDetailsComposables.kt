@@ -10,8 +10,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.runtime.Composable
-import com.pepdeal.infotech.util.ViewModals
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -20,15 +18,12 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material.Scaffold
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -37,14 +32,16 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -73,20 +70,18 @@ import com.pepdeal.infotech.util.Util.fromHex
 import com.pepdeal.infotech.util.Util.toDiscountFormat
 import com.pepdeal.infotech.util.Util.toRupee
 import com.pepdeal.infotech.util.Util.toTwoDecimalPlaces
+import com.pepdeal.infotech.util.ViewModals
 import com.pepdeal.infotech.yourShop.ShopServicesRow
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil3.CoilImage
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import network.chaintech.sdpcomposemultiplatform.sdp
-import network.chaintech.sdpcomposemultiplatform.ssp
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
 import pepdealios.composeapp.generated.resources.black_heart
 import pepdealios.composeapp.generated.resources.compose_multiplatform
 import pepdealios.composeapp.generated.resources.manrope_bold
-import pepdealios.composeapp.generated.resources.manrope_light
 import pepdealios.composeapp.generated.resources.manrope_medium
 import pepdealios.composeapp.generated.resources.manrope_semibold
 import pepdealios.composeapp.generated.resources.place_holder
@@ -131,7 +126,7 @@ fun ShopDetailsWithProductPage(
             )
         }
         onDispose {
-            Util.setStatusBarColor("#FFFFFF", isDark = true) // Reset to white with dark text
+            Util.setStatusBarColor("#FFFFFF", isDark = true)
         }
     }
 
@@ -147,7 +142,7 @@ fun ShopDetailsWithProductPage(
                 if (shopLoading) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center // This centers the progress bar
+                        contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator(color = Color.Yellow)
                     }
@@ -281,7 +276,7 @@ fun ShopDetailsWithProductPage(
 
                                 // Shop Card
                                 AnimatedVisibility(
-                                    visible = true, // Replace with your condition if necessary
+                                    visible = true,
                                     enter = fadeIn(tween(durationMillis = 300)) + slideInVertically(
                                         initialOffsetY = { it }),
                                     exit = fadeOut(tween(durationMillis = 300)) + slideOutVertically(
@@ -368,7 +363,7 @@ fun ShopProductCard(
                         previewPlaceholder = painterResource(Res.drawable.compose_multiplatform),
                         loading = {
                             Image(
-                                painter = painterResource(Res.drawable.place_holder), // Show a default placeholder on failure
+                                painter = painterResource(Res.drawable.place_holder),
                                 contentDescription = "Placeholder",
                                 modifier = Modifier.fillMaxSize()
                                     .background(color = Color.White),
@@ -377,7 +372,7 @@ fun ShopProductCard(
                         },
                         failure = {
                             Image(
-                                painter = painterResource(Res.drawable.place_holder), // Show a default placeholder on failure
+                                painter = painterResource(Res.drawable.place_holder),
                                 contentDescription = "Placeholder",
                                 modifier = Modifier.fillMaxSize()
                                     .background(color = Color.White),
@@ -392,7 +387,7 @@ fun ShopProductCard(
                     Box(
                         modifier = Modifier
                             .align(Alignment.TopStart)
-                            .background(Color(0xFFFF9800).copy(alpha = 0.8f), shape = RoundedCornerShape(bottomEnd = 8.dp))
+                            .background(Color(0xFFFF9800).copy(alpha = 0.7f), shape = RoundedCornerShape(bottomEnd = 8.dp))
                             .padding(horizontal = 8.dp, vertical = 6.dp)
                     ) {
                         Text(

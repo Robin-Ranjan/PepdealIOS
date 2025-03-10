@@ -3,6 +3,8 @@ package com.pepdeal.infotech.categories
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -99,10 +101,8 @@ fun CategoriesScreen(viewModel: CategoriesViewModel = ViewModals.categoriesViewM
         Column(modifier = Modifier.fillMaxSize()
             .background(color = Color.White)
             .pointerInput(Unit) {
-                detectTapGestures(onTap = {
-                    keyboardController?.hide()
-                })
-                detectHorizontalDragGestures { _, _ ->
+                awaitEachGesture {
+                    awaitFirstDown()
                     keyboardController?.hide()
                 }
             }) {

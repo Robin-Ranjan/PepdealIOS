@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.pepdeal.infotech.product.FavProductWithImages
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class FavoriteProductViewModal : ViewModel() {
@@ -16,10 +17,10 @@ class FavoriteProductViewModal : ViewModel() {
     private var currentFavoriteList: MutableList<FavProductWithImages> = mutableListOf()
 
     private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> get() = _isLoading
+    val isLoading: StateFlow<Boolean> get() = _isLoading.asStateFlow()
 
     private val _isEmpty = MutableStateFlow(false)
-    val isEmpty: StateFlow<Boolean> get() = _isEmpty
+    val isEmpty: StateFlow<Boolean> get() = _isEmpty.asStateFlow()
 
     fun getAllFavoriteProduct(userId: String) {
         viewModelScope.launch {

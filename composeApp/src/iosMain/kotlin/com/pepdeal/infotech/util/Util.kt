@@ -227,21 +227,26 @@ object Util {
 
     fun openDialer(phoneNo: String) {
         if (phoneNo != "-1") {
-            // Remove +91 if it exists at the beginning
+            // Remove +91 if present at the beginning
             val formattedPhoneNo = phoneNo.replace(Regex("^\\+91"), "")
 
-            val urlString = "tel:$formattedPhoneNo"
+            val urlString = "tel:$formattedPhoneNo" // ✅ Correct format
             val url = NSURL(string = urlString)
 
             if (UIApplication.sharedApplication.canOpenURL(url)) {
-                UIApplication.sharedApplication.openURL(url)
+                UIApplication.sharedApplication.openURL(url, options = emptyMap<Any?, Any>()) { success ->
+                    if (!success) {
+                        println("Failed to open dialer for: $urlString")
+                    }
+                }
             } else {
-                println("Invalid URL: $urlString")
+                println("Invalid phone number format: $urlString")
             }
         } else {
             println("Something went wrong")
         }
     }
+
 
     // Cross-platform email validation
     fun isValidEmail(email: String): Boolean {
@@ -312,6 +317,19 @@ object Util {
                     toastView.removeFromSuperview()
                 }
             }
+        }
+    }
+    private const val TERM_CONDITION_URL = "https://www.termsfeed.com/live/b4f5f31b-3775-4a13-b785-f17154417fe6"
+    fun openUrlInBrowser() {
+        val nsUrl = NSURL.URLWithString(TERM_CONDITION_URL)
+        if (nsUrl != null) {
+            UIApplication.sharedApplication.openURL(nsUrl, options = emptyMap<Any?, Any>()) { success ->
+                if (!success) {
+                    println("Failed to open URL: $TERM_CONDITION_URL")
+                }
+            }
+        } else {
+            println("Invalid URL: $TERM_CONDITION_URL")
         }
     }
 

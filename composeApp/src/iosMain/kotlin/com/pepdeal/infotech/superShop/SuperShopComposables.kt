@@ -71,8 +71,6 @@ import kottieAnimation.KottieAnimation
 import kottieComposition.KottieCompositionSpec
 import kottieComposition.animateKottieCompositionAsState
 import kottieComposition.rememberKottieComposition
-import network.chaintech.sdpcomposemultiplatform.sdp
-import network.chaintech.sdpcomposemultiplatform.ssp
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.FontResource
@@ -86,10 +84,12 @@ import utils.KottieConstants
 @Composable
 fun SuperShopScreen(userId: String, viewModal: SuperShopViewModal = ViewModals.superShopViewModal) {
 
+    // observables
     val superShops by viewModal.superShop.collectAsStateWithLifecycle()
     val isLoading by viewModal.isLoading.collectAsStateWithLifecycle(initialValue = false)
-    val isEmpty by viewModal.isLoading.collectAsStateWithLifecycle(initialValue = false)
+    val isEmpty by viewModal.isEmpty.collectAsStateWithLifecycle(initialValue = false)
 
+    // variables
     val columnState = rememberLazyListState()
     val scope = rememberCoroutineScope()
 
@@ -157,9 +157,9 @@ fun SuperShopScreen(userId: String, viewModal: SuperShopViewModal = ViewModals.s
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.White,  // Background color
-                        titleContentColor = Color.Black,  // Title color
-                        navigationIconContentColor = Color.Black,  // Back button color
+                        containerColor = Color.White,
+                        titleContentColor = Color.Black,
+                        navigationIconContentColor = Color.Black,
                         actionIconContentColor = Color.Unspecified
                     ),
                     modifier = Modifier.shadow(4.dp),
@@ -178,7 +178,6 @@ fun SuperShopScreen(userId: String, viewModal: SuperShopViewModal = ViewModals.s
                     }
 
                     isEmpty -> {
-                        println(isEmpty)
                         // Lottie Animation for Empty State
                         KottieAnimation(
                             modifier = Modifier
@@ -194,12 +193,7 @@ fun SuperShopScreen(userId: String, viewModal: SuperShopViewModal = ViewModals.s
                             modifier = Modifier
                                 .fillMaxSize()
                                 .nestedScroll(nestedScrollConnection)
-                                .padding(5.dp)
-                                .pointerInput(Unit) {
-                                    detectVerticalDragGestures { change, dragAmount ->
-
-                                    }
-                                },
+                                .padding(5.dp),
                             state = columnState
                         ) {
                             items(superShops,

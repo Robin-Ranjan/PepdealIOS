@@ -11,7 +11,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,21 +23,16 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.SnackbarHost
-import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
@@ -48,7 +44,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarColors
 import androidx.compose.material3.SearchBarDefaults
@@ -58,7 +53,6 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -92,7 +86,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pepdeal.infotech.DataStore
 import com.pepdeal.infotech.PreferencesKeys
 import com.pepdeal.infotech.navigation.routes.Routes
-import com.pepdeal.infotech.shop.ShopCardView
 import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util
 import com.pepdeal.infotech.util.Util.toDiscountFormat
@@ -112,12 +105,9 @@ import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
 import pepdealios.composeapp.generated.resources.black_heart
-import pepdealios.composeapp.generated.resources.compose_multiplatform
 import pepdealios.composeapp.generated.resources.manrope_bold
-import pepdealios.composeapp.generated.resources.manrope_light
 import pepdealios.composeapp.generated.resources.manrope_medium
 import pepdealios.composeapp.generated.resources.manrope_semibold
-import pepdealios.composeapp.generated.resources.pepdeal_logo
 import pepdealios.composeapp.generated.resources.pepdeal_logo_new
 import pepdealios.composeapp.generated.resources.place_holder
 import pepdealios.composeapp.generated.resources.red_heart
@@ -134,8 +124,8 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
     // Observables
     val productNewList by viewModel.products.collectAsStateWithLifecycle()
     val filteredProducts by  viewModel.searchedProducts.collectAsStateWithLifecycle()
-    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
-    val isSearchLoading by viewModel.isSearchLoading.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle(initialValue = false)
+    val isSearchLoading by viewModel.isSearchLoading.collectAsStateWithLifecycle(initialValue = false)
 
     // Variables
     val listState = rememberLazyGridState()
@@ -189,9 +179,10 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
                 .background(Color.White)
                 .padding(horizontal = 3.dp)
                 .pointerInput(Unit) {
-                    detectTapGestures(onTap = {
+                    awaitEachGesture {
+                        awaitFirstDown()
                         keyboardController?.hide()
-                    })
+                    }
                 }
         ) {
             Column(
@@ -302,7 +293,7 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
                                 if (filteredProducts.isEmpty()) {
                                     item {
                                         Text(
-                                            text = "No shops found",
+                                            text = "No products found",
                                             modifier = Modifier.padding(16.dp),
                                             color = Color.Gray
                                         )
@@ -529,7 +520,7 @@ fun ProductCard(
                         modifier = Modifier
                             .align(Alignment.TopStart)
                             .background(
-                                Color(0xFFFF9800).copy(alpha = 0.8f),
+                                Color(0xFFFF9800).copy(alpha = 0.7f),
                                 shape = RoundedCornerShape(bottomEnd = 8.dp))
                             .padding(horizontal = 8.dp, vertical = 6.dp)
                     ) {

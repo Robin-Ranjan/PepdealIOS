@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.onClick
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -56,7 +55,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pepdeal.infotech.Objects
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.product.FavProductWithImages
 import com.pepdeal.infotech.util.NavigationProvider
@@ -73,9 +71,7 @@ import kottieComposition.rememberKottieComposition
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
-import pepdealios.composeapp.generated.resources.black_heart
 import pepdealios.composeapp.generated.resources.compose_multiplatform
-import pepdealios.composeapp.generated.resources.pepdeal_logo
 import pepdealios.composeapp.generated.resources.place_holder
 import pepdealios.composeapp.generated.resources.red_heart
 import utils.KottieConstants
@@ -87,9 +83,12 @@ fun FavoriteProductScreen(
     userId: String,
     viewModal: FavoriteProductViewModal = ViewModals.favoriteProductViewModal
 ) {
+    // observables
     val favProductList by viewModal.favoriteProduct.collectAsStateWithLifecycle()
     val isLoading by viewModal.isLoading.collectAsStateWithLifecycle(initialValue = false)
     val isEmpty by viewModal.isEmpty.collectAsStateWithLifecycle(initialValue = false)
+
+    // variables
     val columnState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     var animation by remember { mutableStateOf("") }

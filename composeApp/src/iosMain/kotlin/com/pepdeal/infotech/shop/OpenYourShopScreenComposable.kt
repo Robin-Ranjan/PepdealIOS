@@ -9,6 +9,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.ScrollableDefaults
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -233,9 +235,10 @@ fun OpenYourShopScreen(shopPhoneNo :String,viewModel: OpenYourShopViewModal = Vi
                             flingBehavior = ScrollableDefaults.flingBehavior()
                         )
                         .pointerInput(Unit) {
-                            detectTapGestures(onTap = {
+                            awaitEachGesture {
+                                awaitFirstDown()
                                 keyboardController?.hide()
-                            })
+                            }
                         }
                         .padding(start = 10.dp, end = 10.dp, bottom = 10.dp, top = 0.dp),
                     horizontalAlignment = Alignment.CenterHorizontally

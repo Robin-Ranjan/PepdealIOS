@@ -25,7 +25,6 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -43,9 +42,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -59,26 +56,14 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.emptyPreferences
-import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pepdeal.infotech.DataStore
-import com.pepdeal.infotech.PreferencesKeys
 import com.pepdeal.infotech.navigation.routes.Routes
-import com.pepdeal.infotech.rememberDataStore
-import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.NavigationProvider.navController
 import com.pepdeal.infotech.util.Util.toNameFormat
 import com.pepdeal.infotech.util.Util.toTwoDecimalPlaces
 import com.pepdeal.infotech.util.ViewModals
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil3.CoilImage
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 import network.chaintech.sdpcomposemultiplatform.sdp
 import network.chaintech.sdpcomposemultiplatform.ssp
 import org.jetbrains.compose.resources.Font
@@ -93,15 +78,6 @@ fun ListAllProductScreen(
     shopId: String,
     viewModal: ListAllProductViewModal = ViewModals.listAllProductViewModal
 ) {
-    val datastore = DataStore.dataStore
-    val myKey = PreferencesKeys.MOBILE_NO
-    // Collect the data from DataStore as state.
-    val preferencesFlow = datastore.data
-    // Provide an initial empty preferences in case no value is stored yet.
-    val preferences by preferencesFlow.collectAsState(initial = emptyPreferences())
-
-    // Retrieve the current value (or default to "Default Value").
-    var currentValue: String
 
     val productsWithImages by viewModal.productWithImages.collectAsStateWithLifecycle()
     val isLoading by viewModal.isLoading.collectAsStateWithLifecycle()
@@ -113,13 +89,6 @@ fun ListAllProductScreen(
             viewModal.getAllProduct(shopId)
         }
     }
-    LaunchedEffect(Unit) {
-        var pref = "Default"
-        datastore.data.map {
-            pref = it[myKey] ?: "Default"
-        }.flowOn(Dispatchers.IO)
-        println(pref)
-    }
 
     MaterialTheme {
         Scaffold(
@@ -127,7 +96,7 @@ fun ListAllProductScreen(
                 SnackbarHost(hostState = snackBar, snackbar = { data ->
                     Snackbar(action = {
                         TextButton(onClick = { data.visuals.message }) {
-                            Text("Okay", color = Color.Yellow)  // Action button color
+                            Text("Okay", color = Color.Yellow)
                         }
                     },
                         containerColor = Color.Yellow,
@@ -190,28 +159,9 @@ fun ListAllProductScreen(
                                     )
                                 },
                                 onUpdateClick = {
-                                    coroutineScope.launch {
-                                        datastore.edit {
-                                            it.clear()
-                                        }
-                                    }
                                     navController.navigate(Routes.UpdateProductPage(products.product.productId))
                                 }, onRemoveClick = {
-//                                    coroutineScope.launch {
-//                                        datastore.edit { prefs ->
-//                                            prefs[myKey] = "User Id Updated"
-//                                        }
-//                                    }
 
-                                    currentValue = preferences[myKey] ?: "Default Value"
-                                    println(currentValue)
-//                                    coroutineScope.launch {
-//                                        datastore.edit {
-//                                            it.clear()
-//                                        }
-//                                    }
-//                                    currentValue = preferences[myKey] ?: "Default Value"
-//                                    println(currentValue)
                                 })
                         }
                     }
@@ -245,7 +195,6 @@ fun ProductCard(
         shape = MaterialTheme.shapes.medium, // You can customize the corner radius
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        // Use a vertical layout with padding.
         Column(
             modifier = Modifier
                 .fillMaxWidth()

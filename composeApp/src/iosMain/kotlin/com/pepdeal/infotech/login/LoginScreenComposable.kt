@@ -2,7 +2,10 @@ package com.pepdeal.infotech.login
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -131,10 +135,20 @@ fun LoginScreen(
                     .background(color = Color.White)
                     .verticalScroll(scrollState)
                     .padding(horizontal = 30.dp)
+//                    .pointerInput(Unit) {
+//                        detectTapGestures(onTap = {
+//                            keyboardController?.hide()
+//                        })
+//
+//                        detectVerticalDragGestures { _, _ ->
+//                            keyboardController?.hide()
+//                        }
+//                    }
                     .pointerInput(Unit) {
-                        detectTapGestures(onTap = {
+                        awaitEachGesture {
+                            awaitFirstDown()
                             keyboardController?.hide()
-                        })
+                        }
                     }
             ) {
                 // Lottie Animation

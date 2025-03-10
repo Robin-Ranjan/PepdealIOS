@@ -141,7 +141,7 @@ class ProductRepo {
         startIndex: String?,
         pageSize: Int,
         searchQuery: String = ""
-    ): Flow<ShopItems> = channelFlow {
+    ): Flow<ShopItems?> = channelFlow {
 
 
         try {
@@ -171,6 +171,7 @@ class ProductRepo {
                 println("valid product 1 : ${validProducts.size}")
                 if (validProducts.isEmpty()) {
                     println("No more products available")
+                    send(null)
                     return@channelFlow
                 } else {
                     validProducts = validProducts
@@ -203,7 +204,11 @@ class ProductRepo {
                         }
                 }
 
-                println("valid product : ${validProducts.size.toString()}")
+
+                if(validProducts.isEmpty()){
+                    send(null)
+                    return@channelFlow
+                }
                 validProducts.forEach { product ->
                     launch {
                         try {
@@ -264,6 +269,7 @@ class ProductRepo {
                 throw Exception("Error fetching product data: ${response.status}")
             }
         } catch (e: Exception) {
+            send(null)
             println("⚠️ Error: ${e.message}")
         }
 //        finally {

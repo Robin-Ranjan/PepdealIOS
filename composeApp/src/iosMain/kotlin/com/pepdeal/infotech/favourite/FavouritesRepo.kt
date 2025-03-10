@@ -1,10 +1,10 @@
 package com.pepdeal.infotech.favourite
 
-import com.pepdeal.infotech.shop.modal.ShopMaster
 import com.pepdeal.infotech.favourite.modal.FavoriteProductMaster
 import com.pepdeal.infotech.product.FavProductWithImages
 import com.pepdeal.infotech.product.ProductImageMaster
 import com.pepdeal.infotech.product.ProductMaster
+import com.pepdeal.infotech.shop.modal.ShopMaster
 import com.pepdeal.infotech.util.FirebaseUtil
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -27,7 +27,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -50,7 +49,6 @@ class FavouritesRepo {
             } else {
                 emptyList()
             }
-
 
         } catch (e: Exception) {
             e.printStackTrace()
@@ -140,7 +138,7 @@ class FavouritesRepo {
                                 }
                             }
                         }
-                        null // Return null if conditions fail
+                        null
                     }
                 }
 
@@ -149,7 +147,7 @@ class FavouritesRepo {
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            send(null) // Emit null in case of an error
+            send(null)
         }
     }
 
