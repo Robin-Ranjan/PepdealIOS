@@ -1,8 +1,5 @@
 package com.pepdeal.infotech.shop
 
-import Notification
-import NotificationDuration
-import Notify
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -11,7 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.ScrollableDefaults
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -46,7 +42,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -84,21 +79,18 @@ import com.pepdeal.infotech.Objects
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.placeAPI.PlacesSearchScreen
 import com.pepdeal.infotech.shop.modal.ShopMaster
-import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.NavigationProvider.navController
 import com.pepdeal.infotech.util.States
 import com.pepdeal.infotech.util.Util
 import com.pepdeal.infotech.util.Util.fromHex
 import com.pepdeal.infotech.util.ViewModals
 import kotlinx.coroutines.flow.collectLatest
-import network.chaintech.sdpcomposemultiplatform.sdp
 import network.chaintech.sdpcomposemultiplatform.ssp
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.FontResource
 import pepdealios.composeapp.generated.resources.Res
 import pepdealios.composeapp.generated.resources.manrope_bold
 import pepdealios.composeapp.generated.resources.manrope_medium
-import platform.posix.err
 
 
 @OptIn(ExperimentalMaterial3Api::class)

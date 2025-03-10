@@ -213,7 +213,7 @@ fun RegisterScreen() {
                                         snackBarHostState = snackBarHostState,
                                         setIsLoading = { isLoading = it },
                                         setShowOtpScreen = { showOtpScreen = it },
-                                        setSessionInfo = { sessionInfo = it }
+//                                        setSessionInfo = { sessionInfo = it }
                                     )
                                 },
                                 modifier = Modifier
@@ -236,11 +236,11 @@ fun RegisterScreen() {
                     }
                 } else {
                     OtpVerificationScreen(phoneNumber,
-                        sessionInfo!!,
+//                        sessionInfo!!,
                         coroutineScope,
-                        sessionInfoChange = {
-                            sessionInfo = it
-                        },
+//                        sessionInfoChange = {
+//                            sessionInfo = it
+//                        },
                         showSnackBar = {
                             coroutineScope.launch {
                                 showSnackBar(it)
@@ -325,7 +325,7 @@ fun handleRegistration(
     snackBarHostState: SnackbarHostState,
     setIsLoading: (Boolean) -> Unit,
     setShowOtpScreen: (Boolean) -> Unit,
-    setSessionInfo: (String?) -> Unit
+//    setSessionInfo: (String?) -> Unit
 ) {
     setIsLoading(true)
     coroutineScope.launch {
@@ -353,13 +353,14 @@ fun handleRegistration(
             }
 
             val result = AuthRepository.sendOtp(phoneNumber)
-            if (result != null) {
-                setSessionInfo(result)
-                snackBarHostState.showSnackbar("OTP Sent Successfully!")
+            if(result){
+                println("Sent OTP")
+//                snackBarHostState.showSnackbar("OTP Sent Successfully!")
                 setShowOtpScreen(true)  // Switch to OTP screen
             } else {
-                snackBarHostState.showSnackbar("Failed to send OTP. Try again.$result")
+                println("Failed To Send OTP")
             }
+
         } catch (e: Exception) {
             snackBarHostState.showSnackbar("Error: ${e.message}")
         } finally {

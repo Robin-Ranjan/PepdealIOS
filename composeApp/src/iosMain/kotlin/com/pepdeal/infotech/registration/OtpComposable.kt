@@ -44,10 +44,10 @@ import utils.KottieConstants
 @Composable
 fun OtpVerificationScreen(
     phoneNumber: String,
-    sessionInfo: String,
+//    sessionInfo: String,
     coroutineScope: CoroutineScope,
     showSnackBar: (String) -> Unit,
-    sessionInfoChange: (String) -> Unit,
+//    sessionInfoChange: (String) -> Unit,
     isOtpAuthenticated: () -> Unit
 ) {
 
@@ -119,8 +119,8 @@ fun OtpVerificationScreen(
                     keyboardController?.hide()
                     isLoading = true
                     coroutineScope.launch {
-                        val idToken = AuthRepository.verifyOtp(otpCode, sessionInfo)
-                        if (idToken != null) {
+                        val idToken = AuthRepository.verifyOtp(phoneNumber,otpCode)
+                        if (idToken) {
                             showSnackBar("User authenticated!")
                             isOtpAuthenticated()
                         } else {
@@ -140,13 +140,13 @@ fun OtpVerificationScreen(
         TextButton(
             onClick = {
                 coroutineScope.launch {
-                    val result = AuthRepository.sendOtp(phoneNumber)
-                    if (result != null) {
-                        sessionInfoChange(result)
-                        showSnackBar("OTP Resent Successfully!")
-                    } else {
-                        showSnackBar("Failed to resend OTP.")
-                    }
+//                    val result = AuthRepository.sendOtp(phoneNumber)
+//                    if (result != null) {
+//                        sessionInfoChange(result)
+//                        showSnackBar("OTP Resent Successfully!")
+//                    } else {
+//                        showSnackBar("Failed to resend OTP.")
+//                    }
                 }
             }
         ) {

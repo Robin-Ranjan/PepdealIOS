@@ -1,13 +1,14 @@
 package com.pepdeal.infotech.registration
 
-import com.pepdeal.infotech.user.UserMaster
 import com.pepdeal.infotech.shop.modal.ShopMaster
+import com.pepdeal.infotech.user.UserMaster
 import com.pepdeal.infotech.util.FirebaseUtil
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.darwin.Darwin
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
@@ -16,14 +17,13 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 object AuthRepository {
@@ -44,92 +44,47 @@ object AuthRepository {
         }
     }
 
-    private const val FIREBASE_API_KEY = "AIzaSyAviy4SudRwo-r-YT1YyTL4wiWPKXzW1Wo"
-    private const val BASE_URL = "https://identitytoolkit.googleapis.com/v1"
+    private val authKey = "443441A5CXtD9tdQ67cec8ddP1"  // Replace with your Auth Key
+    private val senderId = "PEPDAL"  // Provided in MSG91
+    private val otpTemplateId = "67ced1b8d6fc05799850aa43" // Get from MSG91 Dashboard
 
-    @Serializable
-    data class SendOTPRequest(val phoneNumber: String, val recaptchaToken: String = "dummy-token")
+    suspend fun sendOtp(phoneNumber: String): Boolean {
+        val formattedPhoneNumber = phoneNumber.replace(Regex("^\\+"), "")
+        val url = "https://control.msg91.com/api/v5/otp"
 
-    @Serializable
-    data class SendOTPResponse(val sessionInfo: String)
-
-    suspend fun sendOtp(phoneNumber: String): String? {
-        return withContext(Dispatchers.Default) {
-            try {
-                val formattedPhoneNumber = if (phoneNumber.startsWith("+")) phoneNumber else "+$phoneNumber"
-                val requestBody = SendOTPRequest(phoneNumber = formattedPhoneNumber)
-
-                println("Sending OTP Request: $requestBody")
-
-                val response: HttpResponse = client.post("$BASE_URL/accounts:sendVerificationCode?key=$FIREBASE_API_KEY") {
-                    contentType(ContentType.Application.Json)
-                    setBody(requestBody)
+        return try {
+            val response: HttpResponse = client.get(url) {
+                url {
+                    parameters.append("template_id", otpTemplateId)
+                    parameters.append("mobile", formattedPhoneNumber)
+                    parameters.append("authkey", authKey)
+                    parameters.append("otp_length", "6")
                 }
-                println("$BASE_URL/accounts:sendVerificationCode?key=$FIREBASE_API_KEY")
-
-                val responseText = response.bodyAsText() // Get error details
-                println(responseText)
-
-                if (response.status.isSuccess()) {
-                    val otpResponse: SendOTPResponse = response.body()
-                    println("OTP Session Info: ${otpResponse.sessionInfo}")
-                    return@withContext otpResponse.sessionInfo
-                } else {
-                    println("Response Error: ${response.status}")
-                    println("Error Details: $responseText") // Print Firebase error message
-                    return@withContext null
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                println("Exception: ${e.message}")
-                return@withContext null
+                header(HttpHeaders.ContentType, ContentType.Application.Json)
             }
+
+            val responseBody = response.bodyAsText()
+            println("OTP Response: $responseBody")
+
+            response.status == HttpStatusCode.OK
+        } catch (e: Exception) {
+            println("Error sending OTP: ${e.message}")
+            false
         }
     }
 
-    suspend fun verifyOtp(otpCode: String, sessionInfo: String): String? {
-        return withContext(Dispatchers.Default) {
-            try {
-                val requestBody = VerifyOTPRequest(code = otpCode, sessionInfo = sessionInfo)
+    suspend fun verifyOtp(phoneNumber: String, otp: String): Boolean {
+        val formattedPhoneNumber = phoneNumber.replace(Regex("^\\+"), "")
+        val url = "https://control.msg91.com/api/v5/otp/verify?mobile=$formattedPhoneNumber&otp=$otp&authkey=$authKey"
 
-                println("Verifying OTP: $requestBody")
-
-                val response: HttpResponse = client.post("$BASE_URL/accounts:signInWithPhoneNumber?key=$FIREBASE_API_KEY") {
-                    contentType(ContentType.Application.Json)
-                    setBody(requestBody)
-                }
-
-                val responseText = response.bodyAsText() // Get error details
-
-                if (response.status.isSuccess()) {
-                    val verifyResponse: VerifyOTPResponse = response.body()
-                    println("Successfully Verified! ID Token: ${verifyResponse.idToken}")
-                    return@withContext verifyResponse.idToken // This token is used for authentication
-                } else {
-                    println("Response Error: ${response.status}")
-                    println("Error Details: $responseText") // Print Firebase error message
-                    return@withContext null
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                println("Exception: ${e.message}")
-                return@withContext null
-            }
+        return try {
+            val response: HttpResponse = client.get(url)
+            response.status.value == 200
+        } catch (e: Exception) {
+            println("Error verifying OTP: ${e.message}")
+            false
         }
     }
-
-    @Serializable
-    data class VerifyOTPRequest(
-        val sessionInfo: String,
-        val code: String
-    )
-
-    @Serializable
-    data class VerifyOTPResponse(
-        val idToken: String,  // Firebase ID Token (JWT)
-        val refreshToken: String?,
-        val expiresIn: String?
-    )
 
     suspend fun checkUserAvailable(phoneNumber: String): Pair<Boolean, String?> {
         return withContext(Dispatchers.IO) {
@@ -232,39 +187,4 @@ object AuthRepository {
             }
         }
     }
-
-    suspend fun sendOtp(phoneNumber: String, recaptchaToken: String): String? {
-        return withContext(Dispatchers.Default) {
-            try {
-                val formattedPhoneNumber = if (phoneNumber.startsWith("+")) phoneNumber else "+$phoneNumber"
-                val requestBody = SendOTPRequest(phoneNumber = formattedPhoneNumber, recaptchaToken = recaptchaToken)
-
-                println("Sending OTP Request: $requestBody")
-
-                val response: HttpResponse = client.post("$BASE_URL/accounts:sendVerificationCode?key=$FIREBASE_API_KEY") {
-                    contentType(ContentType.Application.Json)
-                    setBody(requestBody)
-                }
-
-                val responseText = response.bodyAsText()
-                println("Response: $responseText")
-
-                if (response.status.isSuccess()) {
-                    val otpResponse: SendOTPResponse = response.body()
-                    println("OTP Session Info: ${otpResponse.sessionInfo}")
-                    return@withContext otpResponse.sessionInfo
-                } else {
-                    println("Response Error: ${response.status}")
-                    println("Error Details: $responseText")
-                    return@withContext null
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                println("Exception: ${e.message}")
-                return@withContext null
-            }
-        }
-    }
-
-
 }
