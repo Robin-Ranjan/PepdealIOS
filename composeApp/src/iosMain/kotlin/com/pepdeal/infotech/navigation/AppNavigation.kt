@@ -10,6 +10,7 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.pepdeal.infotech.AboutUsScreen
+import com.pepdeal.infotech.ForgetPassScreen
 import com.pepdeal.infotech.SplashScreen
 import com.pepdeal.infotech.support.SupportScreen
 import com.pepdeal.infotech.yourShop.YourShopScreen
@@ -61,14 +62,15 @@ fun AppNavigation() {
                             inclusive = true
                         }
                     }
-                },
-                    onForgotPasswordClick = {
-
-                    })
+                })
             }
 
             composable<Routes.RegistrationPage> {
                 RegisterScreen()
+            }
+
+            composable<Routes.ForgetPasswordPage> {
+                ForgetPassScreen()
             }
 
         }

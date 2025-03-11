@@ -1,11 +1,8 @@
-package com.pepdeal.infotech.login
+package com.pepdeal.infotech
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,7 +14,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.sharp.MoreVert
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -27,14 +23,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -47,14 +39,12 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pepdeal.infotech.navigation.routes.Routes
+import com.pepdeal.infotech.registration.AuthRepository
 import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util
-import com.pepdeal.infotech.util.ViewModals
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kottieAnimation.KottieAnimation
 import kottieComposition.KottieCompositionSpec
@@ -64,72 +54,43 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 import pepdealios.composeapp.generated.resources.Res
 import utils.KottieConstants
 
-
 @OptIn(ExperimentalResourceApi::class)
 @Composable
-fun LoginScreen(
-    viewModel: LoginViewModal = ViewModals.loginViewModal,
-    onLoginClick: () -> Unit,
+fun ResetPassScreen(
+    phoneNumber: String,
+    coroutineScope: CoroutineScope,
+    showSnackBar: (String) -> Unit,
+    isPasswordReset: () -> Unit
 ) {
-    // variables
-    var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var isPasswordVisible by remember { mutableStateOf(false) }
+    var confPassword by remember { mutableStateOf("") }
     var animation by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val scrollState = rememberScrollState()
+    var isPasswordVisible by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
-    //observables
-    val loginStatus by viewModel.loginStatus.collectAsStateWithLifecycle()
-    val loginMessage by viewModel.loginMessage.collectAsStateWithLifecycle()
-    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val animationComposition = rememberKottieComposition(
+        spec = KottieCompositionSpec.JsonString(animation)
+    )
 
-    // constants
-    val scrollState = rememberScrollState()
-    val keyboardController = LocalSoftwareKeyboardController.current
-    val snackBar = remember { SnackbarHostState() }
+    val animationState by animateKottieCompositionAsState(
+        composition = animationComposition,
+        iterations = KottieConstants.IterateForever,
+        isPlaying = true
+    )
 
     LaunchedEffect(Unit) {
         try {
-            animation = Res.readBytes("files/login_anim.json").decodeToString()
+            animation = Res.readBytes("files/cnf_pass_anim.json").decodeToString()
         } catch (e: Exception) {
             println(e.message)
         }
     }
 
-    LaunchedEffect(isLoading){
-        if(loginStatus){
-            viewModel.reset()
-            onLoginClick()
-        }
-    }
-    LaunchedEffect(loginMessage){
-        if(loginMessage.isNotBlank()){
-            Util.showToast(loginMessage)
-        }
-    }
-
-    val composition = rememberKottieComposition(
-        spec = KottieCompositionSpec.JsonString(animation)
-    )
-
-    val animationState by animateKottieCompositionAsState(
-        composition = composition,
-        iterations = KottieConstants.IterateForever,
-        isPlaying = true
-    )
-
     MaterialTheme {
-        Scaffold(
-            snackbarHost = {
-                SnackbarHost(hostState = snackBar, snackbar = { data ->
-                    Snackbar(
-                        content = {
-                            Text(text = data.visuals.message)
-                        }
-                    )
-                })
-            }
-        ) {
+        Scaffold {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -149,37 +110,42 @@ fun LoginScreen(
                         .fillMaxWidth()
                         .height(300.dp)
                         .padding(top = 50.dp),
-                    composition = composition,
+                    composition = animationComposition,
                     progress = { animationState.progress }
                 )
 
                 // Phone Number Input
                 OutlinedTextField(
-                    value = username,
-                    onValueChange = { newText ->
-                        if (newText.length <= 10 && newText.all { it.isDigit() }) {
-                            username = newText
-                        }
-                    },
-                    label = { Text("Mobile Number") },
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("New Password") },
                     leadingIcon = {
-                        Icon(imageVector = Icons.Default.Person, contentDescription = "Phone")
+                        Icon(imageVector = Icons.Default.Lock, contentDescription = "Password")
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 30.dp),
                     keyboardOptions = KeyboardOptions.Default.copy(
-                        keyboardType = KeyboardType.Number
+                        keyboardType = KeyboardType.Password
                     ),
                     maxLines = 1,
                     singleLine = true,
+                    visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
+                            Icon(
+                                imageVector = if (isPasswordVisible) Icons.Sharp.MoreVert else Icons.Filled.CheckCircle,
+                                contentDescription = if (isPasswordVisible) "Hide password" else "Show password"
+                            )
+                        }
+                    }
                 )
 
-                // Password Input
+                // Confirm Password Input
                 OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = { Text("Password") },
+                    value = confPassword,
+                    onValueChange = { confPassword = it },
+                    label = { Text("Confirm Password") },
                     leadingIcon = {
                         Icon(imageVector = Icons.Default.Lock, contentDescription = "Password")
                     },
@@ -202,63 +168,70 @@ fun LoginScreen(
                     }
                 )
 
-
                 if (isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier
                             .padding(top = 15.dp)
                             .align(Alignment.CenterHorizontally)
-                        // Use state to control visibility
                     )
-                }else{
-                    // Login Button
+                } else {
                     Button(
                         onClick = {
-                            if (username.isBlank() || password.isBlank()) {
-                                scope.launch { snackBar.showSnackbar("Please fill in all details") }
-                            } else if (username.length < 10) {
-                                scope.launch { snackBar.showSnackbar("Mobile no must be at least 10 characters") }
-                            } else {
-                                viewModel.validateUser("+91$username",Util.hashPassword(password))
+                            isLoading = true
+                            val result  = validatePasswords(password.trim(),confPassword.trim(), snackBarMessage = {
+                                showSnackBar(it)
+                            })
+                            if(result){
+                                scope.launch {
+                                  val status =   AuthRepository.updateUserPassword(phoneNumber,Util.hashPassword(password.trim()))
+                                    if(status){
+                                        isPasswordReset()
+                                    }else {
+                                        showSnackBar("Something went wrong")
+                                    }
+                                    isLoading = false
+                                }
+                            } else{
+                                isLoading = false
                             }
                         },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 15.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
+                        modifier = Modifier.fillMaxWidth().padding(top = 15.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Black,
+                            contentColor = Color.White
+                        )
                     ) {
                         Text(
-                            text = "Login",
+                            text = "Reset",
                             color = Color.White,
                             fontSize = 18.sp
                         )
                     }
                 }
-
-                // Forgot Password Text
-                Text(
-                    text = "Forgot Password?",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 10.dp)
-                        .clickable { NavigationProvider.navController.navigate(Routes.ForgetPasswordPage) },
-                    color = MaterialTheme.colorScheme.primary,
-                    textAlign = TextAlign.Center,
-                    fontSize = 15.sp
-                )
-
-                // Register Text
-                Text(
-                    text = "Don't have an account? Register here",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 5.dp)
-                        .clickable(onClick = { NavigationProvider.navController.navigate(Routes.RegistrationPage) }),
-                    color = MaterialTheme.colorScheme.primary,
-                    textAlign = TextAlign.Center,
-                    fontSize = 15.sp
-                )
             }
         }
+    }
+}
+
+/**
+ * Outer function for validation
+ */
+fun validatePasswords(
+    password: String,
+    confirmPassword: String,
+    snackBarMessage: (String) -> Unit
+): Boolean {
+    return when {
+        password.isEmpty() || confirmPassword.isEmpty() -> {
+            snackBarMessage("Please fill all the details")
+            false
+        }
+
+        password != confirmPassword -> {
+            snackBarMessage("Password Mismatched")
+            false
+        }
+
+        else -> true
     }
 }

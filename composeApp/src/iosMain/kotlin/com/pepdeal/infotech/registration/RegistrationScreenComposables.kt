@@ -4,6 +4,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.ScrollableDefaults
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,9 +21,12 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Call
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -63,8 +68,7 @@ fun RegisterScreen() {
     var isTermAccepted by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
 
-    var sessionInfo by remember { mutableStateOf<String?>(null) }
-    var showOtpScreen by remember { mutableStateOf(false) }  // Control screen visibility
+    var showOtpScreen by remember { mutableStateOf(false) }
 
     val snackBarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
@@ -89,7 +93,7 @@ fun RegisterScreen() {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(bottom = if (keyboardVisible.value) 300.dp else 0.dp) // Adjust based on the keyboard visibility
+                    .padding(bottom = if (keyboardVisible.value) 300.dp else 0.dp)
             ) {
                 if (!showOtpScreen) {
                     Column(
@@ -102,9 +106,10 @@ fun RegisterScreen() {
                             )
                             .padding(16.dp)
                             .pointerInput(Unit) {
-                                detectTapGestures(onTap = {
+                                awaitEachGesture {
+                                    awaitFirstDown()
                                     keyboardController?.hide()
-                                })
+                                }
                             }
                     ) {
                         // First View (Logo and Text Fields)
@@ -137,7 +142,17 @@ fun RegisterScreen() {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = 20.dp),
-                            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+                            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                            prefix = {
+                                Text("+91", color = Color.Black,
+                                    modifier = Modifier.padding(end = 15.dp))
+                            },
+                            suffix = {
+                                Icon(
+                                    imageVector = Icons.Default.Call,
+                                    contentDescription = "Mobile No"
+                                )
+                            }
                         )
 
                         OutlinedTextField(
@@ -213,7 +228,6 @@ fun RegisterScreen() {
                                         snackBarHostState = snackBarHostState,
                                         setIsLoading = { isLoading = it },
                                         setShowOtpScreen = { showOtpScreen = it },
-//                                        setSessionInfo = { sessionInfo = it }
                                     )
                                 },
                                 modifier = Modifier
@@ -222,25 +236,21 @@ fun RegisterScreen() {
                             ) {
                                 Text(text = "Register")
                             }
-                        }
 
-                        Spacer(modifier = Modifier.height(5.dp))
+                            Spacer(modifier = Modifier.height(5.dp))
 
-                        TextButton(
-                            onClick = { NavigationProvider.navController.popBackStack() },
-                            modifier = Modifier
-                                .align(Alignment.CenterHorizontally)
-                        ) {
-                            Text(text = "Already have an Account ?")
+                            TextButton(
+                                onClick = { NavigationProvider.navController.navigate(Routes.LoginPage) },
+                                modifier = Modifier
+                                    .align(Alignment.CenterHorizontally)
+                            ) {
+                                Text(text = "Already have an Account ?")
+                            }
                         }
                     }
                 } else {
                     OtpVerificationScreen(phoneNumber,
-//                        sessionInfo!!,
                         coroutineScope,
-//                        sessionInfoChange = {
-//                            sessionInfo = it
-//                        },
                         showSnackBar = {
                             coroutineScope.launch {
                                 showSnackBar(it)
@@ -255,7 +265,7 @@ fun RegisterScreen() {
                                         emailId = email,
                                         password = password,
                                         isActive = "0",
-                                        userStatus = "0", // user don't have shop
+                                        userStatus = "0",
                                         createdAt = Util.getCurrentTimeStamp(),
                                         updatedAt = Util.getCurrentTimeStamp(),
                                     )
@@ -325,7 +335,6 @@ fun handleRegistration(
     snackBarHostState: SnackbarHostState,
     setIsLoading: (Boolean) -> Unit,
     setShowOtpScreen: (Boolean) -> Unit,
-//    setSessionInfo: (String?) -> Unit
 ) {
     setIsLoading(true)
     coroutineScope.launch {
@@ -355,7 +364,6 @@ fun handleRegistration(
             val result = AuthRepository.sendOtp(phoneNumber)
             if(result){
                 println("Sent OTP")
-//                snackBarHostState.showSnackbar("OTP Sent Successfully!")
                 setShowOtpScreen(true)  // Switch to OTP screen
             } else {
                 println("Failed To Send OTP")

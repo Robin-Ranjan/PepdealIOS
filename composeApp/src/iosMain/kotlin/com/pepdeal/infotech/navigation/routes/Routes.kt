@@ -21,6 +21,9 @@ sealed class Routes {
     object RegistrationPage : Routes()
 
     @Serializable
+    object ForgetPasswordPage:Routes()
+
+    @Serializable
     data class OpenYourShopPage(val shopPhoneNo:String) : Routes()
 
     @Serializable
