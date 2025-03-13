@@ -58,6 +58,7 @@ import utils.KottieConstants
 @Composable
 fun OtpVerificationScreen(
     phoneNumber: String,
+    userName:String = "",
     coroutineScope: CoroutineScope,
     showSnackBar: (String) -> Unit,
     isOtpAuthenticated: () -> Unit,
@@ -187,7 +188,7 @@ fun OtpVerificationScreen(
                 if (!isResending) {
                     isResending = true
                     coroutineScope.launch {
-                        val result = AuthRepository.sendOtp("91$phoneNumber", isResend = true, isForgotPassword = isForgetPass)
+                        val result = AuthRepository.sendOtp("91$phoneNumber", userName = userName,isResend = true, isForgotPassword = isForgetPass)
                         if (result) {
                             showSnackBar("OTP Resent Successfully!")
                             remainingTime = 30 // Reset cooldown

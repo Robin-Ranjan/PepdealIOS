@@ -32,7 +32,6 @@ object CategoriesUtil {
         // Electronics
         SubCategory(1, 1, "Mobiles & Accessories", "https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-14-pro.jpg"),
         SubCategory(2, 1, "Computer & Laptop", "https://pngimg.com/uploads/laptop/laptop_PNG101763.png"),
-//        SubCategory(3, 1, "Home & Kitchen Appliances", "https://pngimg.com/uploads/photo_camera/photo_camera_PNG7828.png"),
         SubCategory(3, 1, "Home & Kitchen Appliances", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FElectronics%2FUntitleddesign44_enhance.jpeg?alt=media&token=be60a147-6017-4387-813d-e8ed5a6dfd1e"),
         SubCategory(4, 1, "Tv,Audio & Entertainment", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FElectronics%2FUntitleddesign60_enhance.jpeg?alt=media&token=b5ec2da9-ba23-46dd-b394-e899b6fe3fc6"),
         SubCategory(5, 1, "Gaming & Accessories", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FElectronics%2FUntitleddesign42_enhance.jpeg?alt=media&token=ca70a0be-ac55-48c4-be37-473c39ba2b20"),
@@ -47,7 +46,7 @@ object CategoriesUtil {
         SubCategory(11, 2, "Footwear", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FFashion%2FUntitleddesign49_enhance.jpeg?alt=media&token=13942e4e-22cb-4be3-a117-35f4a5bece3d"),
         SubCategory(12, 2, "Sportswear", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FFashion%2FUntitleddesign50_enhance.jpeg?alt=media&token=6e2cc556-a68a-427a-aad8-d95ffb2aec4c"),
         SubCategory(13, 2, "Swimwear", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FFashion%2FUntitleddesign51_enhance.jpeg?alt=media&token=ef74c047-5669-4c7a-a97f-4dbe9fb18cf6"),
-        SubCategory(14, 2, "Materials", "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f"),
+        SubCategory(14, 2, "Materials", "https://firebasestorage.googleapis.com/v0/b/pepdeal-1251f.appspot.com/o/Categories_images%2FFashion%2F633bd60db9510c415c0b6a23-15-7-quot-x19-7-quot-bright_enhanced%20(1).jpg?alt=media&token=a7c86202-1f59-42a4-a3ce-7e52f8f86773"),
 
 
         // Home & Kitchen

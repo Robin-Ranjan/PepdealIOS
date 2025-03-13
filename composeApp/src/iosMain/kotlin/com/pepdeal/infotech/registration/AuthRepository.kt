@@ -5,6 +5,7 @@ import com.pepdeal.infotech.user.UserMaster
 import com.pepdeal.infotech.util.FirebaseUtil
 import com.pepdeal.infotech.util.OtpAuthKeys
 import com.pepdeal.infotech.util.Util
+import com.pepdeal.infotech.util.Util.toNameFormat
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.darwin.Darwin
@@ -27,7 +28,11 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 object AuthRepository {
     private val json = Json { ignoreUnknownKeys = true }
@@ -48,29 +53,36 @@ object AuthRepository {
 
     suspend fun sendOtp(
         phoneNumber: String,
+        userName: String = "",
         isForgotPassword: Boolean = false,
         isResend: Boolean = false
     ): Boolean {
         val formattedPhoneNumber = phoneNumber.replace(Regex("^\\+"), "")
-        val baseUrl = "https://control.msg91.com/api/v5/otp"
-        val url = if (isResend) "$baseUrl/retry" else baseUrl
+        val otpBaseUrl = "https://control.msg91.com/api/v5/otp"
+        val url = if (isResend) "$otpBaseUrl/retry" else otpBaseUrl
 
         val templateId = if (isForgotPassword) OtpAuthKeys.FORGET_PASS_OTP_TEMPLATE_ID
-        else OtpAuthKeys.REGISTER_OTP_TEMPLATE_ID
+        else OtpAuthKeys.REGISTER_CUSTOMISED_OTP_TEMPLATE_ID
+
+        val jsonObject = buildJsonObject {
+            put("mobile", formattedPhoneNumber)
+            put("authkey", OtpAuthKeys.AUTH_KEY)
+            if (!isForgotPassword) {
+                put("name", userName.toNameFormat()) // ✅ Correctly sending name
+            }
+            if (!isResend) {
+                put("template_id", templateId)
+                put("otp_length", "6")
+                put("otp_expiry", "10")
+            } else {
+                put("retrytype", "text")
+            }
+        }
+
         return try {
-            val response: HttpResponse = client.get(url) {
-                url {
-                    parameters.append("mobile", formattedPhoneNumber)
-                    parameters.append("authkey", OtpAuthKeys.AUTH_KEY)
-                    if (!isResend) {
-                        parameters.append("template_id", templateId)
-                        parameters.append("otp_length", "6")
-                        parameters.append("otp_expiry", "10")
-                    } else {
-                        parameters.append("retrytype", "text")
-                    }
-                }
-                header(HttpHeaders.ContentType, ContentType.Application.Json)
+            val response: HttpResponse = client.post(url) {
+                contentType(ContentType.Application.Json)
+                setBody(jsonObject)
             }
 
             val responseBody = response.bodyAsText()
@@ -254,4 +266,42 @@ object AuthRepository {
             false
         }
     }
+
+    suspend fun sendRegistrationSms(phoneNumber: String): Boolean {
+        val formattedPhoneNumber = phoneNumber.replace(Regex("^\\+"), "")
+        val url = "https://control.msg91.com/api/v5/flow"
+
+        val requestBody = SmsRequest(
+            template_id = OtpAuthKeys.REGISTER_USER_TEMPLATE_ID,
+            recipients = listOf(Recipient(mobiles = formattedPhoneNumber))
+        )
+
+        return try {
+            val response: HttpResponse = client.post(url) {
+                header(HttpHeaders.ContentType, ContentType.Application.Json)
+                header("authkey", OtpAuthKeys.AUTH_KEY)
+                setBody(Json.encodeToString(requestBody)) // 🔹 Fix: Serialize manually
+            }
+
+            val responseBody = response.bodyAsText()
+            println("SMS Response: $responseBody")
+
+            response.status == HttpStatusCode.OK
+        } catch (e: Exception) {
+            println("Error sending SMS: ${e.message}")
+            false
+        }
+    }
+
+    @Serializable
+    data class Recipient(val mobiles: String)
+
+    @Serializable
+    data class SmsRequest(
+        val template_id: String,
+        val short_url: String = "0",
+        val realTimeResponse: String = "1",
+        val recipients: List<Recipient>
+    )
+
 }

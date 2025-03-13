@@ -6,7 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.ScrollableDefaults
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -72,9 +71,6 @@ fun RegisterScreen() {
 
     val snackBarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
-    var otpAuthenticated by remember { mutableStateOf(false) }
-
-    var confirmPassAnimation by remember { mutableStateOf("") }
 
     val keyboardController = LocalSoftwareKeyboardController.current
     val keyboardVisible = remember { mutableStateOf(false) }
@@ -217,6 +213,7 @@ fun RegisterScreen() {
                         } else {
                             Button(
                                 onClick = {
+                                    println("userName in handleRegistration:- $username")
                                     handleRegistration(
                                         username = username,
                                         phoneNumber = "+91$phoneNumber",
@@ -250,6 +247,7 @@ fun RegisterScreen() {
                     }
                 } else {
                     OtpVerificationScreen(phoneNumber,
+                        userName = username,
                         coroutineScope,
                         showSnackBar = {
                             coroutineScope.launch {
@@ -273,6 +271,7 @@ fun RegisterScreen() {
 
                                 if(status){
                                     NavigationProvider.navController.navigate(Routes.MainPage)
+                                    AuthRepository.sendRegistrationSms("+91$phoneNumber")
                                 }else{
                                     if (message != null) {
                                         showSnackBar(message)
@@ -361,7 +360,8 @@ fun handleRegistration(
                 return@launch
             }
 
-            val result = AuthRepository.sendOtp(phoneNumber)
+            println("Sending OTP :- $username")
+            val result = AuthRepository.sendOtp(phoneNumber = phoneNumber, userName = username)
             if(result){
                 println("Sent OTP")
                 setShowOtpScreen(true)  // Switch to OTP screen
