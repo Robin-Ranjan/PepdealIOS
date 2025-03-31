@@ -72,7 +72,7 @@ object AuthRepository {
             }
             if (!isResend) {
                 put("template_id", templateId)
-                put("otp_length", "6")
+                put("otp_length", OtpAuthKeys.OTP_LENGTH)
                 put("otp_expiry", "10")
             } else {
                 put("retrytype", "text")

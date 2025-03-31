@@ -253,25 +253,3 @@ fun DropdownMenuComponent(label: String, options: List<String>, onSelection: (St
         }
     }
 }
-
-//@Composable
-//fun TicketFAB() {
-//    var showDialog by remember { mutableStateOf(false) }
-//
-//    FloatingActionButton(
-//        onClick = { showDialog = true },
-//        containerColor = Color.White,
-//        shape = RoundedCornerShape(8.dp)
-//    ) {
-//        Icon(imageVector = Icons.Default.Add, contentDescription = "Add", tint = Color.Black)
-//    }
-//
-//    TicketDialog(
-//        showDialog = showDialog,
-//        onDismiss = { showDialog = false },
-//        onSubmit = { size, color, quantity ->
-//            println("Size: $size, Color: $color, Quantity: $quantity")
-//            showDialog = false
-//        }
-//    )
-//}

@@ -24,10 +24,10 @@ sealed class Routes {
     object ForgetPasswordPage:Routes()
 
     @Serializable
-    data class OpenYourShopPage(val shopPhoneNo:String) : Routes()
+    data class OpenYourShopPage(val shopPhoneNo:String,val userId: String) : Routes()
 
     @Serializable
-    object AddNewProductPage : Routes()
+    data class AddNewProductPage(val shopId:String) : Routes()
 
     @Serializable
     data class UpdateProductPage(val productId:String) : Routes()
@@ -39,7 +39,7 @@ sealed class Routes {
     data class CustomerTicketPage(val userId: String) : Routes()
 
     @Serializable
-    object SellerTicketPage : Routes()
+    data class SellerTicketPage(val shopId: String) : Routes()
 
     @Serializable
     data class ShopDetails(val shopId: String, val userId: String) : Routes()

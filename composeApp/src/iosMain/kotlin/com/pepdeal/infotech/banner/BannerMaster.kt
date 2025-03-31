@@ -10,5 +10,6 @@ data class BannerMaster(
     val isActive: String,
     val bannerDescription: String,
     val updatedAt: String,
-    val createdAt:String
+    val createdAt:String,
+    var bannerOrder: String = ""
 )

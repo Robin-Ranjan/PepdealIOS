@@ -63,7 +63,6 @@ import com.attafitamim.krop.core.crop.rememberImageCropper
 import com.attafitamim.krop.ui.ImageCropperDialog
 import com.pepdeal.infotech.DataStore
 import com.pepdeal.infotech.ImageCompressor
-import com.pepdeal.infotech.Objects
 import com.pepdeal.infotech.PreferencesKeys
 import com.pepdeal.infotech.ProfileScreenViewModal
 import com.pepdeal.infotech.navigation.routes.Routes
@@ -340,7 +339,7 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                                     Util.showToast("Please Login")
                                     return@ProfileMenuItem
                                 }
-                                NavigationProvider.navController.navigate(Routes.OpenYourShopPage(userPhone))
+                                NavigationProvider.navController.navigate(Routes.OpenYourShopPage(userPhone, userId = currentUserId))
                             })
                     }
 
@@ -380,7 +379,7 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                                 Util.showToast("Open Your Shop First")
                                 return@ProfileMenuItem
                             }
-                            NavigationProvider.navController.navigate(Routes.AddNewProductPage)
+                            NavigationProvider.navController.navigate(Routes.AddNewProductPage(shopId))
                         })
 
                     ProfileMenuItem(
@@ -397,9 +396,7 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                             }
 
                             NavigationProvider.navController.navigate(
-                                Routes.ListAllProductPage(
-                                    Objects.SHOP_ID
-                                )
+                                Routes.ListAllProductPage(shopId)
                             )
                         })
 
@@ -415,7 +412,7 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                                 Util.showToast("Open Your Shop First")
                                 return@ProfileMenuItem
                             }
-                            NavigationProvider.navController.navigate(Routes.SellerTicketPage)
+                            NavigationProvider.navController.navigate(Routes.SellerTicketPage(shopId))
                         })
 
                     ProfileMenuItem(

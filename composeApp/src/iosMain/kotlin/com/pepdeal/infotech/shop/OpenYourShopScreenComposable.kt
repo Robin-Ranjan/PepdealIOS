@@ -75,7 +75,6 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pepdeal.infotech.DataStore
-import com.pepdeal.infotech.Objects
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.placeAPI.PlacesSearchScreen
 import com.pepdeal.infotech.shop.modal.ShopMaster
@@ -95,7 +94,7 @@ import pepdealios.composeapp.generated.resources.manrope_medium
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OpenYourShopScreen(shopPhoneNo :String,viewModel: OpenYourShopViewModal = ViewModals.openYOurShopViewModal) {
+fun OpenYourShopScreen(shopPhoneNo :String,userID:String,viewModel: OpenYourShopViewModal = ViewModals.openYOurShopViewModal) {
     val shopName = remember { mutableStateOf(TextFieldValue()) }
     val shopAddress = remember { mutableStateOf(TextFieldValue()) }
     val signBoardAddress = remember { mutableStateOf(TextFieldValue()) }
@@ -429,7 +428,7 @@ fun OpenYourShopScreen(shopPhoneNo :String,viewModel: OpenYourShopViewModal = Vi
                                                 viewModel.registerShop(
                                                     shopMaster = ShopMaster(
                                                         shopId = "",
-                                                        userId = Objects.USER_ID,
+                                                        userId = userID,
                                                         shopName = shopName.value.text,
 //                                                        shopMobileNo = shopPhoneNo,
                                                         shopMobileNo = shopPhoneNumber.value.text,

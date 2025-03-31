@@ -6,7 +6,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -71,7 +70,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pepdeal.infotech.Objects
 import com.pepdeal.infotech.color.ColorItem
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.product.ProductMaster
@@ -141,6 +139,8 @@ fun UpdateProductScreen(
     var isImageUpdated by remember { mutableStateOf(false) }
     var showDialog by remember { mutableStateOf(false) }
 
+    var shopId by remember { mutableStateOf("") }
+
     val productImages by viewModal.productImages.collectAsStateWithLifecycle()
     val productDetails by viewModal.productDetails.collectAsStateWithLifecycle()
     val registerProductResponse by viewModal.updateProductResponse.collectAsStateWithLifecycle()
@@ -151,6 +151,7 @@ fun UpdateProductScreen(
     }
 
     LaunchedEffect(productDetails) {
+        shopId = productDetails.shopId
         productName.value = TextFieldValue(productDetails.productName)
         brandName.value = TextFieldValue(productDetails.brandName)
         productCategory.value = TextFieldValue(productDetails.categoryId)
@@ -570,8 +571,8 @@ fun UpdateProductScreen(
                                                             productId = productId,
                                                             updatedProductMaster = ProductMaster(
                                                                 productId = "",
-                                                                userId = Objects.USER_ID,
-                                                                shopId = Objects.SHOP_ID,
+                                                                userId = "",
+                                                                shopId = shopId,
                                                                 productName = productName.value.text,
                                                                 brandId = "",
                                                                 brandName = brandName.value.text,

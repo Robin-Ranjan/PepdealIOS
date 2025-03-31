@@ -110,7 +110,7 @@ class ShopViewModal : ViewModel() {
     fun getTheBannerList() {
         viewModelScope.launch {
             val bannerList = shopRepo.getActiveBannerImages().toMutableList()
-            bannerList[0] = bannerList[2].also { bannerList[2] = bannerList[0] }
+            bannerList.sortBy { it.bannerOrder.toInt() }
             _bannerList.value = bannerList
         }
     }

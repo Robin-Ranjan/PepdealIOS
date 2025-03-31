@@ -6,7 +6,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -73,7 +72,6 @@ import com.attafitamim.krop.core.crop.cropperStyle
 import com.attafitamim.krop.core.crop.rememberImageCropper
 import com.attafitamim.krop.ui.ImageCropperDialog
 import com.pepdeal.infotech.ImageCompressor
-import com.pepdeal.infotech.Objects
 import com.pepdeal.infotech.categories.SubCategory
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.product.ProductMaster
@@ -109,7 +107,7 @@ import pepdealios.composeapp.generated.resources.manrope_light
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddNewProductScreen(viewModal: AddNewProductViewModal = ViewModals.addNewProductViewModal) {
+fun AddNewProductScreen(shopId:String,viewModal: AddNewProductViewModal = ViewModals.addNewProductViewModal) {
     val factory = rememberPermissionsControllerFactory()
     val controller = remember(factory) { factory.createPermissionsController() }
     val coroutineScope = rememberCoroutineScope()
@@ -539,11 +537,11 @@ fun AddNewProductScreen(viewModal: AddNewProductViewModal = ViewModals.addNewPro
                                                 status = { status ->
                                                     if (status) {
                                                             viewModal.registerProduct(
-                                                                shopId = Objects.SHOP_ID,
+                                                                shopId = shopId,
                                                                 productMaster = ProductMaster(
                                                                     productId = "",
-                                                                    userId = Objects.USER_ID,
-                                                                    shopId = Objects.SHOP_ID,
+                                                                    userId = "",
+                                                                    shopId = shopId,
                                                                     productName = productName.value.text,
                                                                     brandId = "",
                                                                     brandName = brandName.value.text,

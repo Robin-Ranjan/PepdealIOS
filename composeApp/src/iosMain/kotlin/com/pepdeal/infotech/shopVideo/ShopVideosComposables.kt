@@ -27,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -54,7 +55,8 @@ import chaintech.videoplayer.model.PlayerSpeed
 import chaintech.videoplayer.model.ScreenResize
 import chaintech.videoplayer.model.VideoPlayerConfig
 import chaintech.videoplayer.ui.video.VideoPlayerComposable
-import com.pepdeal.infotech.Objects
+import com.pepdeal.infotech.DataStore
+import com.pepdeal.infotech.PreferencesKeys
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.product.SearchView
 import com.pepdeal.infotech.util.NavigationProvider
@@ -63,6 +65,7 @@ import com.pepdeal.infotech.util.Util.toNameFormat
 import com.pepdeal.infotech.util.ViewModals
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil3.CoilImage
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
@@ -77,6 +80,10 @@ import kotlin.math.abs
 
 @Composable
 fun FeedScreen(viewModal: ShopVideosViewModal = ViewModals.shopVideosViewModal) {
+
+    val datastore = DataStore.dataStore
+    val currentUserId by datastore.data.map { it[PreferencesKeys.USERID_KEY] ?: "-1" }
+        .collectAsState(initial = "-1")
 
     val keyboardController = LocalSoftwareKeyboardController.current
     var searchQuery by remember { mutableStateOf("") }
@@ -145,7 +152,7 @@ fun FeedScreen(viewModal: ShopVideosViewModal = ViewModals.shopVideosViewModal) 
 
                         LaunchedEffect(shopVideo.shopVideosMaster.shopId) {
                             viewModal.checkSaveShopExists(
-                                Objects.USER_ID,
+                                currentUserId,
                                 shopVideo.shopVideosMaster.shopId
                             ) {
                                 println("${shopVideo.shopsMaster.shopName} $it")
@@ -154,6 +161,7 @@ fun FeedScreen(viewModal: ShopVideosViewModal = ViewModals.shopVideosViewModal) 
                         }
                         FeedCard(shopVideo = shopVideo,
                             superShopRes = painterResource(saveVideoIcon),
+                            userId = currentUserId,
                             isPlaying = isPlaying,
                             onSaveVideoClicked = {
                                 val newSavedVideoState = !isSaveVideo
@@ -163,7 +171,7 @@ fun FeedScreen(viewModal: ShopVideosViewModal = ViewModals.shopVideosViewModal) 
                                 // Call ViewModel to handle like/unlike logic
                                 coroutineScope.launch {
                                     viewModal.toggleSaveShopStatus(
-                                        userId = Objects.USER_ID,
+                                        userId = currentUserId,
                                         shopId = shopVideo.shopVideosMaster.shopId,
                                         shopVideoId = shopVideo.shopVideosMaster.shopVideoId,
                                         newSavedVideoState
@@ -183,6 +191,7 @@ fun FeedScreen(viewModal: ShopVideosViewModal = ViewModals.shopVideosViewModal) 
 @Composable
 fun FeedCard(
     shopVideo: ShopVideoWithShopDetail,
+    userId: String,
     superShopRes: Painter,
     isPlaying: Boolean,
     onSaveVideoClicked: () -> Unit,
@@ -278,7 +287,7 @@ fun FeedCard(
                             NavigationProvider.navController.navigate(
                                 Routes.ShopDetails(
                                     shopVideo.shopsMaster.shopId ?: "",
-                                    Objects.USER_ID
+                                    userId
                                 )
                             )
                         }

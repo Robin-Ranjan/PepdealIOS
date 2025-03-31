@@ -139,7 +139,7 @@ class AddNewProductRepo {
         productId: String,
         images: List<ImageBitmap>
     ): Pair<Boolean, String> {
-        val bucket = "pepdeal-1251f.appspot.com"
+        val bucket = FirebaseUtil.BUCKET_URL
         val baseFileName = "product_images/${productId}/image"
 
         // Map each image to a Pair<Boolean, String> outcome.

@@ -69,7 +69,7 @@ import pepdealios.composeapp.generated.resources.compose_multiplatform
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SellerTicketScreen(viewModal: SellerTicketViewModal = ViewModals.sellerTicketViewModal) {
+fun SellerTicketScreen(shopId:String,viewModal: SellerTicketViewModal = ViewModals.sellerTicketViewModal) {
 
     val sellerTicketProductList by viewModal.sellerTicketProduct.collectAsStateWithLifecycle()
     val isLoading by viewModal.isLoading.collectAsStateWithLifecycle()
@@ -77,7 +77,7 @@ fun SellerTicketScreen(viewModal: SellerTicketViewModal = ViewModals.sellerTicke
 
     LaunchedEffect(Unit) {
         if(sellerTicketProductList.isEmpty()){
-            viewModal.getAllSellerTicketProduct("-OIssBIQoj5chr2PuTLo")
+            viewModal.getAllSellerTicketProduct(shopId)
         }
     }
 

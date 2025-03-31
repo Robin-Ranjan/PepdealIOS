@@ -49,6 +49,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -80,7 +81,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pepdeal.infotech.BannerCarouselWidget
-import com.pepdeal.infotech.Objects
+import com.pepdeal.infotech.DataStore
+import com.pepdeal.infotech.PreferencesKeys
 import com.pepdeal.infotech.checkPermission
 import com.pepdeal.infotech.fonts.FontUtils.getFontResourceByName
 import com.pepdeal.infotech.navigation.routes.Routes
@@ -109,6 +111,7 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.FontResource
@@ -125,6 +128,11 @@ import platform.Foundation.NSUUID
 @OptIn(FlowPreview::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
+
+    val datastore = DataStore.dataStore
+
+    val currentUserId by datastore.data.map { it[PreferencesKeys.USERID_KEY] ?: "-1" }
+        .collectAsState(initial = "-1")
 
     // constants
     val scope = rememberCoroutineScope()
@@ -397,7 +405,14 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
                                         }
                                     } else {
                                         items(searchedShopList) { shop ->
-                                            ShopCardView(shop)
+                                            ShopCardView(shop, onShopClicked = { shopId ->
+                                                NavigationProvider.navController.navigate(
+                                                    Routes.ShopDetails(
+                                                        shopId = shopId,
+                                                        userId = currentUserId
+                                                    )
+                                                )
+                                            })
                                         }
                                     }
                                 }
@@ -410,7 +425,7 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .weight(1f), // Keeps it centered properly
+                                .weight(1f),
                             contentAlignment = Alignment.Center
                         ) {
                             CircularProgressIndicator(color = Color.Blue)
@@ -438,8 +453,17 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
                                     )
                                 }
                             }
-                            items(shopListNew, key = { it.shop.shopId ?: NSUUID.UUID().toString() }) { shop ->
-                                ShopCardView(shop)
+                            items(
+                                shopListNew,
+                                key = { it.shop.shopId ?: NSUUID.UUID().toString() }) { shop ->
+                                ShopCardView(shop, onShopClicked = { shopId ->
+                                    NavigationProvider.navController.navigate(
+                                        Routes.ShopDetails(
+                                            shopId = shopId,
+                                            userId = currentUserId
+                                        )
+                                    )
+                                })
                             }
                         }
                     }
@@ -450,7 +474,7 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
 }
 
 @Composable
-fun ShopCardView(shopWithProduct: ShopWithProducts) {
+fun ShopCardView(shopWithProduct: ShopWithProducts, onShopClicked: (String) -> Unit) {
     var offset by remember { mutableStateOf(Offset(0f, 0f)) }
     val cardBackgroundColor = Color.fromHex(shopWithProduct.shop.bgColourId ?: "")
     val shopNameColor = Color.fromHex(shopWithProduct.shop.fontColourId)
@@ -472,12 +496,7 @@ fun ShopCardView(shopWithProduct: ShopWithProducts) {
                 // Shop Name (Header)
                 Box(modifier = Modifier
                     .clickable {
-                        NavigationProvider.navController.navigate(
-                            Routes.ShopDetails(
-                                shopWithProduct.shop.shopId ?: "",
-                                Objects.USER_ID
-                            )
-                        )
+                        onShopClicked(shopWithProduct.shop.shopId ?: "")
                     }) {
                     Column(
                         modifier = Modifier

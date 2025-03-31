@@ -82,11 +82,13 @@ fun AppNavigation() {
 
             composable<Routes.OpenYourShopPage> {
                 val shopPhoneNo = it.toRoute<Routes.OpenYourShopPage>().shopPhoneNo
-                OpenYourShopScreen(shopPhoneNo)
+                val userId = it.toRoute<Routes.OpenYourShopPage>().userId
+                OpenYourShopScreen(shopPhoneNo,userId)
             }
 
             composable<Routes.AddNewProductPage> {
-                AddNewProductScreen()
+                val shopId = it.toRoute<Routes.AddNewProductPage>().shopId
+                AddNewProductScreen(shopId)
             }
 
             composable<Routes.FavouritesPage> {
@@ -100,7 +102,8 @@ fun AppNavigation() {
             }
 
             composable<Routes.SellerTicketPage> {
-                SellerTicketScreen()
+                val shopId = it.toRoute<Routes.SellerTicketPage>().shopId
+                SellerTicketScreen(shopId)
             }
 
             composable<Routes.ShopDetails> { backStackEntry ->
