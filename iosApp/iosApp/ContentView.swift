@@ -5,7 +5,7 @@ import ComposeApp
 
 struct ComposeView: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIViewController {
-        MainViewControllerKt.MainViewController()
+        return createNavController()
     }
 
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
@@ -13,10 +13,26 @@ struct ComposeView: UIViewControllerRepresentable {
 
 struct ContentView: View {
     var body: some View {
-        ComposeView()
+        NavigationView {
+            ComposeView()
+                .navigationBarHidden(true)
                 .ignoresSafeArea(.keyboard)
-//                .ignoresSafeArea(.container,edges: .bottom)
+//                 .ignoresSafeArea(.container, edges: .bottom)
+        }
+        .navigationViewStyle(StackNavigationViewStyle())
     }
+}
+
+func createNavController() -> UINavigationController {
+    let composeViewController = MainViewControllerKt.MainViewController()
+
+       let navController = UINavigationController(rootViewController: composeViewController)
+       navController.setNavigationBarHidden(true, animated: false) // Hide navigation bar
+       navController.interactivePopGestureRecognizer?.isEnabled = true // Enable back gesture
+       navController.interactivePopGestureRecognizer?.delegate = nil // Allow swipe back
+
+       return navController
+
 }
 
 
