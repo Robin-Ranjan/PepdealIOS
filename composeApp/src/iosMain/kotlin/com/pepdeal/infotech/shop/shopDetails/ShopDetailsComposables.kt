@@ -172,7 +172,8 @@ fun ShopDetailsWithProductPage(
                             ) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "Back"
+                                    contentDescription = "Back",
+                                    tint = Color.fromHex(shopDetails.fontColourId)
                                 )
                             }
 
@@ -184,7 +185,7 @@ fun ShopDetailsWithProductPage(
                                 style = TextStyle(
                                     color = Color.fromHex(shopDetails.fontColourId),
                                     fontSize = 20.sp,
-                                    lineHeight = 20.sp,
+                                    lineHeight = 23.sp,
                                     fontFamily = FontFamily(
                                         Font(
                                             getFontResourceByName(
@@ -204,7 +205,7 @@ fun ShopDetailsWithProductPage(
                                 Icon(
                                     imageVector = Icons.Default.Call,
                                     contentDescription = "Call",
-                                    tint = Color.Black
+                                    tint = Color.fromHex(shopDetails.fontColourId)
                                 )
                             }
 
@@ -217,7 +218,8 @@ fun ShopDetailsWithProductPage(
                                     painter = if (isSuperShop) painterResource(Res.drawable.super_shop_positive) else painterResource(
                                         Res.drawable.super_shop_logo
                                     ),
-                                    contentDescription = "Add to Super Shop"
+                                    contentDescription = "Add to Super Shop",
+                                    tint = Color.fromHex(shopDetails.fontColourId)
                                 )
                             }
                         }
@@ -235,7 +237,8 @@ fun ShopDetailsWithProductPage(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.LocationOn,
-                                    contentDescription = "Location"
+                                    contentDescription = "Location",
+                                    tint = Color.fromHex(shopDetails.fontColourId)
                                 )
                             }
                             Text(
@@ -244,7 +247,8 @@ fun ShopDetailsWithProductPage(
                                 lineHeight = 16.sp,
                                 maxLines = 2,
                                 overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth(),
+                                color = Color.fromHex(shopDetails.fontColourId)
                             )
                         }
 
@@ -389,7 +393,10 @@ fun ShopProductCard(
                     Box(
                         modifier = Modifier
                             .align(Alignment.TopStart)
-                            .background(Color(0xFFFF9800).copy(alpha = 0.7f), shape = RoundedCornerShape(bottomEnd = 8.dp))
+                            .background(
+                                Color(0xFFFF9800).copy(alpha = 0.7f),
+                                shape = RoundedCornerShape(bottomEnd = 8.dp)
+                            )
                             .padding(horizontal = 8.dp, vertical = 6.dp)
                     ) {
                         Text(

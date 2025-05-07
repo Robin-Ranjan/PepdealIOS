@@ -23,7 +23,7 @@ import com.pepdeal.infotech.util.NavigationProvider.navController
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
-import pepdealios.composeapp.generated.resources.pepdeal_logo_new
+import pepdealios.composeapp.generated.resources.pepdeal_logo
 
 @Composable
 fun SplashScreen(){
@@ -53,7 +53,7 @@ fun SplashScreen(){
         ) {
             Box(modifier = Modifier.fillMaxSize().padding(it)){
                 Image(
-                    painter = painterResource(Res.drawable.pepdeal_logo_new),
+                    painter = painterResource(Res.drawable.pepdeal_logo),
                     contentDescription = null,
                     modifier = Modifier
                         .fillMaxWidth()

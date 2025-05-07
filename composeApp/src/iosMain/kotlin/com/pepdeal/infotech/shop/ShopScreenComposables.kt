@@ -8,7 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -120,14 +118,14 @@ import pepdealios.composeapp.generated.resources.Res
 import pepdealios.composeapp.generated.resources.compose_multiplatform
 import pepdealios.composeapp.generated.resources.manrope_bold
 import pepdealios.composeapp.generated.resources.manrope_medium
-import pepdealios.composeapp.generated.resources.pepdeal_logo_new
+import pepdealios.composeapp.generated.resources.pepdeal_logo
 import pepdealios.composeapp.generated.resources.place_holder
 import platform.Foundation.NSUUID
 
 
 @OptIn(FlowPreview::class, ExperimentalMaterial3Api::class)
 @Composable
-fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
+fun ShopScreen(viewModel: ShopViewModel = ViewModals.shopViewModel) {
 
     val datastore = DataStore.dataStore
 
@@ -210,18 +208,18 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
             }
     }
 
-    LaunchedEffect(columnState) {
-        snapshotFlow { columnState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0 }
-            .distinctUntilChanged()
-            .collect { lastVisibleIndex ->
-                val totalItems = columnState.layoutInfo.totalItemsCount
-                if (totalItems > 0 && lastVisibleIndex >= totalItems - 10 && !isLoading && searchQuery.isEmpty()) {
-                    scope.launch(Dispatchers.IO) {
-                        viewModel.loadMoreShops()
-                    }
-                }
-            }
-    }
+//    LaunchedEffect(columnState) {
+//        snapshotFlow { columnState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0 }
+//            .distinctUntilChanged()
+//            .collect { lastVisibleIndex ->
+//                val totalItems = columnState.layoutInfo.totalItemsCount
+//                if (totalItems > 0 && lastVisibleIndex >= totalItems - 10 && !isLoading && searchQuery.isEmpty()) {
+//                    scope.launch(Dispatchers.IO) {
+//                        viewModel.loadMoreShops()
+//                    }
+//                }
+//            }
+//    }
 
     LaunchedEffect(Unit) {
         checkPermission(
@@ -273,13 +271,13 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
                             verticalAlignment = Alignment.CenterVertically // Align items properly
                         ) {
                             Image(
-                                painter = painterResource(Res.drawable.pepdeal_logo_new),
+                                painter = painterResource(Res.drawable.pepdeal_logo),
                                 contentDescription = "App Logo",
                                 modifier = Modifier
                                     .width(130.dp)
                                     .height(28.dp)
                                     .padding(start = 5.dp),
-                                contentScale = ContentScale.FillBounds
+                                contentScale = ContentScale.Crop
                             )
 
                             // Push the next elements to the end of the Row
@@ -375,44 +373,54 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
                     ) {
                         when {
                             isSearchLoading -> {
-
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .weight(1f),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(color = Color.Blue)
+                                }
                             }
 
                             else -> {
-                                LazyColumn(
+                                Box(
                                     modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 5.dp)
-                                        .weight(1f)
-                                        .heightIn(max = 300.dp)
-                                        .background(Color.White)
+                                        .fillMaxSize()
                                         .pointerInput(Unit) {
-                                            detectTapGestures(onTap = {
-                                                keyboardController?.hide()
-                                            })
-                                            detectHorizontalDragGestures { _, _ ->
-                                                keyboardController?.hide()
+                                            awaitPointerEventScope {
+                                                while (true) {
+                                                    awaitPointerEvent()
+                                                    keyboardController?.hide()
+                                                }
                                             }
                                         }
                                 ) {
-                                    if (searchedShopList.isEmpty()) {
-                                        item {
-                                            Text(
-                                                text = "No shops found",
-                                                modifier = Modifier.padding(16.dp),
-                                                color = Color.Gray
-                                            )
-                                        }
-                                    } else {
-                                        items(searchedShopList) { shop ->
-                                            ShopCardView(shop, onShopClicked = { shopId ->
-                                                NavigationProvider.navController.navigate(
-                                                    Routes.ShopDetails(
-                                                        shopId = shopId,
-                                                        userId = currentUserId
-                                                    )
+                                    LazyColumn(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 5.dp)
+                                            .background(Color.White)
+                                    ) {
+                                        if (searchedShopList.isEmpty()) {
+                                            item {
+                                                Text(
+                                                    text = "No shops found",
+                                                    modifier = Modifier.padding(16.dp),
+                                                    color = Color.Gray
                                                 )
-                                            })
+                                            }
+                                        } else {
+                                            items(searchedShopList) { shop ->
+                                                ShopCardView(shop, onShopClicked = { shopId ->
+                                                    NavigationProvider.navController.navigate(
+                                                        Routes.ShopDetails(
+                                                            shopId = shopId,
+                                                            userId = currentUserId
+                                                        )
+                                                    )
+                                                })
+                                            }
                                         }
                                     }
                                 }
@@ -432,38 +440,45 @@ fun ShopScreen(viewModel: ShopViewModal = ViewModals.shopViewModel) {
                         }
                     } else {
                         // Shop List (Properly Weighted)
-                        LazyColumn(
+                        Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .weight(1f)
-                                .nestedScroll(nestedScrollConnection)
-                                .padding(top = 5.dp)
                                 .pointerInput(Unit) {
-                                    detectTapGestures(onTap = {
-                                        keyboardController?.hide()
-                                    })
-                                },
-                            state = columnState
-                        ) {
-                            if (bannerList.isNotEmpty()) {
-                                item {
-                                    BannerCarouselWidget(
-                                        bannerList,
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
+                                    awaitPointerEventScope {
+                                        while (true) {
+                                            awaitPointerEvent()
+                                            keyboardController?.hide()
+                                        }
+                                    }
                                 }
-                            }
-                            items(
-                                shopListNew,
-                                key = { it.shop.shopId ?: NSUUID.UUID().toString() }) { shop ->
-                                ShopCardView(shop, onShopClicked = { shopId ->
-                                    NavigationProvider.navController.navigate(
-                                        Routes.ShopDetails(
-                                            shopId = shopId,
-                                            userId = currentUserId
+                        ) {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .nestedScroll(nestedScrollConnection)
+                                    .padding(top = 5.dp),
+                                state = columnState
+                            ) {
+                                if (bannerList.isNotEmpty()) {
+                                    item {
+                                        BannerCarouselWidget(
+                                            bannerList,
+                                            modifier = Modifier.fillMaxWidth()
                                         )
-                                    )
-                                })
+                                    }
+                                }
+                                items(
+                                    shopListNew,
+                                    key = { it.shop.shopId ?: NSUUID.UUID().toString() }) { shop ->
+                                    ShopCardView(shop, onShopClicked = { shopId ->
+                                        NavigationProvider.navController.navigate(
+                                            Routes.ShopDetails(
+                                                shopId = shopId,
+                                                userId = currentUserId
+                                            )
+                                        )
+                                    })
+                                }
                             }
                         }
                     }
@@ -479,7 +494,8 @@ fun ShopCardView(shopWithProduct: ShopWithProducts, onShopClicked: (String) -> U
     val cardBackgroundColor = Color.fromHex(shopWithProduct.shop.bgColourId ?: "")
     val shopNameColor = Color.fromHex(shopWithProduct.shop.fontColourId)
     val fontResource: FontResource =
-        getFontResourceByName(shopWithProduct.shop.fontStyleId ?: "") ?: Res.font.manrope_bold
+//        getFontResourceByName(shopWithProduct.shop.fontStyleId ?: "") ?: Res.font.manrope_bold
+        Res.font.manrope_bold
     val customFont = FontFamily(Font(fontResource))
 
     Card(
@@ -505,12 +521,6 @@ fun ShopCardView(shopWithProduct: ShopWithProducts, onShopClicked: (String) -> U
                     ) {
                         Text(
                             text = shopWithProduct.shop.shopName.orEmpty(),
-                            style = TextStyle(
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = FontFamily.Serif,
-                                lineHeight = 14.sp
-                            ),
                             color = shopNameColor,
                             modifier = Modifier
                                 .fillMaxWidth()

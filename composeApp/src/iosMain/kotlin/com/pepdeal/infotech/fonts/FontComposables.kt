@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -20,7 +19,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -32,23 +30,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.VerticalAlignmentLine
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.pepdeal.infotech.color.ColorItemCard
 import com.pepdeal.infotech.shop.OpenYourShopViewModal
-import com.pepdeal.infotech.shop.ShopViewModal
-import com.pepdeal.infotech.util.ColorUtil
 import com.pepdeal.infotech.util.NavigationProvider
-import com.pepdeal.infotech.util.Util
-import com.pepdeal.infotech.util.Util.fromHex
 import com.pepdeal.infotech.util.ViewModals
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.FontResource
-import pepdealios.composeapp.generated.resources.Res
 
 
 @OptIn(ExperimentalMaterial3Api::class)

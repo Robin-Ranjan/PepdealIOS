@@ -29,12 +29,10 @@ class ProductViewModal() : ViewModel() {
     private val _isSearchLoading = MutableStateFlow(false) // Loading state
     val isSearchLoading: StateFlow<Boolean> get() = _isSearchLoading
 
-
     private var lastSearchQuery = MutableStateFlow("")
 
 //    private var lastSearchQuery: String = ""
     private var searchJob: Job? = null  // Track the ongoing search job
-
 
     // Define this at the ViewModel level
     private var currentPage = 0  // Page counter
@@ -42,38 +40,38 @@ class ProductViewModal() : ViewModel() {
     private var endReached = false  // Flag to prevent further loading if no more data
 
     fun fetchItemsPage() {
-        println("📌 fetchItemsPage() called")  // ✅ Add this
+        println("📌 fetchItemsPage() called")
 
-        if (_isLoading.value || endReached) {
-            println("⛔ Skipping fetch: isLoading=${_isLoading.value}, endReached=$endReached")
+        // Prevent duplicate load
+        if (_isLoading.value) {
+            println("⛔ Skipping fetch: Already loading.")
             return
         }
+
         _isLoading.value = true
 
         viewModelScope.launch {
-            var itemCount = 0 // Track how many items are loaded
-            val lastProductId = _products.value.lastOrNull()?.productId // ✅ Update pagination index
             try {
-                productRepo.getAllProductsFlowPagination(lastProductId, pageSize)
-                    .collect { newProduct ->
-                        println("📌 New product received: ${newProduct.productName}")
-                        _products.update { oldList ->
-                            (oldList + newProduct).distinctBy { it.productId }
-                        }
-                        itemCount++
+                val newProducts = mutableListOf<ShopItems>()
+
+                productRepo.getAllNearbyProductsFlow()
+                    .collect { product ->
+                        newProducts.add(product)
+//                        if(_isLoading.value) _isLoading.value = false
                     }
+
+                println("📦 Fetched ${newProducts.size} nearby products")
+
+                // ✅ Merge with existing, removing duplicates
+                _products.update { currentList ->
+                    (currentList + newProducts).distinctBy { it.productId }
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
                 println("⚠️ Error fetching products: ${e.message}")
+            } finally {
+                _isLoading.value = false
             }
-
-            if (itemCount == 0) {
-                endReached = true // ✅ Only stop if **no new items** were added
-                println("🚨 No more products. Stopping pagination!")
-            }
-
-            currentPage++
-            _isLoading.value = false
         }
     }
 

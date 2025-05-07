@@ -14,6 +14,7 @@ data class ShopMaster(
     val shopArea:String? = null,
     val city:String? = null,
     val state:String? = null,
+    val pinCode: String = "",
     val shopDescription:String? = null,
     val bgColourId:String? = null,
     val fontSizeId:String? = null,

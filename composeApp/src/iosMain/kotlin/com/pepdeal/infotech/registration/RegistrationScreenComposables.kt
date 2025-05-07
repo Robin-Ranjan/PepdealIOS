@@ -55,7 +55,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
-import pepdealios.composeapp.generated.resources.pepdeal_logo_new
+import pepdealios.composeapp.generated.resources.pepdeal_logo
 
 @Composable
 fun RegisterScreen() {
@@ -110,7 +110,7 @@ fun RegisterScreen() {
                     ) {
                         // First View (Logo and Text Fields)
                         Image(
-                            painter = painterResource(Res.drawable.pepdeal_logo_new),
+                            painter = painterResource(Res.drawable.pepdeal_logo),
                             contentDescription = null,
                             modifier = Modifier
                                 .size(300.dp, 80.dp)

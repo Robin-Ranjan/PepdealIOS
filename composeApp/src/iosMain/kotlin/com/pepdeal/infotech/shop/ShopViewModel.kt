@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class ShopViewModal : ViewModel() {
+class ShopViewModel : ViewModel() {
     private val shopRepo = ShopRepo()
     private val _shops = MutableStateFlow<List<ShopWithProducts>>(emptyList())
     val shops: StateFlow<List<ShopWithProducts>> = _shops.asStateFlow()
@@ -42,7 +42,7 @@ class ShopViewModal : ViewModel() {
         _isLoading.value = true
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                shopRepo.getActiveShopsFlowPaginationEmitWithFilter(lastShopId)
+                shopRepo.getNearbyActiveShopsFlow()
                     .collect { newShop ->  // ✅ newShop is a single item, not a list
                         if (newShop.shop.shopId != lastShopId) { // ✅ Prevent duplicate shop
                             lastShopId = newShop.shop.shopId

@@ -73,10 +73,9 @@ import pepdealios.composeapp.generated.resources.Res
 import pepdealios.composeapp.generated.resources.compose_multiplatform
 import pepdealios.composeapp.generated.resources.manrope_light
 import pepdealios.composeapp.generated.resources.manrope_medium
-import pepdealios.composeapp.generated.resources.pepdeal_logo_new
+import pepdealios.composeapp.generated.resources.pepdeal_logo
 import pepdealios.composeapp.generated.resources.super_shop_logo
 import pepdealios.composeapp.generated.resources.super_shop_positive
-import kotlin.math.abs
 
 @Composable
 fun FeedScreen(viewModal: ShopVideosViewModal = ViewModals.shopVideosViewModal) {
@@ -94,11 +93,11 @@ fun FeedScreen(viewModal: ShopVideosViewModal = ViewModals.shopVideosViewModal) 
     val saveShopSates = remember { mutableStateMapOf<String, Boolean>() }
     var currentlyPlayingIndex by remember { mutableStateOf(-1) }
 
-    LaunchedEffect(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset) {
-        val visibleItems = listState.layoutInfo.visibleItemsInfo
-        val centerIndex = visibleItems.minByOrNull { abs(it.offset) }?.index ?: -1
-        currentlyPlayingIndex = centerIndex
-    }
+//    LaunchedEffect(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset) {
+//        val visibleItems = listState.layoutInfo.visibleItemsInfo
+//        val centerIndex = visibleItems.minByOrNull { abs(it.offset) }?.index ?: -1
+//        currentlyPlayingIndex = centerIndex
+//    }
 
     MaterialTheme {
         Box(
@@ -119,13 +118,13 @@ fun FeedScreen(viewModal: ShopVideosViewModal = ViewModals.shopVideosViewModal) 
                         .fillMaxWidth()
                 ) {
                     Image(
-                        painter = painterResource(Res.drawable.pepdeal_logo_new),
+                        painter = painterResource(Res.drawable.pepdeal_logo),
                         contentDescription = "Your image description",
                         modifier = Modifier
                             .width(130.dp)
                             .height(28.dp)
                             .padding(start = 5.dp),
-                        contentScale = ContentScale.Fit
+                        contentScale = ContentScale.Crop
                     )
                 }
 

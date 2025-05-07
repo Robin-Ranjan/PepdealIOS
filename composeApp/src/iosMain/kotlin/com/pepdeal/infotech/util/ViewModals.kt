@@ -14,7 +14,7 @@ import com.pepdeal.infotech.product.updateProduct.UpdateProductViewModal
 import com.pepdeal.infotech.shop.OpenYourShopViewModal
 import com.pepdeal.infotech.shop.editShop.EditShopDetailsViewModal
 import com.pepdeal.infotech.shop.shopDetails.ShopDetailsViewModal
-import com.pepdeal.infotech.shop.ShopViewModal
+import com.pepdeal.infotech.shop.ShopViewModel
 import com.pepdeal.infotech.shopVideo.favShopVideo.FavoriteShopVideoViewModal
 import com.pepdeal.infotech.shopVideo.ShopVideosViewModal
 import com.pepdeal.infotech.shopVideo.uploadShopVideo.UploadShopVideoViewModal
@@ -24,7 +24,7 @@ import com.pepdeal.infotech.tickets.TicketViewModal
 import com.pepdeal.infotech.user.PersonalInfoViewModal
 
 object ViewModals {
-    val shopViewModel by lazy { ShopViewModal() }
+    val shopViewModel by lazy { ShopViewModel() }
     val productViewModal by lazy { ProductViewModal() }
     val categoriesViewModel by lazy { CategoriesViewModel() }
     val loginViewModal by lazy { LoginViewModal() }

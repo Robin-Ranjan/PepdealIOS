@@ -27,7 +27,11 @@ data class ProductMaster(
     var isActive: String = "", //0->Active, 1->Block by the shop Owner
     val flag: String = "", // 0->Active, 1-> Block by the admin Control Panel
     val createdAt: String = "",
-    val updatedAt: String = ""
+    val updatedAt: String = "",
+    val isShopActive: String = "",
+    val isShopBlock: String = "",
+    val shopLongitude: String = "",
+    val shopLatitude: String = "",
 )
 
 @Serializable

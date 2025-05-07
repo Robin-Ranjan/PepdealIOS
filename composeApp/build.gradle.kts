@@ -18,6 +18,7 @@ kotlin {
 //            export(project("io.github.mirzemehdi:kmpnotifier:1.4.0"))
             baseName = "ComposeApp"
             isStatic = true
+            freeCompilerArgs += listOf("-Xbinary=bundleId=com.pepdeal.infotech.PepdealApp")
         }
     }
 

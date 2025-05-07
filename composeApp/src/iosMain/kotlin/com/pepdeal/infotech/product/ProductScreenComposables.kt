@@ -13,7 +13,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -108,7 +107,7 @@ import pepdealios.composeapp.generated.resources.black_heart
 import pepdealios.composeapp.generated.resources.manrope_bold
 import pepdealios.composeapp.generated.resources.manrope_medium
 import pepdealios.composeapp.generated.resources.manrope_semibold
-import pepdealios.composeapp.generated.resources.pepdeal_logo_new
+import pepdealios.composeapp.generated.resources.pepdeal_logo
 import pepdealios.composeapp.generated.resources.place_holder
 import pepdealios.composeapp.generated.resources.red_heart
 
@@ -123,7 +122,7 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
 
     // Observables
     val productNewList by viewModel.products.collectAsStateWithLifecycle()
-    val filteredProducts by  viewModel.searchedProducts.collectAsStateWithLifecycle()
+    val filteredProducts by viewModel.searchedProducts.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle(initialValue = false)
     val isSearchLoading by viewModel.isSearchLoading.collectAsStateWithLifecycle(initialValue = false)
 
@@ -151,26 +150,26 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
             .distinctUntilChanged()
             .collectLatest { debouncedQuery ->
                 // Call your viewModel function with the debounced search query
-                if(debouncedQuery.isNotEmpty()){
+                if (debouncedQuery.isNotEmpty()) {
                     viewModel.fetchSearchedItemsPage(debouncedQuery)
                 }
             }
     }
 
     // Observe scroll position to load more when reaching near the bottom
-    LaunchedEffect(listState) {
-        snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0 }
-            .distinctUntilChanged()
-            .collect { lastVisibleIndex ->
-                val totalItems = listState.layoutInfo.totalItemsCount
-                if (totalItems > 0 && lastVisibleIndex >= totalItems - 10 && !viewModel.isLoading.value && searchQuery.isEmpty()) {
-                    coroutineScope.launch {
-                        println("loading more ")
-                        viewModel.fetchItemsPage()
-                    }
-                }
-            }
-    }
+//    LaunchedEffect(listState) {
+//        snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0 }
+//            .distinctUntilChanged()
+//            .collect { lastVisibleIndex ->
+//                val totalItems = listState.layoutInfo.totalItemsCount
+//                if (totalItems > 0 && lastVisibleIndex >= totalItems - 10 && !viewModel.isLoading.value && searchQuery.isEmpty()) {
+//                    coroutineScope.launch {
+//                        println("loading more ")
+//                        viewModel.fetchItemsPage()
+//                    }
+//                }
+//            }
+//    }
 
     MaterialTheme {
         Box(
@@ -195,13 +194,13 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
                         modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)
                     ) {
                         Image(
-                            painter = painterResource(Res.drawable.pepdeal_logo_new),
+                            painter = painterResource(Res.drawable.pepdeal_logo),
                             contentDescription = "App Logo",
                             modifier = Modifier
                                 .width(130.dp)
                                 .height(28.dp)
                                 .padding(start = 5.dp),
-                            contentScale = ContentScale.FillBounds
+                            contentScale = ContentScale.Crop
                         )
                     }
                 }
@@ -283,57 +282,69 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
                         }
 
                         else -> {
-                            LazyVerticalGrid(
-                                columns = GridCells.Fixed(2),
-                                modifier = Modifier.fillMaxSize().padding(5.dp),
-                                horizontalArrangement = Arrangement.spacedBy(5.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-
-                                if (filteredProducts.isEmpty()) {
-                                    item {
-                                        Text(
-                                            text = "No products found",
-                                            modifier = Modifier.padding(16.dp),
-                                            color = Color.Gray
-                                        )
-                                    }
-                                } else {
-                                    items(
-                                        filteredProducts,
-                                        key = { it.productId }) { product ->
-                                        val isFavorite =
-                                            favoriteStates[product.productId] ?: false
-                                        val heartIcon =
-                                            if (isFavorite && currentUserId != "-1") {
-                                                Res.drawable.red_heart
-                                            } else {
-                                                Res.drawable.black_heart
-                                            }
-
-                                        // Load Favorite Status for Logged-In Users
-                                        LaunchedEffect(product.productId) {
-                                            if (currentUserId != "-1" && !favoriteStates.containsKey(
-                                                    product.productId
-                                                )
-                                            ) {
-                                                viewModel.checkFavoriteExists(
-                                                    currentUserId,
-                                                    product.productId
-                                                ) { exists ->
-                                                    favoriteStates[product.productId] = exists
-                                                }
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .pointerInput(Unit) {
+                                        awaitPointerEventScope {
+                                            while (true) {
+                                                awaitPointerEvent()
+                                                keyboardController?.hide()
                                             }
                                         }
+                                    }
+                            ) {
+                                LazyVerticalGrid(
+                                    columns = GridCells.Fixed(2),
+                                    modifier = Modifier.fillMaxSize().padding(5.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
 
-                                        // Product Card with Animation
-                                        AnimatedVisibility(
-                                            visible = true,
-                                            enter = fadeIn(tween(300)) + slideInVertically(
-                                                initialOffsetY = { it }),
-                                            exit = fadeOut(tween(300)) + slideOutVertically(
-                                                targetOffsetY = { it })
-                                        ) {
+                                    if (filteredProducts.isEmpty()) {
+                                        item {
+                                            Text(
+                                                text = "No products found",
+                                                modifier = Modifier.padding(16.dp),
+                                                color = Color.Gray
+                                            )
+                                        }
+                                    } else {
+                                        items(
+                                            filteredProducts,
+                                            key = { it.productId }) { product ->
+                                            val isFavorite =
+                                                favoriteStates[product.productId] ?: false
+                                            val heartIcon =
+                                                if (isFavorite && currentUserId != "-1") {
+                                                    Res.drawable.red_heart
+                                                } else {
+                                                    Res.drawable.black_heart
+                                                }
+
+                                            // Load Favorite Status for Logged-In Users
+                                            LaunchedEffect(product.productId) {
+                                                if (currentUserId != "-1" && !favoriteStates.containsKey(
+                                                        product.productId
+                                                    )
+                                                ) {
+                                                    viewModel.checkFavoriteExists(
+                                                        currentUserId,
+                                                        product.productId
+                                                    ) { exists ->
+                                                        favoriteStates[product.productId] = exists
+                                                    }
+                                                }
+                                            }
+
+                                            // Product Card with Animation
+//                                            AnimatedVisibility(
+//                                                visible = true,
+//                                                enter = fadeIn(tween(300)) + slideInVertically(
+//                                                    initialOffsetY = { it }),
+//                                                exit = fadeOut(tween(300)) + slideOutVertically(
+//                                                    targetOffsetY = { it })
+//                                            ) {
                                             ProductCard(
                                                 shopItems = product,
                                                 heartRes = painterResource(heartIcon),
@@ -360,6 +371,7 @@ fun ProductScreen(viewModel: ProductViewModal = ViewModals.productViewModal) {
                                                 }
                                             )
                                         }
+//                                        }
                                     }
                                 }
                             }
@@ -521,7 +533,8 @@ fun ProductCard(
                             .align(Alignment.TopStart)
                             .background(
                                 Color(0xFFFF9800).copy(alpha = 0.7f),
-                                shape = RoundedCornerShape(bottomEnd = 8.dp))
+                                shape = RoundedCornerShape(bottomEnd = 8.dp)
+                            )
                             .padding(horizontal = 8.dp, vertical = 6.dp)
                     ) {
                         Text(

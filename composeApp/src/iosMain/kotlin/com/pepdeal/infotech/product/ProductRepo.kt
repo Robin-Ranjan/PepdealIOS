@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import kotlin.math.*
 
 class ProductRepo {
     private val json = Json { ignoreUnknownKeys = true }
@@ -115,7 +116,11 @@ class ProductRepo {
                                             flag = product.flag,
                                             subCategoryId = product.subCategoryId,
                                             searchTag = product.searchTag,
-                                            onCall = product.onCall
+                                            onCall = product.onCall,
+                                            isShopBlock = product.isShopBlock,
+                                            isShopActive = product.isShopActive,
+                                            shopLongitude = product.shopLongitude,
+                                            shopLatitude = product.shopLatitude
                                         )
 
                                         send(shopItem)
@@ -205,7 +210,7 @@ class ProductRepo {
                 }
 
 
-                if(validProducts.isEmpty()){
+                if (validProducts.isEmpty()) {
                     send(null)
                     return@channelFlow
                 }
@@ -277,6 +282,144 @@ class ProductRepo {
 //        }
     }
 
+    fun getAllNearbyProductsFlow(
+        userLat: Double = 28.7162092,
+        userLng: Double = 77.1170743,
+        radiusKm: Double = 10.0
+    ): Flow<ShopItems> = channelFlow {
+        val client = HttpClient(Darwin) {
+            install(ContentNegotiation) {
+                json(Json { ignoreUnknownKeys = true })
+            }
+        }
+
+        try {
+            println("🌐 Fetching all products from: ${FirebaseUtil.BASE_URL}product_master.json")
+
+            val url = "${FirebaseUtil.BASE_URL}product_master.json"
+            val response: HttpResponse = client.get(url) {
+                contentType(ContentType.Application.Json)
+            }
+
+            println("📥 Response status: ${response.status}")
+
+            if (response.status == HttpStatusCode.OK) {
+                val responseBody: String = response.bodyAsText()
+                println("🧾 Product response length: ${responseBody.length}")
+
+                val productsMap: Map<String, ProductMaster> = json.decodeFromString(responseBody)
+                println("🔍 Total products fetched: ${productsMap.size}")
+
+                val validProductsWithDistance = productsMap.values.mapNotNull { product ->
+                    try {
+                        if (product.isActive == "0" && product.flag == "0" &&
+                            product.isShopActive == "0" && product.isShopBlock == "0"
+                        ) {
+                            val lat = product.shopLatitude.toDoubleOrNull()
+                            val lon = product.shopLongitude.toDoubleOrNull()
+
+                            if (lat != null && lon != null) {
+                                val distance = calculateDistanceInKm(userLat, userLng, lat, lon)
+                                println("📍 Product ${product.productId} is $distance km away")
+
+                                if (distance <= radiusKm) {
+                                    product to distance
+                                } else {
+                                    println("❌ Skipping ${product.productId}: outside radius")
+                                    null
+                                }
+                            } else {
+                                println("⚠️ Skipping ${product.productId}: invalid coordinates")
+                                null
+                            }
+                        } else {
+                            println("❌ Skipping ${product.productId}: inactive or blocked")
+                            null
+                        }
+                    } catch (e: Exception) {
+                        println("⚠️ Error processing product ${product.productId}: ${e.message}")
+                        null
+                    }
+                }.sortedBy { it.second }
+
+                println("✅ Valid nearby products count: ${validProductsWithDistance.size}")
+
+                coroutineScope {
+                    validProductsWithDistance.map { (product, distance) ->
+                        async {
+                            try {
+                                println("📸 Fetching image for ${product.productId}")
+
+                                val imageResponse: HttpResponse =
+                                    client.get("${FirebaseUtil.BASE_URL}product_images_master.json?orderBy=\"productId\"&equalTo=\"${product.productId}\"") {
+                                        contentType(ContentType.Application.Json)
+                                    }
+
+                                val imageUrl: String? = if (imageResponse.status == HttpStatusCode.OK) {
+                                    val imageBody: String = imageResponse.bodyAsText()
+                                    val imagesMap: Map<String, ProductImageMaster> =
+                                        json.decodeFromString(imageBody)
+                                    imagesMap.values.firstOrNull()?.productImages
+                                } else {
+                                    println("⚠️ No image found for ${product.productId}")
+                                    null
+                                }
+
+                                val shopItem = ShopItems(
+                                    image = imageUrl.orEmpty(),
+                                    productId = product.productId,
+                                    shopId = product.shopId,
+                                    productName = product.productName,
+                                    sellingPrice = product.sellingPrice,
+                                    mrp = product.mrp,
+                                    description = product.description,
+                                    category = product.categoryId,
+                                    discountMrp = product.discountMrp,
+                                    isActive = product.isActive,
+                                    flag = product.flag,
+                                    subCategoryId = product.subCategoryId,
+                                    searchTag = product.searchTag,
+                                    onCall = product.onCall,
+                                    isShopBlock = product.isShopBlock,
+                                    isShopActive = product.isShopActive,
+                                    shopLongitude = product.shopLongitude,
+                                    shopLatitude = product.shopLatitude
+                                )
+
+                                send(shopItem)
+                                println("✅ Emitted product ${product.productId} at $distance km")
+                            } catch (e: Exception) {
+                                println("⚠️ Error emitting product ${product.productId}: ${e.message}")
+                            }
+                        }
+                    }.awaitAll()
+                }
+            } else {
+                throw Exception("❌ Error fetching product data: ${response.status}")
+            }
+        } catch (e: Exception) {
+            println("❌ General error: ${e.message}")
+        } finally {
+            println("🔒 Closing HTTP client")
+            client.close()
+        }
+    }
+
+    private fun calculateDistanceInKm(
+        lat1: Double, lon1: Double,
+        lat2: Double, lon2: Double
+    ): Double {
+        val earthRadius = 6371.0
+        val dLat = (lat2 - lat1).toRadians()
+        val dLon = (lon2 - lon1).toRadians()
+        val a = sin(dLat / 2).pow(2) +
+                cos(lat1.toRadians()) * cos(lat2.toRadians()) *
+                sin(dLon / 2).pow(2)
+        val c = 2 * atan2(sqrt(a), sqrt(1 - a))
+        return earthRadius * c
+    }
+
+    private fun Double.toRadians(): Double = this * PI / 180
 }
 
 object HttpClientProvider {
