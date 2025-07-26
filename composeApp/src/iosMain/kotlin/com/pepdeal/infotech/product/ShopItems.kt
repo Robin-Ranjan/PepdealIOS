@@ -1,5 +1,8 @@
 package com.pepdeal.infotech.product
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class ShopItems(
     var productId: String = "",
     var shopId: String = "",
@@ -10,15 +13,15 @@ data class ShopItems(
     val description: String = "",
     val category: String = "",
     val discountMrp: String = "",
-    var isActive:String = "",
-    var flag:String = "",
-    var subCategoryId :String = "",
-    val searchTag: String = "",
-    val onCall:String = "",
-    val createdAt:String = "",
-    val updatedAt:String = "",
-    val isShopActive: String = "",
-    val isShopBlock: String = "",
+    var productActive: String = "",
+    var flag: String = "",
+    var subCategoryId: String = "",
+    val searchTag: List<String> = emptyList(),
+    val onCall: String = "",
+    val createdAt: String = "",
+    val updatedAt: String = "",
+    val shopActive: String = "",
+    val shopBlock: String = "",
     val shopLongitude: String = "",
     val shopLatitude: String = "",
 )

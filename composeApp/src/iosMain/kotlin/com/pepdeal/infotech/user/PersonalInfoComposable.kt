@@ -169,7 +169,8 @@ fun PersonalInfoScreen(
                                     imageBitMap = {
                                         viewModal.uploadNewProfilePic(userId, it)
                                     },
-                                    imageUrl = profileImageUrl?.profilePicUrl ?: ""
+                                    imageUrl = profileImageUrl?.profilePicUrl ?: "",
+                                    userId = userId
                                 )
                             }
 

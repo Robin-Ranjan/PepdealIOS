@@ -1,18 +1,30 @@
 package com.pepdeal.infotech.shopVideo
 
-import com.pepdeal.infotech.shop.modal.ShopMaster
-import com.pepdeal.infotech.shopVideo.favShopVideo.FavouriteShopVideo
-import com.pepdeal.infotech.util.FirebaseUtil
+import com.pepdeal.infotech.core.data.safeCall
+import com.pepdeal.infotech.core.databaseUtils.DatabaseCollection
+import com.pepdeal.infotech.core.databaseUtils.DatabaseQueryResponse
+import com.pepdeal.infotech.core.databaseUtils.DatabaseRequest
+import com.pepdeal.infotech.core.databaseUtils.DatabaseResponse
+import com.pepdeal.infotech.core.databaseUtils.DatabaseUtil
+import com.pepdeal.infotech.core.databaseUtils.DatabaseValue
+import com.pepdeal.infotech.core.databaseUtils.FirestoreFilter
+import com.pepdeal.infotech.core.databaseUtils.buildFirestoreQuery
+import com.pepdeal.infotech.core.domain.AppResult
+import com.pepdeal.infotech.core.domain.DataError
+import com.pepdeal.infotech.core.utils.AppJson
+import com.pepdeal.infotech.placeAPI.httpClient
+import com.pepdeal.infotech.shop.shopDetails.ShopDetailsRepo
+import com.pepdeal.infotech.shopVideo.favShopVideo.model.FavouriteShopVideo
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.darwin.Darwin
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.delete
-import io.ktor.client.request.get
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
@@ -20,13 +32,10 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 
 class ShopVideosRepo {
-//    private val json = Json { ignoreUnknownKeys = true }
-    private val client = HttpClient(Darwin){
-        install(ContentNegotiation){
+    private val client = HttpClient(Darwin) {
+        install(ContentNegotiation) {
             json(Json {
                 prettyPrint = true
                 isLenient = true
@@ -37,45 +46,90 @@ class ShopVideosRepo {
 
     fun fetchShopVideoWithShopDetailsFlow(): Flow<ShopVideoWithShopDetail> = flow {
         try {
-            // Step 1: Fetch all shop videos where flag = "0"
-            val shopVideosResponse: HttpResponse = client.get("${FirebaseUtil.BASE_URL}shops_videos_master.json?orderBy=\"flag\"&equalTo=\"0\"")
-            val shopVideosMap = shopVideosResponse.body<Map<String, ShopVideosMaster>>()
+            // Step 1: Query Firestore for videos with flag == "0" and isActive == "0"
+            val query = buildFirestoreQuery(
+                collection = DatabaseCollection.SHOP_VIDEOS_MASTER,
+                filters = listOf(
+                    FirestoreFilter("flag", "0"),
+                    FirestoreFilter("isActive", "0")
+                )
+            )
 
-            val shopVideos = shopVideosMap.values.filter { it.isActive == "0" }
+            val videoQueryResponse: AppResult<List<DatabaseQueryResponse>, DataError.Remote> =
+                safeCall {
+                    client.post(DatabaseUtil.DATABASE_QUERY_URL) {
+                        contentType(ContentType.Application.Json)
+                        setBody(query)
+                    }.body()
+                }
 
-            // Step 2: Fetch shop details for each shopId
-            for (shopVideo in shopVideos) {
-                val shopDetailsResponse: HttpResponse = client.get("${FirebaseUtil.BASE_URL}shop_master/${shopVideo.shopId}.json")
+            if (videoQueryResponse is AppResult.Error) {
+                println("❌ Failed to fetch shop videos.")
+                return@flow
+            }
 
-                if (shopDetailsResponse.status == HttpStatusCode.OK) {
-                    val shopDetails = shopDetailsResponse.body<ShopMaster>()
+            if (videoQueryResponse is AppResult.Success) {
+                println("✅ Shop videos fetched successfully.")
+                val validVideos = videoQueryResponse.data.map { result ->
+                    val fields = result.document?.fields ?: return@map null
 
-                    // Step 3: Check shop conditions and emit the final result
-//                    if (shopDetails.isActive == "0" && shopDetails.flag == "0") {
-                        emit(ShopVideoWithShopDetail(shopVideo, shopDetails))
-//                    }
+                    ShopVideosMaster(
+                        shopId = (fields["shopId"] as? DatabaseValue.StringValue)?.stringValue.orEmpty(),
+                        videoUrl = (fields["videoUrl"] as? DatabaseValue.StringValue)?.stringValue.orEmpty(),
+                        thumbNailUrl = (fields["thumbNailUrl"] as? DatabaseValue.StringValue)?.stringValue.orEmpty(),
+                        flag = (fields["flag"] as? DatabaseValue.StringValue)?.stringValue.orEmpty(),
+                        isActive = (fields["isActive"] as? DatabaseValue.StringValue)?.stringValue.orEmpty(),
+                        shopVideoId = (fields["shopVideoId"] as? DatabaseValue.StringValue)?.stringValue.orEmpty(),
+                        createdAt = (fields["createdAt"] as? DatabaseValue.StringValue)?.stringValue.orEmpty(),
+                        updatedAt = (fields["updatedAt"] as? DatabaseValue.StringValue)?.stringValue.orEmpty()
+                    )
+                }
+
+                for (shopVideo in validVideos) {
+                    shopVideo?.let {
+                        val shopDetails = ShopDetailsRepo().fetchShopDetails(it.shopId)
+                        if (shopDetails != null) {
+                            println("❌ Failed to fetch shop details for shopId=${shopVideo.shopId}")
+                            emit(ShopVideoWithShopDetail(it, shopDetails))
+                        }
+                    }
                 }
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            println(e.message)
+            println("🔥 Error: ${e.message}")
         }
     }
+
 
     suspend fun isSavedVideo(userId: String, shopId: String): Boolean {
         return try {
             // Query Firebase to get items matching the productId
-            val queryUrl = "${FirebaseUtil.BASE_URL}favourite_shop_video_master.json?orderBy=\"user_id\"&equalTo=\"$userId\""
-            val responseString: String = client.get(queryUrl).body() // Fetch response as String
+            val queryBody = buildFirestoreQuery(
+                collection = DatabaseCollection.FAVOURITE_SHOP_VIDEO_MASTER,
+                filters = listOf(
+                    FirestoreFilter("userId", userId),
+                    FirestoreFilter("shopId", shopId)
+                )
+            )
 
-            // Parse JSON manually
-            println(userId)
-            val responseJson = Json.parseToJsonElement(responseString).jsonObject
-            println(responseJson)
-            // Check if any entry has the matching userId
-            responseJson.values.any { jsonElement ->
-                val favoriteItem = jsonElement.jsonObject
-                favoriteItem["shop_id"]?.jsonPrimitive?.content == shopId
+            val response: AppResult<List<DatabaseQueryResponse>, DataError.Remote> = safeCall {
+                client.post(DatabaseUtil.DATABASE_QUERY_URL) {
+                    contentType(ContentType.Application.Json)
+                    setBody(queryBody)
+                }.body()
+            }
+
+            when (response) {
+                is AppResult.Success -> {
+                    val found = response.data.any { it.document?.fields?.isNotEmpty() == true }
+                    found
+                }
+
+                is AppResult.Error -> {
+                    println("Firestore query error: ${response.error.message}")
+                    false
+                }
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -85,29 +139,46 @@ class ShopVideosRepo {
 
     suspend fun addSaveVideo(shopVideo: FavouriteShopVideo) {
         try {
-            val client = HttpClient(Darwin) {
-                install(ContentNegotiation) {
-                    json(Json {
-                        prettyPrint = true
-                        isLenient = true
-                        ignoreUnknownKeys = true
-                    })
+
+            val response =
+                httpClient.post("${DatabaseUtil.DATABASE_URL}/${DatabaseCollection.FAVOURITE_SHOP_VIDEO_MASTER}") {
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        DatabaseRequest(
+                            fields = mapOf(
+                                "userId" to DatabaseValue.StringValue(shopVideo.user_id),
+                                "shopId" to DatabaseValue.StringValue(shopVideo.shop_id),
+                                "shopVideoId" to DatabaseValue.StringValue(shopVideo.shop_video_id),
+                                "favouriteShopVideoId" to DatabaseValue.StringValue(shopVideo.favouriteShopVideoId),
+                                "createdAt" to DatabaseValue.StringValue(shopVideo.createdAt),
+                            )
+                        )
+                    )
                 }
+
+            if (response.status != HttpStatusCode.OK) {
+                println("Error: ${response.status} ${response.bodyAsText()}")
+                AppResult.Error(DataError.Remote(type = DataError.RemoteType.SERVER))
             }
+            val databaseResponse: DatabaseResponse = response.body()
+            val generatedId = databaseResponse.name.substringAfterLast("/")
 
-            val response: HttpResponse = client.post("${FirebaseUtil.BASE_URL}favourite_shop_video_master.json") {
-                contentType(ContentType.Application.Json)
-                setBody(shopVideo)
-            }
+            val patchResponse =
+                httpClient.patch("${DatabaseUtil.DATABASE_URL}/${DatabaseCollection.FAVOURITE_SHOP_VIDEO_MASTER}/$generatedId?updateMask.fieldPaths=favouriteShopVideoId") {
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        DatabaseRequest(
+                            fields = mapOf(
+                                "favouriteShopVideoId" to DatabaseValue.StringValue(generatedId)
+                            )
+                        )
+                    )
+                }
 
-            // Extract the unique key (favId) from Firebase response
-            val responseBody = response.body<Map<String, String>>()
-            val favouriteShopVideoId = responseBody["name"] ?: return // "name" contains the generated key
-
-            // Update the favorite entry with the generated favId
-            client.patch("${FirebaseUtil.BASE_URL}favourite_shop_video_master/$favouriteShopVideoId.json") {
-                contentType(ContentType.Application.Json)
-                setBody(mapOf("favouriteShopVideoId" to favouriteShopVideoId))
+            if (patchResponse.status == HttpStatusCode.OK) {
+                AppResult.Success(Unit)
+            } else {
+                AppResult.Error(DataError.Remote(type = DataError.RemoteType.SERVER))
             }
 
         } catch (e: Exception) {
@@ -116,34 +187,57 @@ class ShopVideosRepo {
     }
 
     suspend fun removeFavoriteItem(userId: String, shopId: String, onDelete: () -> Unit) {
-        val client = HttpClient(Darwin)
+        val client = HttpClient(Darwin) {
+            install(ContentNegotiation) { AppJson }
+        }
         try {
-            // 1️⃣ Query Firebase to get all items for the user
-            val queryUrl = "${FirebaseUtil.BASE_URL}favourite_shop_video_master.json?orderBy=\"user_id\"&equalTo=\"$userId\""
-            val responseString: String = client.get(queryUrl).body()  // Fetch as String
+            val requestBody = buildFirestoreQuery(
+                collection = DatabaseCollection.FAVOURITE_SHOP_VIDEO_MASTER,
+                filters = listOf(
+                    FirestoreFilter("userId", userId),
+                    FirestoreFilter("shopId", shopId)
+                ),
+                limit = 1
+            )
 
-            // 2️⃣ Parse JSON manually
-            val responseJson = Json.parseToJsonElement(responseString).jsonObject
-
-            // 3️⃣ Find the correct favId by filtering on productId
-            val favouriteShopVideoId = responseJson.entries.firstOrNull { (_, jsonElement) ->
-                jsonElement.jsonObject["shop_id"]?.jsonPrimitive?.content == shopId
-            }?.key
-
-            if (favouriteShopVideoId != null) {
-                // 4️⃣ Delete the specific item using favId
-                val deleteUrl = "${FirebaseUtil.BASE_URL}favourite_shop_video_master/$favouriteShopVideoId.json"
-                val deleteResponse: HttpResponse = client.delete(deleteUrl)
-
-                if (deleteResponse.status == HttpStatusCode.OK) {
-                    println("✅ Favorite item deleted successfully.")
-                    onDelete()
-                } else {
-                    println("❌ Failed to delete favorite item: ${deleteResponse.status}")
-                }
-            } else {
-                println("⚠️ No matching favorite item found for productId: $shopId")
+            val response: HttpResponse = httpClient.post(DatabaseUtil.DATABASE_QUERY_URL) {
+                contentType(ContentType.Application.Json)
+                setBody(requestBody)
             }
+
+            if (response.status != HttpStatusCode.OK) {
+                println("Not Deleted")
+            }
+
+
+            val databaseResponse: List<DatabaseQueryResponse> = try {
+                AppJson.decodeFromString(response.bodyAsText())
+            } catch (e: Exception) {
+                listOf(AppJson.decodeFromString<DatabaseQueryResponse>(response.bodyAsText()))
+            }
+
+            if (databaseResponse.isEmpty()) {
+                println("No matching favorite doctor found for deletion.")
+            }
+            // Extract document ID
+            val documentPath = databaseResponse.firstOrNull()?.document?.name
+            if (documentPath.isNullOrEmpty()) {
+                println("No document name found in response")
+            }
+
+            val documentId = documentPath?.substringAfterLast("/")
+            println("Extracted Document ID for deletion: $documentId")
+
+            val deleteResponse =
+                httpClient.delete("${DatabaseUtil.DATABASE_URL}/${DatabaseCollection.FAVOURITE_SHOP_VIDEO_MASTER}/$documentId")
+
+            if (deleteResponse.status == HttpStatusCode.OK) {
+                println("Deleted Doctor Fav")
+                onDelete()
+            } else {
+                println("Failed to delete favorite doctor. Status: ${deleteResponse.status}")
+            }
+
         } catch (e: Exception) {
             println("❌ Error deleting favorite item: ${e.message}")
         } finally {

@@ -27,16 +27,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pepdeal.infotech.categories.CategoriesScreen
-import com.pepdeal.infotech.product.ProductScreen
-import com.pepdeal.infotech.profile.ProfileScreen
-import com.pepdeal.infotech.shop.ShopScreen
+import com.pepdeal.infotech.product.screen.ProductScreenRoot
+import com.pepdeal.infotech.profile.ProfileScreenRoot
+import com.pepdeal.infotech.shop.ShopScreenRoot
 import com.pepdeal.infotech.shopVideo.FeedScreen
 import network.chaintech.sdpcomposemultiplatform.sdp
 import org.jetbrains.compose.resources.painterResource
 import pepdealios.composeapp.generated.resources.Res
 import pepdealios.composeapp.generated.resources.categories_icon
-import pepdealios.composeapp.generated.resources.categories_icon_
-import pepdealios.composeapp.generated.resources.categorise
 import pepdealios.composeapp.generated.resources.feed_icon
 import pepdealios.composeapp.generated.resources.product_icon
 import pepdealios.composeapp.generated.resources.profile_tab
@@ -45,6 +43,8 @@ import pepdealios.composeapp.generated.resources.shopping_bag
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun MainBottomNavigationWithPager() {
+
+    println("entered the screen main")
     var selectedItem by remember { mutableStateOf(0) }
 
     // HorizontalPager for "ViewPager2" equivalent
@@ -55,7 +55,7 @@ fun MainBottomNavigationWithPager() {
     // Define a scaffold to place the bottom navigation
     MaterialTheme {
         Scaffold(
-            contentWindowInsets =  WindowInsets(0),
+            contentWindowInsets = WindowInsets(0),
             containerColor = Color.White,
             bottomBar = {
                 CompositionLocalProvider(LocalMinimumInteractiveComponentEnforcement provides false) {
@@ -72,6 +72,7 @@ fun MainBottomNavigationWithPager() {
                             "Categories" to painterResource(Res.drawable.categories_icon),
                             "Profile" to painterResource(Res.drawable.profile_tab),
                         )
+                        println("come to after the list")
 
                         items.forEachIndexed { index, (label, icon) ->
                             NavigationBarItem(
@@ -112,13 +113,15 @@ fun MainBottomNavigationWithPager() {
             }
         ) { padding ->
             // Using HorizontalPager for ViewPager2
+
+            println("come to after the list 2")
             HorizontalPager(state = pagerState, modifier = Modifier.padding(padding)) { page ->
                 when (page) {
                     0 -> FeedScreen()
-                    1 -> ShopScreen()
-                    2 -> ProductScreen()
+                    1 -> ShopScreenRoot()
+                    2 -> ProductScreenRoot()
                     3 -> CategoriesScreen()
-                    4 -> ProfileScreen()
+                    4 -> ProfileScreenRoot()
                 }
             }
         }

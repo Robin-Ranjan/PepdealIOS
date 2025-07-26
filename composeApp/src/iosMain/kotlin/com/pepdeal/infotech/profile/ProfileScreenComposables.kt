@@ -64,13 +64,13 @@ import com.attafitamim.krop.ui.ImageCropperDialog
 import com.pepdeal.infotech.DataStore
 import com.pepdeal.infotech.ImageCompressor
 import com.pepdeal.infotech.PreferencesKeys
+import com.pepdeal.infotech.ProfileScreenUi
 import com.pepdeal.infotech.ProfileScreenViewModal
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.product.addProduct.requestPermission
 import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util
 import com.pepdeal.infotech.util.Util.toNameFormat
-import com.pepdeal.infotech.util.ViewModals
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil3.CoilImage
 import dev.icerock.moko.media.compose.BindMediaPickerEffect
@@ -85,6 +85,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
+import org.koin.compose.viewmodel.koinViewModel
 import pepdealios.composeapp.generated.resources.Res
 import pepdealios.composeapp.generated.resources.aboutus_icon
 import pepdealios.composeapp.generated.resources.arrow_forward
@@ -103,9 +104,23 @@ import pepdealios.composeapp.generated.resources.support
 import pepdealios.composeapp.generated.resources.tickets
 import pepdealios.composeapp.generated.resources.update_product_icon
 
+@Composable
+fun ProfileScreenRoot(viewModal: ProfileScreenViewModal = koinViewModel()) {
+    val uiState by viewModal.state.collectAsStateWithLifecycle()
+
+    ProfileScreen(
+        uiState = uiState,
+        viewModal = viewModal
+    )
+}
 
 @Composable
-fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenViewModal) {
+fun ProfileScreen(
+    uiState: ProfileScreenUi,
+    viewModal: ProfileScreenViewModal
+) {
+
+
     val datastore = DataStore.dataStore
 
     val currentUserId by datastore.data.map { it[PreferencesKeys.USERID_KEY] ?: "-1" }
@@ -218,6 +233,7 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                                     picker = picker,
                                     snackBar = snackBar,
                                     imageUrl = profileImageUrl?.profilePicUrl ?: "",
+                                    userId = currentUserId,
                                     imageBitMap = {
                                         viewModal.uploadNewProfilePic(currentUserId, it)
                                     }
@@ -267,11 +283,12 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                                 return@ProfileMenuItem
                             }
                             NavigationProvider.navController.navigate(
-                                Routes.FavouritesPage(
-                                    currentUserId
+                                Routes.FavouritesProductRoute(
+                                    userId = currentUserId
                                 )
                             )
                         })
+
                     ProfileMenuItem(
                         text = "Super Shop",
                         icon = Res.drawable.super_shop_logo,
@@ -282,7 +299,7 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                             }
 
                             NavigationProvider.navController.navigate(
-                                Routes.SuperShopPage(
+                                Routes.SuperShopScreenRoute(
                                     userId = currentUserId
                                 )
                             )
@@ -339,7 +356,12 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                                     Util.showToast("Please Login")
                                     return@ProfileMenuItem
                                 }
-                                NavigationProvider.navController.navigate(Routes.OpenYourShopPage(userPhone, userId = currentUserId))
+                                NavigationProvider.navController.navigate(
+                                    Routes.OpenYourShopPage(
+                                        userPhone,
+                                        userId = currentUserId
+                                    )
+                                )
                             })
                     }
 
@@ -379,7 +401,11 @@ fun ProfileScreen(viewModal: ProfileScreenViewModal = ViewModals.profileScreenVi
                                 Util.showToast("Open Your Shop First")
                                 return@ProfileMenuItem
                             }
-                            NavigationProvider.navController.navigate(Routes.AddNewProductPage(shopId))
+                            NavigationProvider.navController.navigate(
+                                Routes.AddNewProductPage(
+                                    shopId
+                                )
+                            )
                         })
 
                     ProfileMenuItem(

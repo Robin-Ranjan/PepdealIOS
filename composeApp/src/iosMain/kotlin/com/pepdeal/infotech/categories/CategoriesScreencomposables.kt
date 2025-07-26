@@ -5,12 +5,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -48,7 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pepdeal.infotech.navigation.routes.Routes
-import com.pepdeal.infotech.product.SearchView
+import com.pepdeal.infotech.product.screen.component.SearchView
 import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util.toNameFormat
 import com.pepdeal.infotech.util.ViewModals
@@ -128,7 +125,6 @@ fun CategoriesScreen(viewModel: CategoriesViewModel = ViewModals.categoriesViewM
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun CategoryCard(
     category: ProductCategories,
@@ -222,7 +218,7 @@ fun SubCategoryItem(
                     previewPlaceholder = painterResource(Res.drawable.compose_multiplatform),
                     loading = {
                         Image(
-                            painter = painterResource(Res.drawable.place_holder), // Show a default placeholder on failure
+                            painter = painterResource(Res.drawable.place_holder),
                             contentDescription = "Placeholder",
                             modifier = Modifier.fillMaxSize()
                                 .background(color = Color.White),
@@ -231,7 +227,7 @@ fun SubCategoryItem(
                     },
                     failure = {
                         Image(
-                            painter = painterResource(Res.drawable.place_holder), // Show a default placeholder on failure
+                            painter = painterResource(Res.drawable.place_holder),
                             contentDescription = "Placeholder",
                             modifier = Modifier.fillMaxSize()
                                 .background(color = Color.White),
@@ -280,7 +276,7 @@ fun TruncatedText(
                 // Ensure that the last word doesn't get split
                 finalText = if (text[lastCharIndex].isWhitespace()) {
                     text.take(lastCharIndex)
-                        .trimEnd() + "…" // Apply truncation without splitting words
+                        .trimEnd() + "…"
                 } else {
                     // If the last character is not a space, truncate and add ellipsis
                     val spaceBeforeLastWord = text.lastIndexOf(' ', lastCharIndex)

@@ -5,9 +5,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
-import androidx.compose.ui.unit.dp
-import dev.gitlive.firebase.Firebase
-import dev.gitlive.firebase.crashlytics.crashlytics
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.convert
@@ -61,7 +58,6 @@ object Util {
             "-$this%"
         } catch (e: Exception) {
             e.printStackTrace()
-            Firebase.crashlytics.recordException(e)
             println("DiscountFormat toDiscountFormat: ${e.message}")
             this
         }

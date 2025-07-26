@@ -20,39 +20,27 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SearchBar
-import androidx.compose.material3.SearchBarColors
-import androidx.compose.material3.SearchBarDefaults
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -62,7 +50,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -79,20 +66,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pepdeal.infotech.BannerCarouselWidget
-import com.pepdeal.infotech.DataStore
-import com.pepdeal.infotech.PreferencesKeys
 import com.pepdeal.infotech.checkPermission
-import com.pepdeal.infotech.fonts.FontUtils.getFontResourceByName
+import com.pepdeal.infotech.core.base_ui.CustomSnackBarHost
+import com.pepdeal.infotech.core.basic_ui.AppSearchBar
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.product.ProductWithImages
 import com.pepdeal.infotech.shop.modal.ShopWithProducts
+import com.pepdeal.infotech.shop.viewModel.ShopViewModel
 import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util.fromHex
 import com.pepdeal.infotech.util.Util.toDiscountFormat
 import com.pepdeal.infotech.util.Util.toNameFormat
 import com.pepdeal.infotech.util.Util.toRupee
 import com.pepdeal.infotech.util.Util.toTwoDecimalPlaces
-import com.pepdeal.infotech.util.ViewModals
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil3.CoilImage
 import dev.icerock.moko.permissions.Permission
@@ -103,17 +89,14 @@ import dev.jordond.compass.geocoder.placeOrNull
 import dev.jordond.compass.geolocation.Geolocator
 import dev.jordond.compass.geolocation.GeolocatorResult
 import dev.jordond.compass.geolocation.mobile
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.FontResource
 import org.jetbrains.compose.resources.painterResource
+import org.koin.compose.viewmodel.koinViewModel
 import pepdealios.composeapp.generated.resources.Res
 import pepdealios.composeapp.generated.resources.compose_multiplatform
 import pepdealios.composeapp.generated.resources.manrope_bold
@@ -122,51 +105,72 @@ import pepdealios.composeapp.generated.resources.pepdeal_logo
 import pepdealios.composeapp.generated.resources.place_holder
 import platform.Foundation.NSUUID
 
+@Composable
+fun ShopScreenRoot(viewModel: ShopViewModel = koinViewModel()) {
+
+    val uiState by viewModel.state.collectAsStateWithLifecycle()
+
+    val snackBarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(uiState.message) {
+        uiState.message?.let {
+            if (it.message.isNotBlank()) {
+                snackBarHostState.showSnackbar(it.message)
+            }
+            viewModel.onAction(ShopViewModel.Action.OnResetMessage)
+        }
+    }
+
+    ShopScreen(
+        uiState,
+        viewModel = viewModel,
+        snackbarHostState = snackBarHostState,
+        onAction = viewModel::onAction,
+        newAddress = uiState.address?.address
+    )
+}
 
 @OptIn(FlowPreview::class, ExperimentalMaterial3Api::class)
 @Composable
-fun ShopScreen(viewModel: ShopViewModel = ViewModals.shopViewModel) {
+fun ShopScreen(
+    uiState: ShopViewModel.UiState,
+    newAddress: String? = null,
+    viewModel: ShopViewModel,
+    snackbarHostState: SnackbarHostState,
+    onAction: (ShopViewModel.Action) -> Unit,
+) {
 
-    val datastore = DataStore.dataStore
-
-    val currentUserId by datastore.data.map { it[PreferencesKeys.USERID_KEY] ?: "-1" }
-        .collectAsState(initial = "-1")
-
-    // constants
-    val scope = rememberCoroutineScope()
     val factory = rememberPermissionsControllerFactory()
     val controller = remember(factory) { factory.createPermissionsController() }
-    val snackBar = remember { SnackbarHostState() }
     val keyboardController = LocalSoftwareKeyboardController.current
 
     //observer
-    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val isSearchLoading by viewModel.isSearchLoading.collectAsStateWithLifecycle()
-    val shopListNew by viewModel.shops.collectAsStateWithLifecycle()
     val searchedShopList by viewModel.searchedShops.collectAsStateWithLifecycle()
-    val bannerList by viewModel.bannerList.collectAsStateWithLifecycle()
 
     // variables
     var searchQuery by rememberSaveable { mutableStateOf("") }
     val columnState = rememberLazyListState()
     var locationName: String? by rememberSaveable { mutableStateOf(null) }
     var isSearchActive by rememberSaveable { mutableStateOf(false) }
-    val latestShopList = rememberUpdatedState(shopListNew)
     val geoLocation = rememberSaveable { Geolocator.mobile() }
 
     LaunchedEffect(Unit) {
         if (locationName == null) {
             when (val result = geoLocation.current()) {
                 is GeolocatorResult.Success -> {
-//                    println("LOCATION: ${result.data.coordinates}")
-//                    println(
-//                        "LOCATION NAME: ${
-//                            MobileGeocoder()
-//                                .placeOrNull(result.data.coordinates)?.subLocality
-//                        }"
-//                    )
+                    val coordinates = result.data.coordinates
+                    val lat = coordinates.latitude
+                    val lng = coordinates.longitude
                     locationName =
                         MobileGeocoder().placeOrNull(result.data.coordinates)?.subLocality
+
+                    if (uiState.shops.isEmpty()) {
+                        viewModel.loadMoreShops(
+                            userLng = 77.2779323,
+                            userLat = 28.6465035
+                        )
+                    }
                 }
 
                 is GeolocatorResult.Error -> when (result) {
@@ -180,59 +184,30 @@ fun ShopScreen(viewModel: ShopViewModel = ViewModals.shopViewModel) {
         }
     }
 
-    LaunchedEffect(latestShopList.value.isEmpty()) {
-        if (latestShopList.value.isEmpty()) {
-            scope.launch(Dispatchers.IO) {
-                viewModel.loadMoreShops()
-            }
-        }
-    }
-
-    LaunchedEffect(bannerList.isEmpty()) {
-        if (bannerList.isEmpty()) {
-            scope.launch(Dispatchers.IO) {
-                viewModel.getTheBannerList()
-            }
-        }
-    }
+    val displayedLocation = newAddress ?: locationName
 
     LaunchedEffect(searchQuery) {
         snapshotFlow { searchQuery.trim() }
             .debounce(1000)
             .distinctUntilChanged()
             .collectLatest { debouncedQuery ->
-                // Call your viewModel function with the debounced search query
                 if (debouncedQuery.isNotEmpty()) {
                     viewModel.loadMoreSearchedShops(debouncedQuery)
                 }
             }
     }
 
-//    LaunchedEffect(columnState) {
-//        snapshotFlow { columnState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0 }
-//            .distinctUntilChanged()
-//            .collect { lastVisibleIndex ->
-//                val totalItems = columnState.layoutInfo.totalItemsCount
-//                if (totalItems > 0 && lastVisibleIndex >= totalItems - 10 && !isLoading && searchQuery.isEmpty()) {
-//                    scope.launch(Dispatchers.IO) {
-//                        viewModel.loadMoreShops()
-//                    }
-//                }
-//            }
-//    }
-
     LaunchedEffect(Unit) {
         checkPermission(
             permission = Permission.LOCATION,
             controller = controller,
-            snackBarHostState = snackBar
+            snackBarHostState = snackbarHostState
         )
         checkPermission(
             permission = Permission.REMOTE_NOTIFICATION,
             controller = controller,
-            snackBarHostState = snackBar
+            snackBarHostState = snackbarHostState
         )
-
     }
 
     // Outer CardView
@@ -248,7 +223,12 @@ fun ShopScreen(viewModel: ShopViewModel = ViewModals.shopViewModel) {
     MaterialTheme {
         BindEffect(controller)
         Scaffold(
-            snackbarHost = { SnackbarHost(snackBar) }
+            snackbarHost = {
+                CustomSnackBarHost(
+                    hostState = snackbarHostState,
+                    currentMessage = uiState.message
+                )
+            }
         ) {
             Box(
                 modifier = Modifier
@@ -267,8 +247,8 @@ fun ShopScreen(viewModel: ShopViewModel = ViewModals.shopViewModel) {
                     if (!isSearchActive) {
                         // App Logo
                         Row(
-                            modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically // Align items properly
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 5.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Image(
                                 painter = painterResource(Res.drawable.pepdeal_logo),
@@ -279,167 +259,41 @@ fun ShopScreen(viewModel: ShopViewModel = ViewModals.shopViewModel) {
                                     .padding(start = 5.dp),
                                 contentScale = ContentScale.Crop
                             )
-
-                            // Push the next elements to the end of the Row
                             Spacer(modifier = Modifier.weight(1f))
-
-                            // Location Icon with Text
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(end = 10.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Place,
-                                    contentDescription = "Location",
-                                    tint = Color.DarkGray,
-                                    modifier = Modifier.size(20.dp)
-                                )
-
-                                Spacer(modifier = Modifier.width(4.dp))
-
-                                Text(
-                                    text = locationName?.toNameFormat() ?: "Fetching...",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color.Black
-                                )
-                            }
                         }
-                    }
 
-                    SearchBar(
-                        modifier = Modifier.fillMaxWidth()
-                            .border(1.dp, Color.Gray, RoundedCornerShape(8.dp)),
-                        colors = SearchBarColors(
-                            containerColor = Color.White,
-                            dividerColor = Color.Gray
-                        ),
-                        shape = RectangleShape,
-                        shadowElevation = SearchBarDefaults.TonalElevation,
-                        inputField = {
-                            SearchBarDefaults.InputField(
-                                query = searchQuery,
-                                onQueryChange = { searchQuery = it },
-                                onSearch = { /* Implement search logic here */ },
-                                expanded = isSearchActive,
-                                onExpandedChange = { isSearchActive = it },
-                                modifier = Modifier.fillMaxWidth().padding(0.dp),
-                                placeholder = {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .wrapContentHeight(Alignment.CenterVertically)
-                                    ) {
-                                        Text(
-                                            "Search Shop",
-                                            textAlign = TextAlign.Center,
-                                            modifier = Modifier.padding(bottom = 2.dp)
-                                        )
-                                    }
-                                },
-                                leadingIcon = {
-                                    if (isSearchActive) {
-                                        IconButton(onClick = {
-                                            isSearchActive = false
-                                            searchQuery = ""
-                                        }) {
-                                            Icon(
-                                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                                contentDescription = "Back"
-                                            )
-                                        }
-                                    } else {
-                                        Icon(
-                                            imageVector = Icons.Default.Search,
-                                            contentDescription = "Search Icon"
-                                        )
-                                    }
-                                },
-                                trailingIcon = {
-                                    if (searchQuery.isNotEmpty()) {
-                                        IconButton(onClick = { searchQuery = "" }) {
-                                            Icon(
-                                                imageVector = Icons.Default.Close,
-                                                contentDescription = "Clear Search"
-                                            )
-                                        }
-                                    }
-                                },
-//                            colors = TextFieldColors()
-                            )
-                        },
-                        expanded = isSearchActive,
-                        onExpandedChange = { isSearchActive = it }, // Handles search activation
-                    ) {
-                        when {
-                            isSearchLoading -> {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .weight(1f),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    CircularProgressIndicator(color = Color.Blue)
-                                }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 5.dp).clickable {
+                                viewModel.onAction(ShopViewModel.Action.OnLocationClick)
                             }
-
-                            else -> {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .pointerInput(Unit) {
-                                            awaitPointerEventScope {
-                                                while (true) {
-                                                    awaitPointerEvent()
-                                                    keyboardController?.hide()
-                                                }
-                                            }
-                                        }
-                                ) {
-                                    LazyColumn(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(top = 5.dp)
-                                            .background(Color.White)
-                                    ) {
-                                        if (searchedShopList.isEmpty()) {
-                                            item {
-                                                Text(
-                                                    text = "No shops found",
-                                                    modifier = Modifier.padding(16.dp),
-                                                    color = Color.Gray
-                                                )
-                                            }
-                                        } else {
-                                            items(searchedShopList) { shop ->
-                                                ShopCardView(shop, onShopClicked = { shopId ->
-                                                    NavigationProvider.navController.navigate(
-                                                        Routes.ShopDetails(
-                                                            shopId = shopId,
-                                                            userId = currentUserId
-                                                        )
-                                                    )
-                                                })
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // Show Loading Indicator if Needed
-                    if (isLoading && shopListNew.isEmpty()) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .weight(1f),
-                            contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator(color = Color.Blue)
+                            Icon(
+                                imageVector = Icons.Default.Place,
+                                contentDescription = "Location",
+                                tint = Color.DarkGray,
+                                modifier = Modifier.size(20.dp)
+                            )
+
+                            Spacer(modifier = Modifier.width(4.dp))
+
+                            Text(
+                                text = displayedLocation?.toNameFormat() ?: "Fetching...",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.Black,
+                            )
                         }
-                    } else {
-                        // Shop List (Properly Weighted)
+                    }
+
+                    AppSearchBar(
+                        searchQuery = searchQuery,
+                        onSearchQueryChange = { searchQuery = it },
+                        isSearchActive = isSearchActive,
+                        onSearchActiveChange = { isSearchActive = it },
+                        isSearchLoading = isSearchLoading,
+                        onClearClick = { searchQuery = "" }
+                    ) {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -454,30 +308,101 @@ fun ShopScreen(viewModel: ShopViewModel = ViewModals.shopViewModel) {
                         ) {
                             LazyColumn(
                                 modifier = Modifier
-                                    .fillMaxSize()
-                                    .nestedScroll(nestedScrollConnection)
-                                    .padding(top = 5.dp),
-                                state = columnState
+                                    .fillMaxWidth()
+                                    .padding(top = 5.dp)
+                                    .background(Color.White)
                             ) {
-                                if (bannerList.isNotEmpty()) {
+                                if (searchedShopList.isEmpty()) {
                                     item {
-                                        BannerCarouselWidget(
-                                            bannerList,
-                                            modifier = Modifier.fillMaxWidth()
+                                        Text(
+                                            text = "No shops found",
+                                            modifier = Modifier.padding(16.dp),
+                                            color = Color.Gray
                                         )
                                     }
-                                }
-                                items(
-                                    shopListNew,
-                                    key = { it.shop.shopId ?: NSUUID.UUID().toString() }) { shop ->
-                                    ShopCardView(shop, onShopClicked = { shopId ->
-                                        NavigationProvider.navController.navigate(
-                                            Routes.ShopDetails(
-                                                shopId = shopId,
-                                                userId = currentUserId
+                                } else {
+                                    items(searchedShopList) { shop ->
+                                        ShopCardView(shop, onShopClicked = { shopId ->
+                                            NavigationProvider.navController.navigate(
+                                                Routes.ShopDetails(
+                                                    shopId = shopId,
+                                                    userId = uiState.user?.userId ?: "-1"
+                                                )
                                             )
-                                        )
-                                    })
+                                        })
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    when {
+                        uiState.isLoading -> {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .weight(1f),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(color = Color.Blue)
+                            }
+                        }
+
+                        uiState.isEmpty -> {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .weight(1f),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("PepDeal isn’t available on this location just yet.")
+                            }
+                        }
+
+                        else -> {
+                            val shops = uiState.shops
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .pointerInput(Unit) {
+                                        awaitPointerEventScope {
+                                            while (true) {
+                                                awaitPointerEvent()
+                                                keyboardController?.hide()
+                                            }
+                                        }
+                                    }
+                            ) {
+                                LazyColumn(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .nestedScroll(nestedScrollConnection)
+                                        .padding(top = 5.dp),
+                                    state = columnState
+                                ) {
+
+                                    if (uiState.bannerList.isNotEmpty()) {
+                                        item {
+                                            BannerCarouselWidget(
+                                                uiState.bannerList,
+                                                modifier = Modifier.fillMaxWidth()
+                                            )
+                                        }
+                                    }
+                                    items(
+                                        shops,
+                                        key = {
+                                            it.shop.shopId ?: NSUUID.UUID().toString()
+                                        }) { shop ->
+                                        ShopCardView(shop, onShopClicked = { shopId ->
+                                            NavigationProvider.navController.navigate(
+                                                Routes.ShopDetails(
+                                                    shopId = shopId,
+                                                    userId = uiState.user?.userId ?: "-1"
+                                                )
+                                            )
+                                        })
+                                    }
                                 }
                             }
                         }
@@ -510,10 +435,11 @@ fun ShopCardView(shopWithProduct: ShopWithProducts, onShopClicked: (String) -> U
         Box(modifier = Modifier.fillMaxWidth()) {
             Column {
                 // Shop Name (Header)
-                Box(modifier = Modifier
-                    .clickable {
-                        onShopClicked(shopWithProduct.shop.shopId ?: "")
-                    }) {
+                Box(
+                    modifier = Modifier
+                        .clickable {
+                            onShopClicked(shopWithProduct.shop.shopId ?: "")
+                        }) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -571,7 +497,8 @@ fun ShopCardView(shopWithProduct: ShopWithProducts, onShopClicked: (String) -> U
                         },
                     horizontalArrangement = Arrangement.spacedBy(3.dp)
                 ) {
-                    items(items = shopWithProduct.products,
+                    items(
+                        items = shopWithProduct.products,
                         key = { it.product.productId }) { shopItem ->
                         ShopItemView(shopItem) {
                             NavigationProvider.navController.navigate(Routes.ProductDetailsPage(it))

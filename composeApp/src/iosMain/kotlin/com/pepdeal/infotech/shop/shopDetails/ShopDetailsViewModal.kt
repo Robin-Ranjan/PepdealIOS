@@ -3,9 +3,9 @@ package com.pepdeal.infotech.shop.shopDetails
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pepdeal.infotech.shop.modal.ShopMaster
-import com.pepdeal.infotech.superShop.SuperShopMaster
-import com.pepdeal.infotech.favourite.FavouritesRepo
-import com.pepdeal.infotech.favourite.modal.FavoriteProductMaster
+import com.pepdeal.infotech.superShop.model.SuperShopMaster
+import com.pepdeal.infotech.favourite_product.repository.FavouritesRepo
+import com.pepdeal.infotech.favourite_product.modal.FavoriteProductMaster
 import com.pepdeal.infotech.product.ProductWithImages
 import com.pepdeal.infotech.shop.modal.ShopStatusMaster
 import com.pepdeal.infotech.util.Util
@@ -34,40 +34,47 @@ class ShopDetailsViewModal():ViewModel() {
     private val _shopServices = MutableStateFlow<ShopStatusMaster?>(null)
     val shopServices: StateFlow<ShopStatusMaster?> get() = _shopServices
 
-    fun fetchShopDetails(shopId:String){
+    fun fetchShopDetails(shopId: String) {
+        println("🔄 Fetching shop details for shopId = $shopId")
         _shopLoading.value = true
         viewModelScope.launch {
             val shopDetails = repo.fetchShopDetails(shopId = shopId)
-            if(shopDetails!=null){
+            if (shopDetails != null) {
                 _shopDetails.value = shopDetails
-                _shopLoading.value = false
+                println("✅ Shop details fetched: ${shopDetails.shopName}")
+            } else {
+                println("⚠️ No shop details found for shopId = $shopId")
             }
+            _shopLoading.value = false
         }
     }
 
-    fun fetchShopProducts(shopId:String){
+    fun fetchShopProducts(shopId: String) {
+        println("🔄 Starting fetchShopProducts for shopId = $shopId")
         viewModelScope.launch {
             repo.getActiveProductsWithImages(shopId)
-                .collect{ newProduct->
-                    // Using a mutable list to efficiently add items without creating new lists
+                .collect { productList ->
+                    println("📦 Received ${productList.size} products for shopId = $shopId")
                     _shopProduct.update { oldList ->
-                        // Use `distinctBy` to filter out duplicates
-                        (oldList + newProduct).distinctBy { it.product.productId }
+                        val updatedList = (oldList + productList).distinctBy { it.product.productId }
+                        println("✅ _shopProduct updated. Total products now: ${updatedList.size}")
+                        updatedList
                     }
                 }
         }
-
     }
 
     fun fetchShopServices(shopId: String) {
+        println("🔄 Fetching shop services for shopId = $shopId")
         try {
             viewModelScope.launch(Dispatchers.IO) {
                 val shopServiceStatus = repo.fetchShopServices(shopId)
                 _shopServices.value = shopServiceStatus
+                println("✅ Shop services fetched: $shopServiceStatus")
             }
         } catch (e: Exception) {
+            println("❌ Error fetching shop services: ${e.message}")
             e.printStackTrace()
-            println(e.message)
         }
     }
 

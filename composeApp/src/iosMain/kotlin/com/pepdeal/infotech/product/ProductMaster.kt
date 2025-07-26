@@ -19,35 +19,32 @@ data class ProductMaster(
     val sizeId: String = "",
     val sizeName: String = "",
     val color: String = "",
-    val searchTag: String = "",
+    val searchTag: List<String> = emptyList(),
     val onCall: String = "", // 0-> Yes , 1-> No
     val mrp: String = "",
     val discountMrp: String = "",
     val sellingPrice: String = "",
-    var isActive: String = "", //0->Active, 1->Block by the shop Owner
+
+    var productActive: String = "", //0->Active, 1->Block by the shop Owner
     val flag: String = "", // 0->Active, 1-> Block by the admin Control Panel
-    val createdAt: String = "",
-    val updatedAt: String = "",
-    val isShopActive: String = "",
-    val isShopBlock: String = "",
+
+    val shopActive: String = "",
+    val shopBlock: String = "",
+
     val shopLongitude: String = "",
     val shopLatitude: String = "",
+
+    val createdAt: String = "",
+    val updatedAt: String = "",
 )
 
 @Serializable
 data class ProductImageMaster(
-    val id:String = "",
+    val id: String = "",
     val productId: String = "",
     val productImages: String = "",
     val createdAt: String = "",
     val updatedAt: String = ""
-)
-
-@Serializable
-data class FavProductWithImages(
-    val product: ProductMaster,
-    val images: List<ProductImageMaster>,
-    val createdAt:String = ""
 )
 
 @Serializable
@@ -56,3 +53,8 @@ data class ProductWithImages(
     val images: List<ProductImageMaster>
 )
 
+@Serializable
+data class ProductUiDto(
+    val shopItem: ShopItems,
+    val isFavourite: Boolean
+)

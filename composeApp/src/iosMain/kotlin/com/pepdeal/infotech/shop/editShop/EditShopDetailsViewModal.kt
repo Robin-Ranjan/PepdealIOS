@@ -13,7 +13,6 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.FontResource
 
 class EditShopDetailsViewModal() : ViewModel() {
-    private val shopDetailsRepo = ShopDetailsRepo()
     private val repo = EditShopDetailsRepo()
 
     private val _shopLoading = MutableStateFlow(false)
@@ -67,7 +66,7 @@ class EditShopDetailsViewModal() : ViewModel() {
     fun fetchShopDetails(shopId: String) {
         _shopLoading.value = true
         viewModelScope.launch {
-            val shopDetails = shopDetailsRepo.fetchShopDetails(shopId = shopId)
+            val shopDetails = repo.fetchShopDetails(shopId = shopId)
             if (shopDetails != null) {
                 _shopDetails.value = shopDetails
                 _selectedBackGroundColorName.value =
@@ -95,10 +94,13 @@ class EditShopDetailsViewModal() : ViewModel() {
 
     fun fetchShopServices(shopId: String) {
         viewModelScope.launch {
+            println("🔄 Fetching shop services for shopId = $shopId")
             val shopServices = repo.fetchShopServices(shopId)
+            println("✅ Shop services fetched: $shopServices")
             _shopServices.value = shopServices
         }
     }
+
 
     fun updateShopDetails(shopStatusMaster: ShopStatusMaster, shopMaster: ShopMaster) {
         _isUploaded.value = true

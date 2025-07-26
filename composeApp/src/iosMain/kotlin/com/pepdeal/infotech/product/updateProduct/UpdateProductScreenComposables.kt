@@ -6,7 +6,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,10 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -33,12 +29,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -47,7 +41,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -147,7 +140,6 @@ fun UpdateProductScreen(
     val isUploading by viewModal.isUploading.collectAsStateWithLifecycle()
     LaunchedEffect(productId) {
         viewModal.fetchProductDetails(productId)
-        viewModal.fetchProductImages(productId)
     }
 
     LaunchedEffect(productDetails) {
@@ -156,7 +148,7 @@ fun UpdateProductScreen(
         brandName.value = TextFieldValue(productDetails.brandName)
         productCategory.value = TextFieldValue(productDetails.categoryId)
         productSubCategory.value = TextFieldValue(productDetails.subCategoryId)
-        searchTag.value = TextFieldValue(productDetails.searchTag)
+        searchTag.value = TextFieldValue(productDetails.searchTag.joinToString { " ," })
         productDescription.value = TextFieldValue(productDetails.description)
         productDescription2.value = TextFieldValue(productDetails.description2)
         productSpecification.value = TextFieldValue(productDetails.specification)
@@ -208,11 +200,12 @@ fun UpdateProductScreen(
         Scaffold(
             snackbarHost = {
                 SnackbarHost(hostState = snackBar, snackbar = { data ->
-                    Snackbar(action = {
-                        TextButton(onClick = { data.visuals.message }) {
-                            Text("Okay", color = Color.Yellow)  // Action button color
-                        }
-                    },
+                    Snackbar(
+                        action = {
+                            TextButton(onClick = { data.visuals.message }) {
+                                Text("Okay", color = Color.Yellow)  // Action button color
+                            }
+                        },
                         containerColor = Color.Yellow,
                         contentColor = Color.Black,
                         content = { Text(text = data.visuals.message) })
@@ -242,9 +235,9 @@ fun UpdateProductScreen(
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.White,  // Background color
-                        titleContentColor = Color.Black,  // Title color
-                        navigationIconContentColor = Color.Black,  // Back button color
+                        containerColor = Color.White,
+                        titleContentColor = Color.Black,
+                        navigationIconContentColor = Color.Black,
                         actionIconContentColor = Color.Unspecified
                     ),
                     expandedHeight = 50.sdp
@@ -388,7 +381,6 @@ fun UpdateProductScreen(
                         }
 
                         item {
-//                            Spacer(modifier = Modifier.height(8.dp))
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -587,12 +579,13 @@ fun UpdateProductScreen(
                                                                 sizeId = productSize.value.text,
                                                                 sizeName = "",
                                                                 color = productColors.value.text,
-                                                                searchTag = searchTag.value.text,
+                                                                searchTag = searchTag.value.text.split(",").map { it.trim() }
+                                                                    .filter { it.isNotEmpty() },
                                                                 onCall = if (showProductPrices) "0" else "1",
                                                                 mrp = productMrp.value.text,
                                                                 discountMrp = productDiscount.value.text,
                                                                 sellingPrice = productSale.value.text,
-                                                                isActive = "1",
+                                                                productActive = "1",
                                                                 flag = "1",
                                                                 createdAt = Util.getCurrentTimeStamp(),
                                                                 updatedAt = Util.getCurrentTimeStamp()
@@ -686,159 +679,5 @@ fun UpdateProductScreen(
                 containerColor = Color.White
             )
         }
-    }
-}
-
-@Composable
-fun TextFieldWithChips(
-    state: MutableState<TextFieldValue>,
-    label: String,
-    modifier: Modifier = Modifier.fillMaxWidth()
-) {
-    Column(modifier = modifier) {
-        OutlinedTextField(
-            value = state.value,
-            onValueChange = { newText -> state.value = newText },
-            label = { Text(text = label) }
-        )
-        // Place additional UI elements below the text field.
-        if (state.value.text.isNotEmpty()) {
-            ColorChips(
-                colorCodes = state.value.text,
-                colorMap
-            )
-        }
-    }
-}
-
-
-//@Composable
-//fun TextFieldWithLabelAndColorChips(
-//    label: String,
-//    maxLines: Int = 1,
-//    fontResources: FontResource = Res.font.manrope_medium,
-//    state: MutableState<TextFieldValue>,
-//    isEditable: Boolean = true,
-//    maxLength: Int = Int.MAX_VALUE,
-//    inputType: KeyboardType = KeyboardType.Text,
-//    minLines: Int = 1,
-//    modifier: Modifier = Modifier.fillMaxWidth(),
-//    onValueChange: (TextFieldValue) -> Unit = {},
-//    color: Color = Color.Black,
-//    onClick: () -> Unit = {}
-//) {
-//    // A predefined map of color codes to names.
-//    val colorNameMap = mapOf(
-//        "FF0000" to "Red",
-//        "00FF00" to "Green",
-//        "0000FF" to "Blue"
-//        // Add additional mappings as needed.
-//    )
-//
-//    OutlinedTextField(
-//        value = state.value,
-//        label = { Text(text = label, color = Color.Gray) },
-//        onValueChange = { newText ->
-//            if (inputType == KeyboardType.Number) {
-//                if (newText.text.all { it.isDigit() } && newText.text.length <= maxLength) {
-//                    state.value = newText
-//                }
-//            } else {
-//                if (newText.text.length <= maxLength) {
-//                    state.value = newText
-//                }
-//            }
-//            onValueChange(newText)
-//        },
-//        modifier = modifier
-//            .background(Color.White, MaterialTheme.shapes.small)
-//            .clickable { onClick() }
-//            .padding(8.dp),
-//        textStyle = TextStyle(
-//            color = color,
-//            fontSize = 15.sp,
-//            fontFamily = FontFamily(Font(fontResources)),
-//            lineHeight = 15.sp
-//        ),
-//        enabled = isEditable,
-//        maxLines = maxLines,
-//        minLines = minLines,
-//        keyboardOptions = KeyboardOptions.Default.copy(
-//            keyboardType = inputType
-//        ),
-//        decorationBox = { innerTextField ->
-//            Column {
-//                innerTextField()
-//                if (state.value.text.isNotEmpty()) {
-//                    ColorChips(
-//                        colorCodes = state.value.text,
-//                        colorNameMap = colorNameMap
-//                    )
-//                }
-//            }
-//        }
-//    )
-//}
-
-// Helper composable to display a row of color chips.
-@Composable
-fun ColorChips(
-    colorCodes: String,
-    colorNameMap: Map<String, String>
-) {
-    // Split the string into individual codes, trimming whitespace.
-    val colorList = colorCodes.split(",").map { it.trim() }.filter { it.isNotEmpty() }
-
-    Row(
-        modifier = Modifier
-            .horizontalScroll(rememberScrollState())
-            .padding(top = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        colorList.forEach { code ->
-            // Look up the name; use "Unknown" if not found.
-            val colorName = colorNameMap[code] ?: "Unknown"
-            val color = parseColor(code)
-            ColorChip(color = color, name = colorName)
-        }
-    }
-}
-
-// A simple chip composable showing a colored circle and a label.
-@Composable
-fun ColorChip(color: Color, name: String) {
-    Surface(
-        shape = MaterialTheme.shapes.small,
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-        ) {
-            // A small circle filled with the specified color.
-            Box(
-                modifier = Modifier
-                    .size(16.dp)
-                    .background(color = color, shape = CircleShape)
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(text = name, style = MaterialTheme.typography.bodySmall)
-        }
-    }
-}
-
-// Helper function to parse a hex string into a Color.
-fun parseColor(hex: String): Color {
-    return try {
-        // If the hex code is 6 characters, add full alpha.
-        val colorInt = if (hex.length == 6) {
-            (0xFF shl 24) or hex.toLong(16).toInt()
-        } else {
-            hex.toLong(16).toInt()
-        }
-        Color(colorInt)
-    } catch (e: Exception) {
-        Color.Gray // Fallback color if parsing fails.
     }
 }

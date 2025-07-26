@@ -2,8 +2,11 @@ package com.pepdeal.infotech.product.updateProduct
 
 import androidx.compose.ui.graphics.ImageBitmap
 import com.pepdeal.infotech.FirebaseUploadResponse
+import com.pepdeal.infotech.core.databaseUtils.FirestoreFilter
 import com.pepdeal.infotech.product.ProductImageMaster
 import com.pepdeal.infotech.product.ProductMaster
+import com.pepdeal.infotech.product.ProductWithImages
+import com.pepdeal.infotech.product.producrDetails.ProductDetailsRepo
 import com.pepdeal.infotech.util.FirebaseUtil
 import com.pepdeal.infotech.util.ImagesUtil.toByteArray
 import com.pepdeal.infotech.util.ImagesUtil.toNSData
@@ -30,10 +33,8 @@ import io.ktor.http.content.TextContent
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
-import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -47,58 +48,18 @@ class UpdateProductRepo {
         }
     }
 
-    suspend fun fetchProductDetails(productId: String): ProductMaster? {
-        val productDetails: ProductMaster?
+    suspend fun fetchProductDetails(productId: String): ProductWithImages? {
+        val productDetails: ProductWithImages?
         try {
-            val response: HttpResponse =
-                client.get("${FirebaseUtil.BASE_URL}product_master.json?orderBy=\"productId\"&equalTo=\"$productId\"") {
-//                parameter("orderBy", "productId")
-//                parameter("equalTo", productId)
-                    contentType(ContentType.Application.Json)
-                }
-
-            if (response.status == HttpStatusCode.OK) {
-                val productMap: Map<String, ProductMaster> =
-                    json.decodeFromString(response.bodyAsText())
-                productMap.values.firstOrNull() ?: ProductMaster()
-                productDetails = productMap.values.firstOrNull()
-            } else {
-                return null
-            }
+            productDetails = ProductDetailsRepo().fetchTheProductDetails(productId,
+                filterList = listOf(FirestoreFilter("productId", productId))
+            )
         } catch (e: Exception) {
             e.printStackTrace()
             println(e.message)
             return null
         }
         return productDetails
-    }
-
-    // Fetch images for a specific product
-    suspend fun getProductImages(productId: String): List<ProductImageMaster> = coroutineScope {
-        val client = HttpClient(Darwin)
-        val imageList = mutableListOf<ProductImageMaster>()
-
-        try {
-            val response: HttpResponse =
-                client.get("${FirebaseUtil.BASE_URL}product_images_master.json?orderBy=\"productId\"&equalTo=\"$productId\"") {
-//                parameter("orderBy", "\"productId\"")
-//                parameter("equalTo", "\"$productId\"")
-                    contentType(ContentType.Application.Json)
-                }
-
-            if (response.status == HttpStatusCode.OK) {
-                val responseBody: String = response.bodyAsText()
-
-                val imagesMap: Map<String, ProductImageMaster> = json.decodeFromString(responseBody)
-
-                imageList.addAll(imagesMap.values)
-            }
-        } catch (e: Exception) {
-            println("Error fetching product images: ${e.message}")
-        } finally {
-            client.close()
-        }
-        return@coroutineScope imageList
     }
 
     // Main function to update product details and replace images
@@ -123,13 +84,13 @@ class UpdateProductRepo {
                 "warranty" to updatedProductMaster.warranty,
                 "color" to updatedProductMaster.color,
                 "mrp" to updatedProductMaster.mrp,
-                "searchTag" to updatedProductMaster.searchTag,
+//                "searchTag" to updatedProductMaster.searchTag,
                 "onCall" to updatedProductMaster.onCall,
                 "discountMrp" to updatedProductMaster.discountMrp,
                 "sellingPrice" to updatedProductMaster.sellingPrice,
                 "sizeName" to updatedProductMaster.sizeName,
                 "updatedAt" to updatedProductMaster.updatedAt,
-                "isActive" to updatedProductMaster.isActive,
+                "isActive" to updatedProductMaster.productActive,
                 "flag" to updatedProductMaster.flag
             )
 
@@ -183,8 +144,8 @@ class UpdateProductRepo {
                             "Product registered but some images failed to upload. Details: $imageMsg"
                         )
                     }
-                }else{
-                    onComplete(true,"Product is Updated.")
+                } else {
+                    onComplete(true, "Product is Updated.")
                 }
             }
         } catch (e: Exception) {

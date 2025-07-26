@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -200,7 +199,7 @@ fun ShopDetailsWithProductPage(
                             )
 
                             IconButton(
-                                onClick = { Util.openDialer(shopDetails.shopMobileNo ?: "") }
+                                onClick = { Util.openDialer(shopDetails.shopMobileNo) }
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Call,

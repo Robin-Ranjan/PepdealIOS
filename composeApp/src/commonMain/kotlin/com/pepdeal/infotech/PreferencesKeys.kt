@@ -8,4 +8,6 @@ object PreferencesKeys {
     val SHOPID_KEY =  stringPreferencesKey("shop_id")
     val MOBILE_NO = stringPreferencesKey("mobile_no")
     val USER_STATUS = stringPreferencesKey("user_status")
+
+    val user_data_key = stringPreferencesKey("user_data_key")
 }

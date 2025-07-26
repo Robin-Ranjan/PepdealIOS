@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class UpdateProductViewModal() : ViewModel() {
+class UpdateProductViewModal : ViewModel() {
     private val repo = UpdateProductRepo()
     private val _productDetails = MutableStateFlow(ProductMaster())
     val productDetails: StateFlow<ProductMaster> get() = _productDetails.asStateFlow()
@@ -32,20 +32,13 @@ class UpdateProductViewModal() : ViewModel() {
         viewModelScope.launch {
             val productDetails = repo.fetchProductDetails(productId)
             if (productDetails != null) {
-                _productDetails.value = productDetails
+                _productDetails.value = productDetails.product
+                _productImages.value = productDetails.images
                 _productLoading.value = false
                 println(productDetails)
             } else {
                 println(null)
             }
-        }
-    }
-
-    fun fetchProductImages(productId: String) {
-        viewModelScope.launch {
-            val productImages = repo.getProductImages(productId)
-            _productImages.value = productImages
-            println(_productImages.value)
         }
     }
 
@@ -57,8 +50,13 @@ class UpdateProductViewModal() : ViewModel() {
     ) {
         _isUploading.value = true
         viewModelScope.launch {
-            repo.updateProductWithImages(productId,updatedProductMaster,isImageEdited,newUriList){ status , message ->
-               _updateProductResponse.value = Pair(status,message)
+            repo.updateProductWithImages(
+                productId = productId,
+                updatedProductMaster = updatedProductMaster,
+                isImageEdited = isImageEdited,
+                newUriList = newUriList
+            ) { status, message ->
+                _updateProductResponse.value = Pair(status, message)
                 _isUploading.value = false
             }
         }

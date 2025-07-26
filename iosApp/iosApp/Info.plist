@@ -19,9 +19,11 @@
 	<key>CFBundlePackageType</key>
 	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0.1</string>
+	<string>3.0.2</string>
 	<key>CFBundleVersion</key>
-	<string>2</string>
+	<string>12</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSApplicationCategoryType</key>
 	<string></string>
 	<key>LSApplicationQueriesSchemes</key>
@@ -35,20 +37,18 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string> To Access the user Current Location to show the shop accordingly.</string>
-	<key>NSContactsUsageDescription</key>
-	<string>This app needs access to your contacts to connect you with your friends and local services.</string>
-	<key>NSMotionUsageDescription</key>
-	<string>This app uses motion data to enhance user experience and performance tracking.</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>This app needs location access to show nearby deals and offers from local businesses.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>This app uses Bluetooth to connect with nearby devices for location-based features and personalization.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>This app needs access to your contacts to connect you with your friends and local services.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app needs location access to show nearby deals and offers from local businesses.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string> To Access the user Current Location to show the shop accordingly.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>This app uses motion data to enhance user experience and performance tracking.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>To Access the Product and Profile Pic</string>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -60,6 +60,8 @@
 	<array>
 		<string>armv7</string>
 	</array>
+	<key>UIStatusBarStyle</key>
+	<string></string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationLandscapeLeft</string>

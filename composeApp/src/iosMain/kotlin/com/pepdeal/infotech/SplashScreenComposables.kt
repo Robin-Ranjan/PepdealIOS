@@ -39,9 +39,10 @@ fun SplashScreen(){
 
         // Delay before navigating
         delay(500)
-
+        print("Host root created, calling next  1")
         // Navigate after animation completes
         navController.navigate(Routes.MainPage) {
+            print("Host root created, calling next screen 2")
             popUpTo(Routes.SplashScreenPage) { inclusive = true }
         }
     }

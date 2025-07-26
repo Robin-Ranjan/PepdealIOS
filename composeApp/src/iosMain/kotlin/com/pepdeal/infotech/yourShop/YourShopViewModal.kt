@@ -41,11 +41,13 @@ class YourShopViewModal() : ViewModel() {
     fun fetchShopProducts(shopId: String) {
         viewModelScope.launch {
             repo.getActiveProductsWithImages(shopId)
-                .collect { newProduct ->
-                    // Using a mutable list to efficiently add items without creating new lists
+                .collect { productList ->
+                    println("📦 Received ${productList.size} products for shopId = $shopId")
                     _shopProduct.update { oldList ->
-                        // Use `distinctBy` to filter out duplicates
-                        (oldList + newProduct).distinctBy { it.product.productId }
+                        val updatedList =
+                            (oldList + productList).distinctBy { it.product.productId }
+                        println("✅ _shopProduct updated. Total products now: ${updatedList.size}")
+                        updatedList
                     }
                 }
         }

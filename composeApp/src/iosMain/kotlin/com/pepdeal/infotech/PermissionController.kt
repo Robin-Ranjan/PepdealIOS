@@ -14,37 +14,59 @@ suspend fun checkPermission(
     controller: PermissionsController,
     snackBarHostState: SnackbarHostState
 ) {
-    val granted = controller.isPermissionGranted(permission)
-    if (!granted) {
+    val initiallyGranted = controller.isPermissionGranted(permission)
+
+    if (!initiallyGranted) {
         try {
+            // Request permission
             controller.providePermission(permission)
-        } catch (e: DeniedException) {
 
-            val result = snackBarHostState.showSnackbar(
-                message = "Permission denied",
-                actionLabel = "Open Settings",
-                duration = SnackbarDuration.Short
-            )
-
-            if (result == SnackbarResult.ActionPerformed) {
-                controller.openAppSettings()
+            // Always re-check after requesting
+            val grantedNow = controller.isPermissionGranted(permission)
+            if (!grantedNow) {
+                val result = snackBarHostState.showSnackbar(
+                    message = "Permission still not granted.",
+                    actionLabel = "Open Settings",
+                    duration = SnackbarDuration.Short
+                )
+                if (result == SnackbarResult.ActionPerformed) {
+                    controller.openAppSettings()
+                }
             }
+
         } catch (e: DeniedAlwaysException) {
+//            val result = snackBarHostState.showSnackbar(
+//                message = "Permission permanently denied.",
+//                actionLabel = "Open Settings",
+//                duration = SnackbarDuration.Short
+//            )
+//            if (result == SnackbarResult.ActionPerformed) {
+//                controller.openAppSettings()
+//            }
+            println("${e.permission.name} is Denied Permanently")
+
+        } catch (e: DeniedException) {
             val result = snackBarHostState.showSnackbar(
-                message = "Permanently denied",
+                message = "Permission denied.",
                 actionLabel = "Open Settings",
                 duration = SnackbarDuration.Short
             )
-
             if (result == SnackbarResult.ActionPerformed) {
                 controller.openAppSettings()
             }
 
         } catch (e: RequestCanceledException) {
             snackBarHostState.showSnackbar(
-                message = "Request cancelled."
+                message = "Permission request canceled."
             )
+
+        } catch (e: Exception) {
+            snackBarHostState.showSnackbar(
+                message = e.message ?: "Unknown error occurred."
+            )
+            e.printStackTrace()
         }
     }
 }
+
 

@@ -76,7 +76,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pepdeal.infotech.DataStore
 import com.pepdeal.infotech.navigation.routes.Routes
-import com.pepdeal.infotech.placeAPI.PlacesSearchScreen
+import com.pepdeal.infotech.placeAPI.screen.PlacesSearchScreen
 import com.pepdeal.infotech.shop.modal.ShopMaster
 import com.pepdeal.infotech.util.NavigationProvider.navController
 import com.pepdeal.infotech.util.States
@@ -94,7 +94,11 @@ import pepdealios.composeapp.generated.resources.manrope_medium
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OpenYourShopScreen(shopPhoneNo :String,userID:String,viewModel: OpenYourShopViewModal = ViewModals.openYOurShopViewModal) {
+fun OpenYourShopScreen(
+    shopPhoneNo: String,
+    userID: String,
+    viewModel: OpenYourShopViewModal = ViewModals.openYOurShopViewModal
+) {
     val shopName = remember { mutableStateOf(TextFieldValue()) }
     val shopAddress = remember { mutableStateOf(TextFieldValue()) }
     val signBoardAddress = remember { mutableStateOf(TextFieldValue()) }
@@ -122,9 +126,9 @@ fun OpenYourShopScreen(shopPhoneNo :String,userID:String,viewModel: OpenYourShop
     val myKey = stringPreferencesKey("userId")
     val preferencesFlow = dataStore.data
     val preferences by preferencesFlow.collectAsState(initial = emptyPreferences())
-    val currentValue = preferences[myKey]?:"-1"
+    val currentValue = preferences[myKey] ?: "-1"
 
-    if(currentValue!="-1"){
+    if (currentValue != "-1") {
         println(currentValue)
     }
 
@@ -266,7 +270,8 @@ fun OpenYourShopScreen(shopPhoneNo :String,userID:String,viewModel: OpenYourShop
 //                            navController.navigate(Routes.SearchScreenPage)
                             showShopAddressUI = true
                         },
-                        isEditable = false)
+                        isEditable = false
+                    )
 
                     TextFieldWithLabel(
                         label = "Shop Address For Sign Board",
@@ -352,14 +357,17 @@ fun OpenYourShopScreen(shopPhoneNo :String,userID:String,viewModel: OpenYourShop
                         },
                         isEditable = false,
                         prefix = {
-                            Card(modifier = Modifier
-                                .size(24.dp),
+                            Card(
+                                modifier = Modifier
+                                    .size(24.dp),
                                 shape = RoundedCornerShape(2.dp),
-                                colors = CardDefaults.cardColors(containerColor = if (shopBoardBackgroundColorName.value.text.isNotEmpty()) Color.fromHex(
-                                    shopBoardBackgroundColorCode.value.text
-                                ) else Color.Black),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (shopBoardBackgroundColorName.value.text.isNotEmpty()) Color.fromHex(
+                                        shopBoardBackgroundColorCode.value.text
+                                    ) else Color.Black
+                                ),
                                 border = BorderStroke(0.5.dp, color = Color.Black)
-                            ){
+                            ) {
 
                             }
                         }
@@ -374,14 +382,17 @@ fun OpenYourShopScreen(shopPhoneNo :String,userID:String,viewModel: OpenYourShop
                         },
                         isEditable = false,
                         prefix = {
-                            Card(modifier = Modifier
-                                .size(24.dp),
+                            Card(
+                                modifier = Modifier
+                                    .size(24.dp),
                                 shape = RoundedCornerShape(2.dp),
-                                colors = CardDefaults.cardColors(containerColor = if (shopBoardFontColorName.value.text.isNotEmpty()) Color.fromHex(
-                                    shopBoardFontColorCode.value.text
-                                ) else Color.Black),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (shopBoardFontColorName.value.text.isNotEmpty()) Color.fromHex(
+                                        shopBoardFontColorCode.value.text
+                                    ) else Color.Black
+                                ),
                                 border = BorderStroke(0.5.dp, color = Color.Black)
-                            ){
+                            ) {
 
                             }
                         }
@@ -424,7 +435,7 @@ fun OpenYourShopScreen(shopPhoneNo :String,userID:String,viewModel: OpenYourShop
                                             errorMessage = error
                                         },
                                         status = { status ->
-                                            if(status){
+                                            if (status) {
                                                 viewModel.registerShop(
                                                     shopMaster = ShopMaster(
                                                         shopId = "",
@@ -442,12 +453,14 @@ fun OpenYourShopScreen(shopPhoneNo :String,userID:String,viewModel: OpenYourShop
                                                         fontSizeId = "",
                                                         fontStyleId = shopBoardFontStyle.value.text,
                                                         fontColourId = shopBoardFontColorCode.value.text,
-                                                        isActive = "1",
+                                                        shopActive = "1",
                                                         flag = "1",
                                                         latitude = latitude.value.text,
                                                         longitude = longitude.value.text,
                                                         shopStatus = "",
-                                                        searchTag = searchTag.value.text,
+                                                        searchTag = searchTag.value.text.split(",")
+                                                            .map { it.trim() }
+                                                            .filter { it.isNotEmpty() },
                                                         isVerified = "1",
                                                         createdAt = Util.getCurrentTimeStamp(),
                                                         updatedAt = Util.getCurrentTimeStamp(),
@@ -477,7 +490,7 @@ fun OpenYourShopScreen(shopPhoneNo :String,userID:String,viewModel: OpenYourShop
                 }
             }
         }
-        if(showShopAddressUI){
+        if (showShopAddressUI) {
             PlacesSearchScreen(
                 addressDetails = { placeDetails ->
                     shopAddress.value = TextFieldValue(placeDetails.address)

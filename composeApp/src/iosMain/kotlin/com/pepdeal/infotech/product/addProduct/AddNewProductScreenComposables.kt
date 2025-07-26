@@ -554,12 +554,13 @@ fun AddNewProductScreen(shopId:String,viewModal: AddNewProductViewModal = ViewMo
                                                                     sizeId = productSize.value.text,
                                                                     sizeName = "",
                                                                     color = productColorsCode?:"",
-                                                                    searchTag = searchTag.value.text,
+                                                                    searchTag = searchTag.value.text.split(",").map { it.trim() }
+                                                                        .filter { it.isNotEmpty() },
                                                                     onCall = if(showProductPrices) "0" else "1",
                                                                     mrp = productMrp.value.text,
                                                                     discountMrp = productDiscount.value.text,
                                                                     sellingPrice = productSale.value.text,
-                                                                    isActive = "1",
+                                                                    productActive = "1",
                                                                     flag = "1",
                                                                     createdAt = Util.getCurrentTimeStamp(),
                                                                     updatedAt = Util.getCurrentTimeStamp()

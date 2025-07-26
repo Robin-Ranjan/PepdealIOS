@@ -21,19 +21,19 @@ sealed class Routes {
     object RegistrationPage : Routes()
 
     @Serializable
-    object ForgetPasswordPage:Routes()
+    object ForgetPasswordPage : Routes()
 
     @Serializable
-    data class OpenYourShopPage(val shopPhoneNo:String,val userId: String) : Routes()
+    data class OpenYourShopPage(val shopPhoneNo: String, val userId: String) : Routes()
 
     @Serializable
-    data class AddNewProductPage(val shopId:String) : Routes()
+    data class AddNewProductPage(val shopId: String) : Routes()
 
     @Serializable
-    data class UpdateProductPage(val productId:String) : Routes()
+    data class UpdateProductPage(val productId: String) : Routes()
 
     @Serializable
-    data class FavouritesPage(val userId: String) : Routes()
+    data class FavouritesProductRoute(val userId: String) : Routes()
 
     @Serializable
     data class CustomerTicketPage(val userId: String) : Routes()
@@ -51,34 +51,40 @@ sealed class Routes {
     data class PersonalInfoPage(val userId: String) : Routes()
 
     @Serializable
-    data class SuperShopPage(val userId: String) : Routes()
+    data class SuperShopScreenRoute(val userId: String) : Routes()
 
     @Serializable
     data class FavoriteShopVideosPage(val userId: String) : Routes()
 
     @Serializable
-    data class UploadShopVideoPage(val shopId: String):Routes()
+    data class UploadShopVideoPage(val shopId: String) : Routes()
 
     @Serializable
-    data class ListAllProductPage(val shopId:String) :Routes()
+    data class ListAllProductPage(val shopId: String) : Routes()
 
     @Serializable
-    data class CategoryWiseProductPage(val subCategoryName:String) :Routes()
+    data class CategoryWiseProductPage(val subCategoryName: String) : Routes()
 
     @Serializable
-    data class ProductDetailsPage(val productId: String) :Routes()
+    data class ProductDetailsPage(val productId: String) : Routes()
 
     @Serializable
     object SplashScreenPage : Routes()
 
     @Serializable
-    data class YourShopScreenPage(val shopId:String) :Routes()
+    data class YourShopScreenPage(val shopId: String) : Routes()
 
     @Serializable
-    data class SupportScreenPage(val userName:String,val userMobileNo:String):Routes()
+    data class SupportScreenPage(val userName: String, val userMobileNo: String) : Routes()
 
     @Serializable
-    object AboutUs :Routes()
+    object AboutUs : Routes()
+
+    @Serializable
+    data object AddressSearchRoute : Routes()
+
+    @Serializable
+    data object ShopScreenRoute : Routes()
 
     companion object {
         const val ColorBottomSheet = "color_bottom_sheet"

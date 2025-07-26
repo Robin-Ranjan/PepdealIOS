@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pepdeal.infotech.UserProfilePicMaster
+import com.pepdeal.infotech.user.repository.PersonalInfoRepo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,10 +24,9 @@ class PersonalInfoViewModal() : ViewModel() {
     val userDetails: StateFlow<UserMaster> get() = _userDetails
 
     private val _userProfilePicMaster = MutableStateFlow<UserProfilePicMaster?>(null)
-    val userProfilePicMaster : StateFlow<UserProfilePicMaster?> get() = _userProfilePicMaster
+    val userProfilePicMaster: StateFlow<UserProfilePicMaster?> get() = _userProfilePicMaster
 
 
-    private var hasFetchedProfilePic = false
 
     fun fetchUserDetails(userId: String) {
         _isLoading.value = true
@@ -40,36 +40,35 @@ class PersonalInfoViewModal() : ViewModel() {
     fun updateUserEmailId(userId: String, emailId: String, onSuccess: (Boolean) -> Unit) {
         _uploading.value = true
         viewModelScope.launch {
-            val success = repo.updateUserEmailId(userId, emailId) // Now calling suspend function inside coroutine
+            val success = repo.updateUserEmailId(
+                userId,
+                emailId
+            )
             _uploading.value = false
-            withContext(Dispatchers.Main) { onSuccess(success) } // Ensure UI update on main thread
+            withContext(Dispatchers.Main) { onSuccess(success) }
         }
-
     }
 
-    fun fetchUserProfilePic(userId:String){
-        if (hasFetchedProfilePic) return // Skip if already fetched
-
+    fun fetchUserProfilePic(userId: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val userProfile = repo.fetchUserProfilePic(userId)
             println(userProfile)
             _userProfilePicMaster.value = userProfile
-            hasFetchedProfilePic = userProfile?.profilePicUrl.isNullOrEmpty().not() // Fetch only once
         }
     }
 
-    fun uploadNewProfilePic(userId: String,profilePicImage: ImageBitmap){
+    fun uploadNewProfilePic(userId: String, profilePicImage: ImageBitmap) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                repo.uploadThumbnailWithDelete(userId, profilePicImage)
-            } catch (e:Exception){
+                repo.updateProfilePic(userId, profilePicImage)
+            } catch (e: Exception) {
                 println(e.message)
                 e.printStackTrace()
             }
         }
     }
 
-    fun reset(){
+    fun reset() {
         _userDetails.value = UserMaster()
         _userProfilePicMaster.value = null
     }

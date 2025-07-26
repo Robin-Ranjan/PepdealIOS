@@ -9,7 +9,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -50,12 +49,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import com.pepdeal.infotech.product.ProductMaster
-import com.pepdeal.infotech.tickets.TicketMaster
+import com.pepdeal.infotech.tickets.model.TicketMaster
 import com.pepdeal.infotech.util.ColorUtil
 import com.pepdeal.infotech.util.Util
-import network.chaintech.sdpcomposemultiplatform.sdp
-import network.chaintech.sdpcomposemultiplatform.ssp
-import kotlin.math.max
 
 @Composable
 fun TicketDialog(

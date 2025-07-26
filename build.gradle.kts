@@ -5,5 +5,5 @@ plugins {
     alias(libs.plugins.composeCompiler) apply false
     alias(libs.plugins.kotlinMultiplatform) apply false
     alias(libs.plugins.googleServices) apply false
-    kotlin("plugin.serialization") version "2.0.0"
+//    kotlin("plugin.serialization") version "2.0.0"
 }

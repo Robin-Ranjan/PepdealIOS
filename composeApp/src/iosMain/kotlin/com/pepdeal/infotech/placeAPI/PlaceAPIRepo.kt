@@ -1,16 +1,12 @@
 package com.pepdeal.infotech.placeAPI
 
-import com.pepdeal.infotech.util.APIKEY
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.engine.darwin.Darwin
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
-import io.ktor.client.request.parameter
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.coroutines.Dispatchers
@@ -65,11 +61,6 @@ data class PlacePredictionApiResponse(
     @SerialName("description") val description: String,
     @SerialName("place_id") val placeId: String
 )
-
-//@Serializable
-//data class PlaceDetailsResponse(
-//    @SerialName("result") val result: PlaceDetailsResult?
-//)
 
 @Serializable
 data class PlaceDetailsResult(
@@ -191,7 +182,8 @@ suspend fun fetchPlaceDetails(
                 when {
                     "locality" in component.types -> city = component.longName // City
                     "sublocality" in component.types -> area = component.longName // Area
-                    "administrative_area_level_1" in component.types -> state = component.longName // State
+                    "administrative_area_level_1" in component.types -> state =
+                        component.longName // State
                 }
             }
 
@@ -217,7 +209,6 @@ suspend fun fetchPlaceDetails(
         null
     }
 }
-
 
 
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)

@@ -58,7 +58,7 @@ import chaintech.videoplayer.ui.video.VideoPlayerComposable
 import com.pepdeal.infotech.DataStore
 import com.pepdeal.infotech.PreferencesKeys
 import com.pepdeal.infotech.navigation.routes.Routes
-import com.pepdeal.infotech.product.SearchView
+import com.pepdeal.infotech.product.screen.component.SearchView
 import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util.fromHex
 import com.pepdeal.infotech.util.Util.toNameFormat

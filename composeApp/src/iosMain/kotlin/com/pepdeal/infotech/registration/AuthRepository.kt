@@ -1,5 +1,17 @@
 package com.pepdeal.infotech.registration
 
+import com.pepdeal.infotech.core.data.safeCall
+import com.pepdeal.infotech.core.databaseUtils.DatabaseCollection
+import com.pepdeal.infotech.core.databaseUtils.DatabaseQueryResponse
+import com.pepdeal.infotech.core.databaseUtils.DatabaseRequest
+import com.pepdeal.infotech.core.databaseUtils.DatabaseResponse
+import com.pepdeal.infotech.core.databaseUtils.DatabaseUtil
+import com.pepdeal.infotech.core.databaseUtils.DatabaseValue
+import com.pepdeal.infotech.core.databaseUtils.FirestoreFilter
+import com.pepdeal.infotech.core.databaseUtils.buildFirestorePatchUrl
+import com.pepdeal.infotech.core.databaseUtils.buildFirestoreQuery
+import com.pepdeal.infotech.core.domain.AppResult
+import com.pepdeal.infotech.core.domain.DataError
 import com.pepdeal.infotech.shop.modal.ShopMaster
 import com.pepdeal.infotech.user.UserMaster
 import com.pepdeal.infotech.util.FirebaseUtil
@@ -112,33 +124,45 @@ object AuthRepository {
     suspend fun checkUserAvailable(phoneNumber: String): Pair<Boolean, String?> {
         return withContext(Dispatchers.IO) {
             try {
-                val response: HttpResponse =
-                    client.get("${FirebaseUtil.BASE_URL}user_master.json") {
-                        parameter("orderBy", "\"mobileNo\"")
-                        parameter("equalTo", "\"$phoneNumber\"")
+                println("🔍 Checking Firestore for user with phoneNumber=$phoneNumber")
+
+                // Step 1: Build Firestore query body
+                val queryBody = buildFirestoreQuery(
+                    collection = DatabaseCollection.USER_MASTER,
+                    filters = listOf(
+                        FirestoreFilter("mobileNo", phoneNumber)
+                    ),
+                    limit = 1
+                )
+
+                // Step 2: Execute query
+                val response: AppResult<List<DatabaseQueryResponse>, DataError.Remote> = safeCall {
+                    client.post(DatabaseUtil.DATABASE_QUERY_URL) {
                         contentType(ContentType.Application.Json)
+                        setBody(queryBody)
+                    }.body()
+                }
+
+                // Step 3: Check result
+                return@withContext when {
+                    response is AppResult.Success && response.data.isNotEmpty() && response.data.first().document != null -> {
+                        println("✅ User Found in Firestore")
+                        true to "User Found"
                     }
 
-                if (response.status == HttpStatusCode.OK) {
-                    val responseBody: String = response.bodyAsText()
-                    println(responseBody)
-                    if (responseBody == "null" || responseBody.isBlank() || responseBody == "{}") {
-                        println("User Not Found")
-                        return@withContext Pair(false, "User Not Found")  // ✅ Corrected return
+                    response is AppResult.Success -> {
+                        println("❌ User Not Found (Empty or null document)")
+                        false to "User Not Found"
                     }
-                    return@withContext Pair(
-                        true,
-                        "User Found"
-                    )  // ✅ Ensuring return inside `withContext`
-                } else {
-                    return@withContext Pair(false, "User Not Found")
+
+                    else -> {
+                        println("❌ Firestore query failed")
+                        false to "Failed to check user"
+                    }
                 }
             } catch (e: Exception) {
-                println("Error: ${e.message}")
-                return@withContext Pair(
-                    false,
-                    "Error checking mobile number availability."
-                )  // ✅ Ensure exception handling returns
+                println("🚨 Exception in checkUserAvailable (Firestore): ${e.message}")
+                false to "Error checking user in Firestore"
             }
         }
     }
@@ -146,124 +170,160 @@ object AuthRepository {
     suspend fun registerUser(userMaster: UserMaster): Pair<Boolean, String?> {
         return withContext(Dispatchers.IO) {
             try {
-                // Get a unique Firebase-generated ID
-                val keyResponse: HttpResponse =
-                    client.post("${FirebaseUtil.BASE_URL}user_master.json") {
-                        contentType(ContentType.Application.Json)
-                        setBody("{}") // Firebase returns a unique key when we send an empty object
-                    }
+                // Step 1: Create user in Firestore
+                val createResponse: HttpResponse = client.post(
+                    "${DatabaseUtil.DATABASE_URL}/${DatabaseCollection.USER_MASTER}"
+                ) {
+                    contentType(ContentType.Application.Json)
+                    setBody(DatabaseRequest(fields = mapOf())) // empty body to get Firestore doc ID
+                }
 
-                val keyJson = keyResponse.body<Map<String, String>>()
-                val userId =
-                    keyJson["name"] ?: return@withContext Pair(false, "Error generating user ID.")
+                if (!createResponse.status.isSuccess()) {
+                    return@withContext Pair(false, "Error generating user ID.")
+                }
 
+                val createBody: DatabaseResponse = createResponse.body()
+                val userId = createBody.name.substringAfterLast("/")
                 val newUser = userMaster.copy(userId = userId, fcmToken = "")
 
-                // Register User with the generated Firebase key
-                val registerResponse: HttpResponse =
-                    client.put("${FirebaseUtil.BASE_URL}user_master/$userId.json") {
+                val updateFields = mapOf(
+                    "userId" to DatabaseValue.StringValue(newUser.userId),
+                    "userName" to DatabaseValue.StringValue(newUser.userName),
+                    "mobileNo" to DatabaseValue.StringValue(newUser.mobileNo),
+                    "emailId" to DatabaseValue.StringValue(newUser.emailId),
+                    "password" to DatabaseValue.StringValue(newUser.password),
+                    "fcmToken" to DatabaseValue.StringValue(newUser.fcmToken),
+                    "deviceToken" to DatabaseValue.StringValue(newUser.deviceToken),
+                    "isActive" to DatabaseValue.StringValue(newUser.isActive),
+                    "createdAt" to DatabaseValue.StringValue(newUser.createdAt),
+                    "updatedAt" to DatabaseValue.StringValue(newUser.updatedAt)
+                )
+
+
+                val patchUrl = buildFirestorePatchUrl(
+                    collection = DatabaseCollection.USER_MASTER,
+                    documentId = userId,
+                    fields = updateFields.keys.toList()
+                )
+                // Step 2: Set user data
+                val patchUserResponse =
+                    client.patch(patchUrl) {
                         contentType(ContentType.Application.Json)
-                        setBody(newUser)
+                        setBody(
+                            DatabaseRequest(fields = updateFields)
+                        )
                     }
 
-                if (registerResponse.status != HttpStatusCode.OK) {
+                if (!patchUserResponse.status.isSuccess()) {
                     return@withContext Pair(false, "Registration Failed")
                 }
 
-                println("User mobile No:- ${userMaster.mobileNo}")
+                // Step 3: Search for existing shop with this mobile number
+                val shopQueryBody = buildFirestoreQuery(
+                    collection = DatabaseCollection.SHOP_MASTER,
+                    filters = listOf(FirestoreFilter("shopMobileNo", userMaster.mobileNo)),
+                    limit = 1
+                )
 
-                // Check if the user is also a shop owner
-                val shopResponse: HttpResponse =
-                    client.get("${FirebaseUtil.BASE_URL}shop_master.json") {
-                        parameter("orderBy", "\"shopMobileNo\"")
-                        parameter("equalTo", "\"${userMaster.mobileNo}\"")
-                        contentType(ContentType.Application.Json)
-                    }
-                val shopJson = shopResponse.body<Map<String, ShopMaster>>()
-                println(shopJson)
-
-                if (shopJson.isNotEmpty()) {
-                    val shopEntry = shopJson.entries.first()
-                    val shopId = shopEntry.key
-
-                    println("Updating shop with shopId: $shopId")
-
-                    val shopUpdates = mapOf("userId" to userId)
-
-                    val shopUpdateResponse: HttpResponse =
-                        client.patch("${FirebaseUtil.BASE_URL}shop_master/$shopId.json") {
+                val shopResponse: AppResult<List<DatabaseQueryResponse>, DataError.Remote> =
+                    safeCall {
+                        client.post(DatabaseUtil.DATABASE_QUERY_URL) {
                             contentType(ContentType.Application.Json)
-                            setBody(shopUpdates)
+                            setBody(shopQueryBody)
+                        }.body()
+                    }
+
+                if (shopResponse is AppResult.Success && shopResponse.data.isNotEmpty()) {
+                    val shopDoc = shopResponse.data.first().document?.name ?: ""
+                    val shopId = shopDoc.substringAfterLast("/")
+
+                    val shopUpdates = mapOf("userId" to DatabaseValue.StringValue(userId))
+                    val patchShopResponse =
+                        client.patch("${DatabaseUtil.DATABASE_URL}/${DatabaseCollection.SHOP_MASTER}/$shopId?updateMask.fieldPaths=userId") {
+                            contentType(ContentType.Application.Json)
+                            setBody(DatabaseRequest(fields = shopUpdates))
                         }
 
-                    if (shopUpdateResponse.status != HttpStatusCode.OK) {
+                    if (!patchShopResponse.status.isSuccess()) {
                         return@withContext Pair(
                             false,
                             "User registered but shop userId update failed."
                         )
                     }
-                } else {
-                    println("empty json")
                 }
 
-                val userUpdates = mapOf("userStatus" to "1")
-                val updateUserStatusResponse: HttpResponse =
-                    client.patch("${FirebaseUtil.BASE_URL}user_master/$userId.json") { // Update specific user node
+                // Step 4: Update userStatus = "1"
+                val userStatusPatch = mapOf("userStatus" to DatabaseValue.StringValue("1"))
+                val userStatusResponse =
+                    client.patch("${DatabaseUtil.DATABASE_URL}/${DatabaseCollection.USER_MASTER}/$userId?updateMask.fieldPaths=userStatus") {
                         contentType(ContentType.Application.Json)
-                        setBody(userUpdates)
+                        setBody(DatabaseRequest(fields = userStatusPatch))
                     }
 
-
-                if (updateUserStatusResponse.status != HttpStatusCode.OK) {
+                if (!userStatusResponse.status.isSuccess()) {
                     return@withContext Pair(false, "User registered but userStatus update failed.")
                 }
 
                 Pair(true, "Registration Successful")
             } catch (e: Exception) {
-                println(e.message)
+                println("🔥 Exception in registerUser: ${e.message}")
+                e.printStackTrace()
                 Pair(false, "Something Went Wrong")
             }
         }
     }
 
+
     suspend fun updateUserPassword(mobileNo: String, updatedPass: String): Boolean {
-        return try {
-            val client = HttpClient(Darwin) {
-                install(ContentNegotiation) {
-                    json(json)
+        return withContext(Dispatchers.IO) {
+            try {
+                // Step 1: Build Firestore query to find user by mobile number
+                val queryBody = buildFirestoreQuery(
+                    collection = DatabaseCollection.USER_MASTER,
+                    filters = listOf(FirestoreFilter("mobileNo", mobileNo)),
+                    limit = 1
+                )
+
+                val queryResponse: AppResult<List<DatabaseQueryResponse>, DataError.Remote> = safeCall {
+                    client.post(DatabaseUtil.DATABASE_QUERY_URL) {
+                        contentType(ContentType.Application.Json)
+                        setBody(queryBody)
+                    }.body()
                 }
-            }
-            // Step 1: Fetch user ID by matching mobile number
-            val response: HttpResponse = client.get("${FirebaseUtil.BASE_URL}user_master.json") {
-                parameter("orderBy", "\"mobileNo\"")
-                parameter("equalTo", "\"$mobileNo\"")
-                contentType(ContentType.Application.Json)
-            }
 
-            val responseBody: String = response.bodyAsText()
-            val userMap: Map<String, UserMaster>? = json.decodeFromString(responseBody)
+                if (queryResponse !is AppResult.Success || queryResponse.data.isEmpty()) {
+                    println("❌ User not found for mobileNo=$mobileNo")
+                    return@withContext false
+                }
 
-            println(userMap)
-            val userId = userMap?.keys?.firstOrNull() ?: return false // Extract the userId
+                val documentName = queryResponse.data.first().document?.name ?: return@withContext false
+                val userId = documentName.substringAfterLast("/")
 
-            println(userId)
+                // Step 2: Prepare patch fields
+                val updateFields = mapOf(
+                    "password" to DatabaseValue.StringValue(updatedPass),
+                    "updatedAt" to DatabaseValue.StringValue(Util.getCurrentTimeStamp())
+                )
 
-            val requestBody = mapOf(
-                "password" to updatedPass,
-                "updatedAt" to Util.getCurrentTimeStamp()
-            )
+                val patchUrl = buildFirestorePatchUrl(
+                    collection = DatabaseCollection.USER_MASTER,
+                    documentId = userId,
+                    fields = updateFields.keys.toList()
+                )
 
-            val updateResponse: HttpResponse =
-                client.patch("${FirebaseUtil.BASE_URL}user_master/$userId.json") {
+                // Step 3: Send PATCH request
+                val patchResponse: HttpResponse = client.patch(patchUrl) {
                     contentType(ContentType.Application.Json)
-                    setBody(requestBody)
+                    setBody(DatabaseRequest(fields = updateFields))
                 }
 
-            updateResponse.status.isSuccess()
-        } catch (e: Exception) {
-            e.printStackTrace()
-            println(e.message)
-            false
+                println("📬 PATCH Response: ${patchResponse.status}")
+                return@withContext patchResponse.status.isSuccess()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                println("🚨 updateUserPassword error: ${e.message}")
+                false
+            }
         }
     }
 

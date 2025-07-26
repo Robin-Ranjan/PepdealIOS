@@ -67,7 +67,7 @@ import com.pepdeal.infotech.TicketDialog
 import com.pepdeal.infotech.product.ProductImageMaster
 import com.pepdeal.infotech.product.ProductMaster
 import com.pepdeal.infotech.shop.modal.ShopMaster
-import com.pepdeal.infotech.tickets.TicketMaster
+import com.pepdeal.infotech.tickets.model.TicketMaster
 import com.pepdeal.infotech.util.ColorUtil
 import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util
@@ -90,6 +90,7 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
+import org.koin.compose.viewmodel.koinViewModel
 import pepdealios.composeapp.generated.resources.Res
 import pepdealios.composeapp.generated.resources.black_heart
 import pepdealios.composeapp.generated.resources.compose_multiplatform
@@ -99,11 +100,10 @@ import pepdealios.composeapp.generated.resources.original
 import pepdealios.composeapp.generated.resources.red_heart
 import utils.KottieConstants
 
-@OptIn(ExperimentalResourceApi::class)
 @Composable
 fun ProductDetailScreen(
     productId: String,
-    viewModal: ProductDetailsViewModal = ViewModals.productDetailsViewModal
+    viewModal: ProductDetailsViewModal = koinViewModel()
 ) {
     //dataStore
     val datastore = DataStore.dataStore
@@ -227,7 +227,7 @@ fun ProductDetailScreen(
                                             NavigationProvider.navController.popBackStack()
                                         },
                                         onLikeClick = {
-                                            if (currentUserId != "-1") {
+                                            if (currentUserId == "-1") {
                                                 Util.showToast("Login Please")
                                                 return@ProductImagesCarouselWidget
                                             }
@@ -375,7 +375,12 @@ fun WarrantySection(product: ProductMaster) {
                 colorNames?.let {
                     Text(
                         text = buildAnnotatedString {
-                            withStyle(style = SpanStyle(color = Color.Black, fontWeight = FontWeight.Bold)) {
+                            withStyle(
+                                style = SpanStyle(
+                                    color = Color.Black,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            ) {
                                 append("Color: ")
                             }
                             withStyle(style = SpanStyle(color = Color.DarkGray)) {
@@ -388,7 +393,12 @@ fun WarrantySection(product: ProductMaster) {
                 if (product.brandId.isNotEmpty() && product.brandId.isNotEmpty() && product.brandId != "-") {
                     Text(
                         text = buildAnnotatedString {
-                            withStyle(style = SpanStyle(color = Color.Black, fontWeight = FontWeight.Bold)) {
+                            withStyle(
+                                style = SpanStyle(
+                                    color = Color.Black,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            ) {
                                 append("Brand: ")
                             }
                             withStyle(style = SpanStyle(color = Color.DarkGray)) {
@@ -401,7 +411,12 @@ fun WarrantySection(product: ProductMaster) {
 
                 Text(
                     text = buildAnnotatedString {
-                        withStyle(style = SpanStyle(color = Color.Black, fontWeight = FontWeight.Bold)) {
+                        withStyle(
+                            style = SpanStyle(
+                                color = Color.Black,
+                                fontWeight = FontWeight.Bold
+                            )
+                        ) {
                             append("Category: ")
                         }
                         withStyle(style = SpanStyle(color = Color.DarkGray)) {
@@ -440,7 +455,11 @@ fun AdditionalDetailsSection(product: ProductMaster) {
         if (product.description2.isNotEmpty() || product.description2.isNotBlank()) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(text = "Additional Details", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            Text(text = product.description2.toNameFormat(), fontSize = 12.sp, color = Color.DarkGray)
+            Text(
+                text = product.description2.toNameFormat(),
+                fontSize = 12.sp,
+                color = Color.DarkGray
+            )
         }
     }
 }
@@ -469,7 +488,7 @@ fun ProductShopInfoSection(shopMaster: ShopMaster) {
         // Row for Mobile Number with Call Icon
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
-               imageVector = Icons.Default.Call,
+                imageVector = Icons.Default.Call,
                 contentDescription = "Call",
                 tint = Color.DarkGray,
                 modifier = Modifier.size(16.dp).padding(end = 4.dp)
@@ -486,7 +505,7 @@ fun ProductShopInfoSection(shopMaster: ShopMaster) {
         // Row for Address with Location Icon
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
-               imageVector = Icons.Default.MyLocation,
+                imageVector = Icons.Default.MyLocation,
                 contentDescription = "Location",
                 tint = Color.DarkGray,
                 modifier = Modifier.size(16.dp).padding(end = 4.dp)
