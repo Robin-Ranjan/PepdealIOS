@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.pepdeal.infotech.PreferencesKeys
 import com.pepdeal.infotech.core.base_ui.SnackBarMessage
 import com.pepdeal.infotech.core.domain.AppResult
+import com.pepdeal.infotech.core.domain.onError
 import com.pepdeal.infotech.core.domain.onSuccess
 import com.pepdeal.infotech.dataStore.PreferencesRepository
 import com.pepdeal.infotech.favourite_product.modal.FavoriteProductMaster
@@ -44,7 +45,6 @@ class ProductViewModel(
     init {
         viewModelScope.launch {
             observeUserLogin()
-            fetchItems()
         }
     }
 
@@ -84,7 +84,8 @@ class ProductViewModel(
                 action.location.address?.let {
                     fetchItems(
                         userLat = action.location.lat ?: 0.0,
-                        userLng = action.location.lng ?: 0.0
+                        userLng = action.location.lng ?: 0.0,
+                        userId = _state.value.user?.userId
                     )
                 }
             }
@@ -113,6 +114,7 @@ class ProductViewModel(
                 serializer = UserMaster.serializer(),
             )
             updateState(user = user)
+            fetchItems(userId = user?.userId)
         }
     }
 
@@ -195,6 +197,7 @@ class ProductViewModel(
     }
 
     fun fetchItems(
+        userId: String? = null,
         userLat: Double = 28.7162092,
         userLng: Double = 77.1170743,
     ) {
@@ -203,30 +206,35 @@ class ProductViewModel(
             return
         }
 
+        println("🚀 Starting fetch for products near ($userLat, $userLng) with userId = $userId")
         isFetching = true
         updateState(isLoading = true)
 
         val collectedProducts = mutableListOf<ProductUiDto>()
 
         viewModelScope.launch {
-            productUseCase.fetchedProduct(
-                userId = _state.value.user?.userId,
+            productUseCase.fetchedProducts(
+                userId = userId,
                 userLat = userLat,
                 userLng = userLng
             )
                 .onEach { product ->
                     product.onSuccess { data ->
+                        println("✅ Product fetched: ${data.shopItem}")
                         collectedProducts.add(data)
+                    }.onError {
+                        println("❌ Product fetch error: ${it.type} - ${it.message}")
                     }
                 }
                 .catch { e ->
                     e.printStackTrace()
+                    println("⚠️ Error during product flow: ${e.message}")
                     isFetching = false
-                    println("⚠️ Error fetching products: ${e.message}")
                 }
                 .onCompletion {
                     isFetching = false
                     updateState(isLoading = false, products = collectedProducts)
+                    println("🏁 Fetch completed. Total products collected: ${collectedProducts.size}")
                 }
                 .launchIn(this)
         }

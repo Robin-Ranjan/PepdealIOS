@@ -3,7 +3,6 @@ package com.pepdeal.infotech.shop
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -43,7 +42,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -72,9 +70,9 @@ import com.pepdeal.infotech.core.basic_ui.AppSearchBar
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.product.ProductWithImages
 import com.pepdeal.infotech.shop.modal.ShopWithProducts
+import com.pepdeal.infotech.shop.screen.component.SearchTagItemCard
 import com.pepdeal.infotech.shop.viewModel.ShopViewModel
 import com.pepdeal.infotech.util.NavigationProvider
-import com.pepdeal.infotech.util.Util.fromHex
 import com.pepdeal.infotech.util.Util.toDiscountFormat
 import com.pepdeal.infotech.util.Util.toNameFormat
 import com.pepdeal.infotech.util.Util.toRupee
@@ -90,9 +88,6 @@ import dev.jordond.compass.geolocation.Geolocator
 import dev.jordond.compass.geolocation.GeolocatorResult
 import dev.jordond.compass.geolocation.mobile
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.FontResource
 import org.jetbrains.compose.resources.painterResource
@@ -109,6 +104,7 @@ import platform.Foundation.NSUUID
 fun ShopScreenRoot(viewModel: ShopViewModel = koinViewModel()) {
 
     val uiState by viewModel.state.collectAsStateWithLifecycle()
+    val searchTags by viewModel.searchTags.collectAsStateWithLifecycle()
 
     val snackBarHostState = remember { SnackbarHostState() }
 
@@ -123,6 +119,7 @@ fun ShopScreenRoot(viewModel: ShopViewModel = koinViewModel()) {
 
     ShopScreen(
         uiState,
+        searchTags,
         viewModel = viewModel,
         snackbarHostState = snackBarHostState,
         onAction = viewModel::onAction,
@@ -134,6 +131,7 @@ fun ShopScreenRoot(viewModel: ShopViewModel = koinViewModel()) {
 @Composable
 fun ShopScreen(
     uiState: ShopViewModel.UiState,
+    searchTags: ShopViewModel.SearchShopTags,
     newAddress: String? = null,
     viewModel: ShopViewModel,
     snackbarHostState: SnackbarHostState,
@@ -144,12 +142,7 @@ fun ShopScreen(
     val controller = remember(factory) { factory.createPermissionsController() }
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    //observer
-    val isSearchLoading by viewModel.isSearchLoading.collectAsStateWithLifecycle()
-    val searchedShopList by viewModel.searchedShops.collectAsStateWithLifecycle()
-
     // variables
-    var searchQuery by rememberSaveable { mutableStateOf("") }
     val columnState = rememberLazyListState()
     var locationName: String? by rememberSaveable { mutableStateOf(null) }
     var isSearchActive by rememberSaveable { mutableStateOf(false) }
@@ -186,17 +179,6 @@ fun ShopScreen(
 
     val displayedLocation = newAddress ?: locationName
 
-    LaunchedEffect(searchQuery) {
-        snapshotFlow { searchQuery.trim() }
-            .debounce(1000)
-            .distinctUntilChanged()
-            .collectLatest { debouncedQuery ->
-                if (debouncedQuery.isNotEmpty()) {
-                    viewModel.loadMoreSearchedShops(debouncedQuery)
-                }
-            }
-    }
-
     LaunchedEffect(Unit) {
         checkPermission(
             permission = Permission.LOCATION,
@@ -223,6 +205,7 @@ fun ShopScreen(
     MaterialTheme {
         BindEffect(controller)
         Scaffold(
+            containerColor = BackGroundColor,
             snackbarHost = {
                 CustomSnackBarHost(
                     hostState = snackbarHostState,
@@ -233,7 +216,7 @@ fun ShopScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.White)
+                    .background(BackGroundColor)
                     .padding(horizontal = 3.dp)
                     .pointerInput(Unit) {
                         awaitEachGesture {
@@ -282,17 +265,19 @@ fun ShopScreen(
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = Color.Black,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
 
                     AppSearchBar(
-                        searchQuery = searchQuery,
-                        onSearchQueryChange = { searchQuery = it },
+                        searchQuery = searchTags.query,
+                        onSearchQueryChange = { onAction(ShopViewModel.Action.OnSearchQueryChange(it)) },
                         isSearchActive = isSearchActive,
                         onSearchActiveChange = { isSearchActive = it },
-                        isSearchLoading = isSearchLoading,
-                        onClearClick = { searchQuery = "" }
+                        isSearchLoading = searchTags.isLoading,
+                        onClearClick = { onAction(ShopViewModel.Action.OnSearchQueryChange("")) }
                     ) {
                         Box(
                             modifier = Modifier
@@ -306,107 +291,145 @@ fun ShopScreen(
                                     }
                                 }
                         ) {
-                            LazyColumn(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 5.dp)
-                                    .background(Color.White)
-                            ) {
-                                if (searchedShopList.isEmpty()) {
-                                    item {
-                                        Text(
-                                            text = "No shops found",
-                                            modifier = Modifier.padding(16.dp),
-                                            color = Color.Gray
-                                        )
-                                    }
-                                } else {
-                                    items(searchedShopList) { shop ->
-                                        ShopCardView(shop, onShopClicked = { shopId ->
-                                            NavigationProvider.navController.navigate(
-                                                Routes.ShopDetails(
-                                                    shopId = shopId,
-                                                    userId = uiState.user?.userId ?: "-1"
-                                                )
-                                            )
-                                        })
-                                    }
+                            when {
+                                searchTags.isLoading -> {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.align(Alignment.Center)
+                                    )
                                 }
-                            }
-                        }
-                    }
 
-                    when {
-                        uiState.isLoading -> {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .weight(1f),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator(color = Color.Blue)
-                            }
-                        }
+                                searchTags.isEmpty -> {
+                                    Text(
+                                        text = "No Tags found",
+                                        modifier = Modifier.align(Alignment.Center),
+                                        color = Color.Gray
+                                    )
+                                }
 
-                        uiState.isEmpty -> {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .weight(1f),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("PepDeal isn’t available on this location just yet.")
-                            }
-                        }
+                                else -> {
+                                    LazyColumn(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 5.dp)
+                                            .background(BackGroundColor)
+                                    ) {
+                                        items(searchTags.topSearchTags) {
+                                            SearchTagItemCard(it) { shopId ->
+                                                NavigationProvider.navController.navigate(
+                                                    Routes.ShopSearchRoute(
+                                                        shopId,
+                                                        uiState.user?.userId
+                                                    )
+                                                )
+                                            }
+                                        }
 
-                        else -> {
-                            val shops = uiState.shops
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .pointerInput(Unit) {
-                                        awaitPointerEventScope {
-                                            while (true) {
-                                                awaitPointerEvent()
-                                                keyboardController?.hide()
+                                        if (searchTags.topShopNames.isNotEmpty()) {
+                                            item {
+                                                Text(
+                                                    text = "Search By Shop Name",
+                                                    fontFamily = FontFamily(Font(Res.font.manrope_medium)),
+                                                    color = Color.DarkGray,
+                                                    modifier = Modifier.padding(
+                                                        top = 8.dp,
+                                                        bottom = 4.dp,
+                                                        start = 12.dp
+                                                    ),
+                                                    fontSize = 14.sp
+                                                )
+                                            }
+                                        }
+
+                                        items(searchTags.topShopNames) {
+                                            SearchTagItemCard(it) {
+                                                NavigationProvider.navController.navigate(
+                                                    Routes.ShopSearchRoute(
+                                                        it,
+                                                        uiState.user?.userId
+                                                    )
+                                                )
                                             }
                                         }
                                     }
-                            ) {
-                                LazyColumn(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .nestedScroll(nestedScrollConnection)
-                                        .padding(top = 5.dp),
-                                    state = columnState
-                                ) {
-
-                                    if (uiState.bannerList.isNotEmpty()) {
-                                        item {
-                                            BannerCarouselWidget(
-                                                uiState.bannerList,
-                                                modifier = Modifier.fillMaxWidth()
-                                            )
-                                        }
+                                }
+                            }
+                        }
+                    }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .pointerInput(Unit) {
+                                awaitPointerEventScope {
+                                    while (true) {
+                                        awaitPointerEvent()
+                                        keyboardController?.hide()
                                     }
-                                    items(
-                                        shops,
-                                        key = {
-                                            it.shop.shopId ?: NSUUID.UUID().toString()
-                                        }) { shop ->
-                                        ShopCardView(shop, onShopClicked = { shopId ->
-                                            NavigationProvider.navController.navigate(
-                                                Routes.ShopDetails(
-                                                    shopId = shopId,
-                                                    userId = uiState.user?.userId ?: "-1"
+                                }
+                            }
+                    ) {
+                        Column(modifier = Modifier.fillMaxSize().padding(top = 5.dp)) {
+                            // 🔹 Always show banners if available
+                            if (uiState.bannerList.isNotEmpty()) {
+                                BannerCarouselWidget(
+                                    uiState.bannerList,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+
+                            when {
+                                uiState.isLoading -> {
+                                    // 🔸 Show loader centered in remaining space
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .weight(1f), // Fill rest of screen below banners
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator(color = Color.Blue)
+                                    }
+                                }
+
+                                uiState.isEmpty -> {
+                                    // 🔸 Show empty state message
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .weight(1f),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text("PepDeal isn’t available on this location just yet.")
+                                    }
+                                }
+
+                                else -> {
+                                    // 🔹 Show shop list
+                                    LazyColumn(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .weight(1f)
+                                            .nestedScroll(nestedScrollConnection)
+                                            .padding(top = 5.dp),
+                                        state = columnState
+                                    ) {
+                                        items(
+                                            uiState.shops,
+                                            key = { it.shop.shopId ?: NSUUID.UUID().toString() }
+                                        ) { shop ->
+                                            ShopCardView(shop, onShopClicked = { shopId ->
+                                                NavigationProvider.navController.navigate(
+                                                    Routes.ShopDetails(
+                                                        shopId = shopId,
+                                                        userId = uiState.user?.userId ?: "-1"
+                                                    )
                                                 )
-                                            )
-                                        })
+                                            })
+                                        }
                                     }
                                 }
                             }
                         }
                     }
+
                 }
             }
         }
@@ -416,8 +439,10 @@ fun ShopScreen(
 @Composable
 fun ShopCardView(shopWithProduct: ShopWithProducts, onShopClicked: (String) -> Unit) {
     var offset by remember { mutableStateOf(Offset(0f, 0f)) }
-    val cardBackgroundColor = Color.fromHex(shopWithProduct.shop.bgColourId ?: "")
-    val shopNameColor = Color.fromHex(shopWithProduct.shop.fontColourId)
+//    val cardBackgroundColor = Color.fromHex(shopWithProduct.shop.bgColourId ?: "")
+    val cardBackgroundColor = Color.White
+//    val shopNameColor = Color.fromHex(shopWithProduct.shop.fontColourId)
+    val shopNameColor = Color.Black
     val fontResource: FontResource =
 //        getFontResourceByName(shopWithProduct.shop.fontStyleId ?: "") ?: Res.font.manrope_bold
         Res.font.manrope_bold
@@ -430,7 +455,7 @@ fun ShopCardView(shopWithProduct: ShopWithProducts, onShopClicked: (String) -> U
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        border = BorderStroke(1.dp, Color.Gray)
+        border = BorderStroke(0.25.dp, Color.Gray.copy(alpha = 0.5f))
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Column {
@@ -446,12 +471,12 @@ fun ShopCardView(shopWithProduct: ShopWithProducts, onShopClicked: (String) -> U
                             .background(cardBackgroundColor)
                     ) {
                         Text(
-                            text = shopWithProduct.shop.shopName.orEmpty(),
+                            text = shopWithProduct.shop.shopName.orEmpty().uppercase(),
                             color = shopNameColor,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 5.dp),
-                            textAlign = TextAlign.Center,
+                                .padding(top = 5.dp, start = 8.dp),
+                            textAlign = TextAlign.Start,
                             fontFamily = customFont
                         )
 
@@ -465,8 +490,8 @@ fun ShopCardView(shopWithProduct: ShopWithProducts, onShopClicked: (String) -> U
                             ),
                             color = shopNameColor,
                             modifier = Modifier
-                                .fillMaxWidth(),
-                            textAlign = TextAlign.Center
+                                .fillMaxWidth().padding(start = 8.dp),
+                            textAlign = TextAlign.Start
                         )
                     }
                 }
@@ -521,7 +546,7 @@ fun ShopItemView(shopItem: ProductWithImages, onProductClicked: (String) -> Unit
         colors = CardDefaults.cardColors(containerColor = Color.White),
         shape = RoundedCornerShape(3.dp),
         elevation = CardDefaults.elevatedCardElevation(0.dp),
-        border = BorderStroke(1.dp, Color.Gray)
+//        border = BorderStroke(0.dp, Color.Gray)
     ) {
         Column(
             modifier = Modifier.fillMaxWidth()
@@ -532,16 +557,17 @@ fun ShopItemView(shopItem: ProductWithImages, onProductClicked: (String) -> Unit
                 Card(
                     shape = RoundedCornerShape(2.dp),
                     elevation = CardDefaults.elevatedCardElevation(0.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(0.dp, color = Color.Gray)
                 ) {
                     CoilImage(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(110.dp)
-                            .border(1.dp, color = Color.LightGray),
+                            .height(110.dp),
+//                            .border(1.dp, color = Color.LightGray),
                         imageModel = { shopItem.images.firstOrNull()?.productImages ?: "" },
                         imageOptions = ImageOptions(
-                            contentScale = ContentScale.Crop,
+                            contentScale = ContentScale.FillBounds,
                             alignment = Alignment.Center,
                             colorFilter = ColorFilter.colorMatrix(ColorMatrix().apply {
                                 setToSaturation(1f)
@@ -554,7 +580,7 @@ fun ShopItemView(shopItem: ProductWithImages, onProductClicked: (String) -> Unit
                                 contentDescription = "Placeholder",
                                 modifier = Modifier.fillMaxSize()
                                     .background(color = Color.White),
-                                contentScale = ContentScale.Crop
+                                contentScale = ContentScale.FillBounds
                             )
                         },
                         loading = {
@@ -563,7 +589,7 @@ fun ShopItemView(shopItem: ProductWithImages, onProductClicked: (String) -> Unit
                                 contentDescription = "Placeholder",
                                 modifier = Modifier.fillMaxSize()
                                     .background(color = Color.White),
-                                contentScale = ContentScale.Crop
+                                contentScale = ContentScale.FillBounds
                             )
                         }
                     )
@@ -641,3 +667,5 @@ fun ShopItemView(shopItem: ProductWithImages, onProductClicked: (String) -> Unit
         }
     }
 }
+
+val BackGroundColor = Color(0xFFF7F7F7)

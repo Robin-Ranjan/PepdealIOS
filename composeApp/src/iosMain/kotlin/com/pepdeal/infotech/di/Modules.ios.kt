@@ -26,12 +26,15 @@ import com.pepdeal.infotech.product.repository.ProductRepository
 import com.pepdeal.infotech.product.repository.ProductRepositoryImpl
 import com.pepdeal.infotech.product.repository.ProductSearchRepository
 import com.pepdeal.infotech.product.repository.ProductSearchRepositoryImpl
+import com.pepdeal.infotech.shop.repository.AlgoliaShopSearchTagRepository
+import com.pepdeal.infotech.shop.repository.AlgoliaShopSearchTagRepositoryImpl
 import com.pepdeal.infotech.shop.repository.SearchShopRepository
 import com.pepdeal.infotech.shop.repository.SearchShopRepositoryImpl
 import com.pepdeal.infotech.shop.viewModel.ShopViewModel
 import com.pepdeal.infotech.shop.repository.ShopRepository
 import com.pepdeal.infotech.shop.repository.ShopRepositoryImpl
 import com.pepdeal.infotech.shop.shopUseCases.ShopUseCase
+import com.pepdeal.infotech.shop.viewModel.SearchShopViewmodel
 import com.pepdeal.infotech.shopVideo.favShopVideo.repository.FavoriteShopVideoRepository
 import com.pepdeal.infotech.shopVideo.favShopVideo.repository.FavoriteShopVideoRepositoryImpl
 import com.pepdeal.infotech.shopVideo.favShopVideo.viewModel.FavoriteShopVideoViewModal
@@ -51,6 +54,7 @@ import com.pepdeal.infotech.user.repository.UserRepositoryImpl
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.darwin.Darwin
 import org.koin.core.module.Module
+import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
@@ -77,8 +81,9 @@ actual val platformModule: Module
         singleOf(::SellerTicketRepositoryImpl).bind<SellerTicketRepository>()
         singleOf(::FavoriteShopVideoRepositoryImpl).bind<FavoriteShopVideoRepository>()
         singleOf(::AddressRepositoryImpl).bind<AddressRepository>()
+        singleOf(::AlgoliaShopSearchTagRepositoryImpl).bind<AlgoliaShopSearchTagRepository>()
 
-        viewModel { ProductDetailsViewModal(get()) }
+        viewModelOf(::ProductDetailsViewModal)
         viewModel { TicketViewModal(get(), get()) }
         viewModel { LoginViewModal(get(), get()) }
         viewModel { ProfileScreenViewModal(get(), get()) }
@@ -88,9 +93,10 @@ actual val platformModule: Module
         viewModel { CategoryWiseProductViewModal(get(), get(), get(), get()) }
         viewModel { SellerTicketViewModal(get(), get()) }
         viewModel { FavoriteShopVideoViewModal(get(), get()) }
-        viewModel { ShopViewModel(get(), get()) }
+        viewModel { ShopViewModel(get(), get(), get()) }
         viewModelOf(::ProductViewModel)
         viewModelOf(::LocationViewModel)
+        factoryOf(::SearchShopViewmodel)
 
 
 //        Use Cases (business logic)
@@ -98,7 +104,7 @@ actual val platformModule: Module
             ShopUseCase(
                 shopRepository = get(),
                 productRepository = get(),
-                shopSearchRepository = get()
+                algoliaShopSearchTagRepository = get()
             )
         }
 
@@ -106,7 +112,9 @@ actual val platformModule: Module
             ProductUseCase(
                 productRepository = get(),
                 favRepo = get(),
-                productSearchRepository = get()
+                productSearchRepository = get(),
+                shopRepository = get(),
+                ticketRepository = get()
             )
         }
     }

@@ -122,16 +122,4 @@ class ProductDetailsRepo {
             return null
         }
     }
-
-    suspend fun fetchTheProductShopDetails(shopId: String): ShopMaster? {
-        try {
-            return ShopDetailsRepo().fetchShopDetails(shopId)
-
-        } catch (e: Exception) {
-            println("Error fetching shop details: ${e.message}")
-            e.printStackTrace()
-            return null
-        }
-    }
-
 }

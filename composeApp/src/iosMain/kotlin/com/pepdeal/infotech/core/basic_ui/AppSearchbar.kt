@@ -9,13 +9,10 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.with
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -42,8 +39,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.pepdeal.infotech.shop.BackGroundColor
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,7 +64,7 @@ fun AppSearchBar(
             .fillMaxWidth()
             .border(1.dp, Color.Gray, RoundedCornerShape(8.dp)),
         colors = SearchBarColors(
-            containerColor = Color.White,
+            containerColor = BackGroundColor,
             dividerColor = Color.Gray
         ),
         shape = RectangleShape,
@@ -83,16 +80,8 @@ fun AppSearchBar(
                     .fillMaxWidth()
                     .padding(0.dp),
                 placeholder = {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .wrapContentHeight(Alignment.CenterVertically)
-                    ) {
-                        Text(
-                            text = placeholderText,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(bottom = 2.dp)
-                        )
+                    if (searchQuery.isEmpty()) {
+                        AnimatedSearchHintText(query = searchQuery)
                     }
                 },
                 leadingIcon = {
@@ -161,10 +150,10 @@ fun AppSearchBar(
 }
 
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun AnimatedSearchHint(query: String): String {
-    val suggestions =
-        listOf("Search Food 🍔", "Search Clothes 👗", "Search Hotels 🏨", "Search Electronics 📱")
+fun AnimatedSearchHintText(query: String) {
+    val suggestions = listOf("Food 🍔", "Fashion 👗", "Hotels 🏨", "Electronics 📱")
     var index by remember { mutableStateOf(0) }
 
     LaunchedEffect(key1 = query.isEmpty()) {
@@ -176,5 +165,30 @@ fun AnimatedSearchHint(query: String): String {
         }
     }
 
-    return if (query.isEmpty()) suggestions[index] else ""
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Static "Search" part
+        Text(
+            text = "Search ",
+            style = MaterialTheme.typography.bodyLarge,
+            color = Color.Gray
+        )
+
+        // Animated suggestion part
+        AnimatedContent(
+            targetState = suggestions[index],
+            transitionSpec = {
+                slideInVertically { height -> height } + fadeIn() with
+                        slideOutVertically { height -> -height } + fadeOut()
+            },
+            label = "Animated Suggestion"
+        ) { word ->
+            Text(
+                text = word,
+                style = MaterialTheme.typography.bodyLarge,
+                color = Color.Gray
+            )
+        }
+    }
 }

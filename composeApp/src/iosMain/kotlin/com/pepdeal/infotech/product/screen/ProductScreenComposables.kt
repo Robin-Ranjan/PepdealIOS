@@ -50,6 +50,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -219,130 +220,133 @@ fun ProductScreen(
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = Color.Black,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
+                    }
 
-                        AppSearchBar(
-                            searchQuery = searchQuery,
-                            onSearchQueryChange = { searchQuery = it },
-                            isSearchActive = isSearchActive,
-                            onSearchActiveChange = { isSearchActive = it },
-                            isSearchLoading = isSearchLoading,
-                            onClearClick = { searchQuery = "" }
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .pointerInput(Unit) {
-                                        awaitPointerEventScope {
-                                            while (true) {
-                                                awaitPointerEvent()
-                                                keyboardController?.hide()
-                                            }
+                    AppSearchBar(
+                        searchQuery = searchQuery,
+                        onSearchQueryChange = { searchQuery = it },
+                        isSearchActive = isSearchActive,
+                        onSearchActiveChange = { isSearchActive = it },
+                        isSearchLoading = isSearchLoading,
+                        onClearClick = { searchQuery = "" }
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .pointerInput(Unit) {
+                                    awaitPointerEventScope {
+                                        while (true) {
+                                            awaitPointerEvent()
+                                            keyboardController?.hide()
                                         }
                                     }
+                                }
+                        ) {
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(2),
+                                modifier = Modifier.fillMaxSize().padding(5.dp),
+                                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                LazyVerticalGrid(
-                                    columns = GridCells.Fixed(2),
-                                    modifier = Modifier.fillMaxSize().padding(5.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(5.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    if (filteredProducts.isEmpty()) {
-                                        item {
-                                            Text(
-                                                text = "No products found",
-                                                modifier = Modifier.padding(16.dp),
-                                                color = Color.Gray
-                                            )
-                                        }
-                                    } else {
-                                        items(
-                                            filteredProducts,
-                                            key = { it.shopItem.productId }) { product ->
+                                if (filteredProducts.isEmpty()) {
+                                    item {
+                                        Text(
+                                            text = "No products found",
+                                            modifier = Modifier.padding(16.dp),
+                                            color = Color.Gray
+                                        )
+                                    }
+                                } else {
+                                    items(
+                                        filteredProducts,
+                                        key = { it.shopItem.productId }) { product ->
 
-                                            ProductCard(
-                                                shopItems = product.shopItem,
-                                                isFavorite = product.isFavourite,
-                                                onLikeClicked = {
-                                                    onAction(
-                                                        ProductViewModel.Action.OnSearchedFavClick(
-                                                            product.shopItem
-                                                        )
+                                        ProductCard(
+                                            shopItems = product.shopItem,
+                                            isFavorite = product.isFavourite,
+                                            onLikeClicked = {
+                                                onAction(
+                                                    ProductViewModel.Action.OnSearchedFavClick(
+                                                        product.shopItem
                                                     )
-                                                },
-                                                onProductClicked = {
-                                                    onAction(
-                                                        ProductViewModel.Action.OnClickProduct(
-                                                            product.shopItem
-                                                        )
+                                                )
+                                            },
+                                            onProductClicked = {
+                                                onAction(
+                                                    ProductViewModel.Action.OnClickProduct(
+                                                        product.shopItem
                                                     )
-                                                }
-                                            )
-                                        }
+                                                )
+                                            }
+                                        )
                                     }
                                 }
                             }
+                        }
+                    }
 
-                            when {
-                                uiState.isLoading -> {
-                                    Box(
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        CircularProgressIndicator(color = Color.Blue)
-                                    }
-                                }
+                    when {
+                        uiState.isLoading -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize()
+                                    .weight(1f),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(color = Color.Blue)
+                            }
+                        }
 
-                                uiState.isEmpty -> {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .weight(1f),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text("PepDeal isn’t available in your location just yet.")
-                                    }
-                                }
+                        uiState.isEmpty -> {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .weight(1f),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("PepDeal isn’t available in your location just yet.")
+                            }
+                        }
 
-                                else -> {
-                                    val product = uiState.products
-                                    LazyVerticalGrid(
-                                        columns = GridCells.Fixed(2),
-                                        modifier = Modifier.fillMaxSize().padding(5.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(5.dp),
-                                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                                        state = listState
+                        else -> {
+                            val product = uiState.products
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(2),
+                                modifier = Modifier.fillMaxSize().padding(5.dp),
+                                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                state = listState
+                            ) {
+                                items(product, key = { it.shopItem.productId }) { product ->
+                                    // Product Card with Animation
+                                    AnimatedVisibility(
+                                        visible = true,
+                                        enter = fadeIn(tween(300)) + slideInVertically(
+                                            initialOffsetY = { it }),
+                                        exit = fadeOut(tween(300)) + slideOutVertically(
+                                            targetOffsetY = { it })
                                     ) {
-                                        items(product, key = { it.shopItem.productId }) { product ->
-                                            // Product Card with Animation
-                                            AnimatedVisibility(
-                                                visible = true,
-                                                enter = fadeIn(tween(300)) + slideInVertically(
-                                                    initialOffsetY = { it }),
-                                                exit = fadeOut(tween(300)) + slideOutVertically(
-                                                    targetOffsetY = { it })
-                                            ) {
-                                                ProductCard(
-                                                    shopItems = product.shopItem,
-                                                    isFavorite = product.isFavourite,
-                                                    onLikeClicked = {
-                                                        onAction(
-                                                            ProductViewModel.Action.OnFavClick(
-                                                                product.shopItem
-                                                            )
-                                                        )
-                                                    },
-                                                    onProductClicked = {
-                                                        onAction(
-                                                            ProductViewModel.Action.OnClickProduct(
-                                                                product.shopItem
-                                                            )
-                                                        )
-                                                    }
+                                        ProductCard(
+                                            shopItems = product.shopItem,
+                                            isFavorite = product.isFavourite,
+                                            onLikeClicked = {
+                                                onAction(
+                                                    ProductViewModel.Action.OnFavClick(
+                                                        product.shopItem
+                                                    )
+                                                )
+                                            },
+                                            onProductClicked = {
+                                                onAction(
+                                                    ProductViewModel.Action.OnClickProduct(
+                                                        product.shopItem
+                                                    )
                                                 )
                                             }
-                                        }
+                                        )
                                     }
                                 }
                             }

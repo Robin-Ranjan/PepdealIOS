@@ -31,6 +31,7 @@ class ProductSearchRepositoryImpl(
         searchQuery: String
     ): Flow<AppResult<List<ShopItems>, DataError.Remote>> = channelFlow {
         try {
+            val query = searchQuery.trim().lowercase().split(" ").filter { it.isNotBlank() }
             val queryBody = buildFirestoreQuery(
                 collection = DatabaseCollection.PRODUCT_MASTER,
                 filters = listOf(
@@ -38,7 +39,7 @@ class ProductSearchRepositoryImpl(
                     FirestoreFilter("flag", "0"),
                     FirestoreFilter("shopActive", "0"),
                     FirestoreFilter("shopBlock", "0"),
-                    FirestoreFilter("searchTag", searchQuery, FirestoreOperator.ARRAY_CONTAINS_ANY)
+                    FirestoreFilter("searchTag", query, FirestoreOperator.ARRAY_CONTAINS)
                 ),
                 limit = 5000
             )

@@ -28,13 +28,14 @@ import com.pepdeal.infotech.placeAPI.screen.SearchAddressRoot
 import com.pepdeal.infotech.product.ProductViewModel
 import com.pepdeal.infotech.product.addProduct.AddNewProductScreen
 import com.pepdeal.infotech.product.listProduct.screen.ListAllProductScreenRoot
-import com.pepdeal.infotech.product.producrDetails.ProductDetailScreen
+import com.pepdeal.infotech.product.producrDetails.ProductDetailScreenRoot
 import com.pepdeal.infotech.product.updateProduct.UpdateProductScreen
 import com.pepdeal.infotech.registration.RegisterScreen
 import com.pepdeal.infotech.shop.OpenYourShopScreen
 import com.pepdeal.infotech.shop.editShop.EditShopColorBottomSheet
 import com.pepdeal.infotech.shop.editShop.EditShopDetailsScreen
 import com.pepdeal.infotech.shop.editShop.EditShopFontBottomSheet
+import com.pepdeal.infotech.shop.screen.SearchShopScreenRoot
 import com.pepdeal.infotech.shop.shopDetails.ShopDetailsWithProductPage
 import com.pepdeal.infotech.shop.viewModel.AddressData
 import com.pepdeal.infotech.shop.viewModel.ShopViewModel
@@ -83,7 +84,11 @@ fun AppNavigation() {
                             AddressData.serializer(), jsonData
                         )
                         shopViewModel.onAction(ShopViewModel.Action.OnLocationChange(newAddress))
-                        productViewModel.onAction(ProductViewModel.Action.OnLocationChange(newAddress))
+                        productViewModel.onAction(
+                            ProductViewModel.Action.OnLocationChange(
+                                newAddress
+                            )
+                        )
                         backStackEntry.savedStateHandle.remove<String>("newAddressDeal")
                     }
                 }
@@ -158,8 +163,7 @@ fun AppNavigation() {
             }
 
             composable<Routes.ProductDetailsPage> {
-                val productId = it.toRoute<Routes.ProductDetailsPage>().productId
-                ProductDetailScreen(productId)
+                ProductDetailScreenRoot()
             }
 
             composable<Routes.SupportScreenPage> {
@@ -180,6 +184,10 @@ fun AppNavigation() {
 
             composable<Routes.SplashScreenPage> {
                 SplashScreen()
+            }
+
+            composable<Routes.ShopSearchRoute> {
+                SearchShopScreenRoot()
             }
 
             dialog(

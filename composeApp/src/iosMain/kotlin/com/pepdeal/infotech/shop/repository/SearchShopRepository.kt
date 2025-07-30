@@ -1,7 +1,6 @@
 package com.pepdeal.infotech.shop.repository
 
 import com.pepdeal.infotech.shop.modal.ShopMaster
-import com.pepdeal.infotech.shop.modal.ShopWithProducts
 import kotlinx.coroutines.flow.Flow
 
 interface SearchShopRepository {
@@ -11,3 +10,4 @@ interface SearchShopRepository {
         searchQuery: String = ""
     ): Flow<List<ShopMaster>>
 }
+

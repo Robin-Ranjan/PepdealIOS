@@ -10,27 +10,34 @@ import com.pepdeal.infotech.core.domain.AppResult
 import com.pepdeal.infotech.dataStore.PreferencesRepository
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.shop.modal.ShopWithProducts
-import com.pepdeal.infotech.shop.repository.SearchShopRepository
-import com.pepdeal.infotech.shop.repository.ShopRepository
+import com.pepdeal.infotech.shop.repository.AlgoliaShopSearchTagRepository
 import com.pepdeal.infotech.shop.shopUseCases.ShopUseCase
 import com.pepdeal.infotech.user.UserMaster
 import com.pepdeal.infotech.util.NavigationProvider
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
+@OptIn(FlowPreview::class)
 class ShopViewModel(
     private val shopUseCase: ShopUseCase,
+    private val shopSearchTagsRepo: AlgoliaShopSearchTagRepository,
     private val preferencesRepository: PreferencesRepository
 ) : ViewModel() {
 
@@ -46,16 +53,38 @@ class ShopViewModel(
             initialValue = _state.value
         )
 
-    private val _searchedShops = MutableStateFlow<List<ShopWithProducts>>(emptyList())
-    val searchedShops: StateFlow<List<ShopWithProducts>> = _searchedShops.asStateFlow()
+    private var lastSuccessfulResult: SearchShopTagSummaryResult? = null
+    private val _actions = MutableSharedFlow<ShopSearchSuggestion>()
 
-    private val _isSearchLoading = MutableStateFlow(false)
-    val isSearchLoading: StateFlow<Boolean> get() = _isSearchLoading
-    private var lastSearchedShopId: String? = null
+    private val _searchTags = MutableStateFlow(SearchShopTags())
+    val searchTags: StateFlow<SearchShopTags> = _searchTags.asStateFlow()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = _searchTags.value
+        )
     private var lastSearchQuery: String = ""
 
     private var searchJob: Job? = null
     private var isFetching = false
+
+    init {
+        viewModelScope.launch {
+            _actions
+                .filterIsInstance<ShopSearchSuggestion.Search>()
+                .map { it.query.trim() }
+                .debounce(300)
+                .distinctUntilChanged()
+                .collectLatest { query ->
+                    println("🔍 Searching for: $query")
+                    searchJob?.cancel()
+
+                    searchJob = launch {
+                        performSearch(query)
+                    }
+                }
+        }
+    }
 
     fun onAction(action: Action) {
         when (action) {
@@ -68,6 +97,13 @@ class ShopViewModel(
                     isLoading = true
                 )
                 loadMoreShops(action.location.lat ?: 0.0, action.location.lng ?: 0.0)
+            }
+
+            is Action.OnSearchQueryChange -> {
+                viewModelScope.launch {
+                    _searchTags.update { it.copy(query = action.query) }
+                    _actions.emit(ShopSearchSuggestion.Search(action.query))
+                }
             }
         }
     }
@@ -93,9 +129,9 @@ class ShopViewModel(
                         when (response) {
                             is AppResult.Success -> {
                                 val data = response.data
-                                println("✅ Received shops: ${data?.shop?.shopName}") // Debug log
+                                println("✅ Received shops: ${data.shop.shopName}") // Debug log
 
-                                data?.let { shop ->
+                                data.let { shop ->
                                     // Optional: avoid duplicates
                                     if (newShops.none { it.shop.shopId == data.shop.shopId }) {
                                         newShops.add(shop)
@@ -123,54 +159,63 @@ class ShopViewModel(
         }
     }
 
+    fun performSearch(query: String) {
+        if (query == lastSearchQuery || isFetching) return
 
-    fun loadMoreSearchedShops(query: String) {
-        // If the query is empty, we emit nothing.
-        if (query.isEmpty()) {
-            _searchedShops.value = emptyList()
-            lastSearchedShopId = null
-            lastSearchQuery = ""
-            return
-        }
-
-        // If the query has changed from the previous one, clear the old results and reset pagination.
-        if (query != lastSearchQuery) {
-            _searchedShops.value = emptyList()
-            lastSearchedShopId = null
-            lastSearchQuery = query
-        } else {
-            return
-        }
-
-        _isSearchLoading.value = true
+        lastSearchQuery = query
+        isFetching = true
 
         searchJob?.cancel()
-
-        println("loadMore Searched  called")
-        try {
-            searchJob = viewModelScope.launch {
-//                 Call your repository function that returns a Flow<ShopWithProducts>
-                shopUseCase.searchShop(
-                    lastSearchedShopId,
-                    searchQuery = query,
-                    pageSize = 4000
-                )
-                    .collect { newShop ->
-                        // Prevent duplicates by checking lastSearchedShopId
-                        if (newShop.shop.shopId != lastSearchedShopId) {
-                            lastSearchedShopId = newShop.shop.shopId
-                        }
-                        _searchedShops.update { oldList ->
-                            (oldList + newShop).distinctBy { it.shop.shopId }
-                        }
-
-                        if (_isSearchLoading.value) _isSearchLoading.value = false
+        searchJob = viewModelScope.launch {
+            if (query.isBlank()) {
+                lastSuccessfulResult?.let { result ->
+                    _searchTags.update {
+                        it.copy(
+                            topSearchTags = result.topShopNames,
+                            topShopNames = result.topShopNames
+                        )
                     }
+                }
+                isFetching = false
+                return@launch
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        } finally {
-            _isSearchLoading.value = false
+
+            _searchTags.update { it.copy(isLoading = true) }
+
+            try {
+                var emitted = false
+                shopSearchTagsRepo.searchSummary(query).collectLatest { result ->
+                    result.onSuccess {
+                        if (it.topSearchTags.isNotEmpty() && it.topShopNames.isNotEmpty()) {
+                            lastSuccessfulResult = it
+                            _searchTags.update { tags ->
+                                tags.copy(
+                                    topSearchTags = it.topSearchTags,
+                                    topShopNames = it.topShopNames,
+                                    isLoading = false
+                                )
+                            }
+                            emitted = true
+                        }
+                    }
+
+                    result.onFailure { e ->
+                        e.printStackTrace()
+                        _searchTags.update { it.copy(isEmpty = true, isLoading = false) }
+                        emitted = true
+                    }
+                }
+
+                if (!emitted) {
+                    _searchTags.update { it.copy(isEmpty = true, isLoading = false) }
+                }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _searchTags.update { it.copy(isEmpty = true, isLoading = false) }
+            } finally {
+                isFetching = false
+            }
         }
     }
 
@@ -236,12 +281,26 @@ class ShopViewModel(
         val isEmpty: Boolean = false
     )
 
+    data class SearchShopTags(
+        val query: String = "",
+        val topSearchTags: List<String> = emptyList(),
+        val topShopNames: List<String> = emptyList(),
+        val isLoading: Boolean = false,
+        val isEmpty: Boolean = false
+    )
+
     sealed interface Action {
 
         data class OnLocationChange(val location: AddressData) : Action
         data object OnResetMessage : Action
 
         data object OnLocationClick : Action
+
+        data class OnSearchQueryChange(val query: String) : Action
+    }
+
+    sealed class ShopSearchSuggestion {
+        data class Search(val query: String) : ShopSearchSuggestion()
     }
 }
 
@@ -250,4 +309,9 @@ data class AddressData(
     val address: String? = null,
     val lat: Double? = null,
     val lng: Double? = null
+)
+
+data class SearchShopTagSummaryResult(
+    val topSearchTags: List<String>,
+    val topShopNames: List<String>
 )

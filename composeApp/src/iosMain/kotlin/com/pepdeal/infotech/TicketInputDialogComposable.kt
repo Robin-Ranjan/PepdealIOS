@@ -58,7 +58,6 @@ fun TicketDialog(
     productDetails: ProductMaster,
     showDialog: Boolean,
     onDismiss: () -> Unit,
-    onSubmit: (String, String, String) -> Unit,// Size, Color, Quantity,
     onSubmitTicket: (TicketMaster) -> Unit
 ) {
 
@@ -168,8 +167,6 @@ fun TicketDialog(
                                     .padding(start = 3.dp, end = 3.dp, top = 3.dp),
                                 shape = RoundedCornerShape(5.dp),
                                 onClick = {
-                                    onSubmit(selectedSize, selectedColor, quantity)
-
                                     val ticket = TicketMaster(
                                         ticketId = "",
                                         userId = "",
@@ -213,7 +210,6 @@ fun DropdownMenuComponent(label: String, options: List<String>, onSelection: (St
     var selectedOption by remember { mutableStateOf(label) }
     var menuWidth by remember { mutableStateOf(0.dp) } // To store the width of the parent Box
     val localDensity = LocalDensity.current
-    val scrollState = rememberScrollState()
     Box(
         modifier = Modifier.fillMaxWidth().background(Color.White)
             .border(1.dp, Color.Gray, RoundedCornerShape(5.dp)).clickable { expanded = true }

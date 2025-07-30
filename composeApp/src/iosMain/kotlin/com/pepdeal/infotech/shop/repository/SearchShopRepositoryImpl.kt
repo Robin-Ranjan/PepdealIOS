@@ -10,35 +10,48 @@ import com.pepdeal.infotech.core.databaseUtils.FirestoreOperator
 import com.pepdeal.infotech.core.databaseUtils.buildFirestoreQuery
 import com.pepdeal.infotech.core.domain.AppResult
 import com.pepdeal.infotech.core.domain.DataError
-import com.pepdeal.infotech.product.repository.ProductRepository
+import com.pepdeal.infotech.core.utils.AppJson
 import com.pepdeal.infotech.shop.modal.ShopMaster
-import com.pepdeal.infotech.shop.modal.ShopWithProducts
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLPath
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
+import kotlinx.serialization.json.put
 
 class SearchShopRepositoryImpl(
     private val httpClient: HttpClient,
-    private val productRepo: ProductRepository
 ) : SearchShopRepository {
+
     override suspend fun getActiveSearchedShopsFlowPagination(
         lastShopId: String?,
         pageSize: Int,
         searchQuery: String
     ): Flow<List<ShopMaster>> = channelFlow {
         try {
-
+            val query = searchQuery.trim().lowercase().split(" ").filter { it.isNotBlank() }
             val queryBody = buildFirestoreQuery(
                 collection = DatabaseCollection.SHOP_MASTER,
                 filters = listOf(
                     FirestoreFilter("shopActive", "0"),
                     FirestoreFilter("flag", "0"),
-                    FirestoreFilter("searchTag", searchQuery, FirestoreOperator.ARRAY_CONTAINS)
+                    FirestoreFilter("searchTag", query, FirestoreOperator.ARRAY_CONTAINS)
                 ),
                 limit = 5000
             )
@@ -96,26 +109,12 @@ class SearchShopRepositoryImpl(
             }
             send(validShops)
 
-//            for (shop in validShops) {
-////                val shopId = shop.shopId
-////                if (!shopId.isNullOrBlank()) {
-////                    val productsResult = productRepo.getActiveProductsWithImages(shopId)
-////                    if (productsResult is AppResult.Success && productsResult.data.isNotEmpty()) {
-////                        println("✅ Emitting: ${shop.shopName} with ${productsResult.data.size} products")
-////                        send(ShopWithProducts(shop, productsResult.data))
-////                    } else {
-////                        println("⚠️ No valid products for shop $shopId")
-////                    }
-////                } else {
-////                    println("❌ Skipping shop due to null or blank shopId")
-////                }
-//
-//            }
-
-
             println("🎯 Completed nearby shop scan.")
         } catch (e: Exception) {
             println("❌ Exception in getNearbyActiveShopsFlow: ${e.message}")
         }
     }
 }
+
+
+

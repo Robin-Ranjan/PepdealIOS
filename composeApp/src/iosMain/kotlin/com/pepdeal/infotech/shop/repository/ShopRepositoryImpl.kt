@@ -32,7 +32,7 @@ import kotlinx.coroutines.flow.flowOn
 class ShopRepositoryImpl(
     private val httpClient: HttpClient
 ) : ShopRepository {
-    override suspend fun fetchShopDetails(shopId: String): AppResult<ShopMaster?, DataError.Remote> {
+    override suspend fun fetchShopDetails(shopId: String): AppResult<ShopMaster, DataError.Remote> {
         val queryBody = buildFirestoreQuery(
             collection = DatabaseCollection.SHOP_MASTER,
             limit = 1,
@@ -54,9 +54,18 @@ class ShopRepositoryImpl(
             is AppResult.Error -> AppResult.Error(response.error)
 
             is AppResult.Success -> {
-                println("shopDetails:${response.data}")
-                val shop = response.data.firstOrNull()?.document?.fields?.let { fields ->
-                    ShopMaster(
+                val doc = response.data.firstOrNull()?.document
+                if (doc?.fields == null) {
+                    // 🔴 No document found — return Fail
+                    AppResult.Error(
+                        DataError.Remote(
+                            DataError.RemoteType.NOT_FOUND,
+                            "Shop not found for ID: $shopId"
+                        )
+                    )
+                } else {
+                    val fields = doc.fields
+                    val shop = ShopMaster(
                         shopId = (fields["shopId"] as? DatabaseValue.StringValue)?.stringValue.orEmpty(),
                         userId = (fields["userId"] as? DatabaseValue.StringValue)?.stringValue.orEmpty(),
                         shopName = (fields["shopName"] as? DatabaseValue.StringValue)?.stringValue.orEmpty(),
@@ -77,17 +86,18 @@ class ShopRepositoryImpl(
                         latitude = (fields["latitude"] as? DatabaseValue.StringValue)?.stringValue.orEmpty(),
                         longitude = (fields["longitude"] as? DatabaseValue.StringValue)?.stringValue.orEmpty(),
                         shopStatus = (fields["shopStatus"] as? DatabaseValue.StringValue)?.stringValue.orEmpty(),
-                        searchTag = (fields["searchTag"] as? DatabaseValue.ArrayValue)?.values?.mapNotNull { (it as? DatabaseValue.StringValue)?.stringValue }
+                        searchTag = (fields["searchTag"] as? DatabaseValue.ArrayValue)?.values
+                            ?.mapNotNull { (it as? DatabaseValue.StringValue)?.stringValue }
                             .orEmpty(),
                         isVerified = (fields["isVerified"] as? DatabaseValue.StringValue)?.stringValue.orEmpty(),
                         createdAt = (fields["createdAt"] as? DatabaseValue.StringValue)?.stringValue.orEmpty(),
                         updatedAt = (fields["updatedAt"] as? DatabaseValue.StringValue)?.stringValue.orEmpty(),
                         showNumber = (fields["showNumber"] as? DatabaseValue.StringValue)?.stringValue.orEmpty(),
                         geoHash = (fields["geoHash"] as? DatabaseValue.StringValue)?.stringValue.orEmpty()
-
                     )
+
+                    AppResult.Success(shop)
                 }
-                AppResult.Success(shop)
             }
         }
     }
