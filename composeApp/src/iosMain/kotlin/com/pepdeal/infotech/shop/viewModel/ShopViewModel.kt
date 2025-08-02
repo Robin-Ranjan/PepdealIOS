@@ -14,6 +14,7 @@ import com.pepdeal.infotech.shop.repository.AlgoliaShopSearchTagRepository
 import com.pepdeal.infotech.shop.shopUseCases.ShopUseCase
 import com.pepdeal.infotech.user.UserMaster
 import com.pepdeal.infotech.util.NavigationProvider
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.IO
@@ -65,7 +66,6 @@ class ShopViewModel(
         )
     private var lastSearchQuery: String = ""
 
-    private var searchJob: Job? = null
     private var isFetching = false
 
     init {
@@ -77,11 +77,7 @@ class ShopViewModel(
                 .distinctUntilChanged()
                 .collectLatest { query ->
                     println("🔍 Searching for: $query")
-                    searchJob?.cancel()
-
-                    searchJob = launch {
-                        performSearch(query)
-                    }
+                    performSearch(query)
                 }
         }
     }
@@ -160,27 +156,24 @@ class ShopViewModel(
     }
 
     fun performSearch(query: String) {
-        if (query == lastSearchQuery || isFetching) return
+        if (query == lastSearchQuery) return
 
         lastSearchQuery = query
-        isFetching = true
 
-        searchJob?.cancel()
-        searchJob = viewModelScope.launch {
+        viewModelScope.launch {
             if (query.isBlank()) {
                 lastSuccessfulResult?.let { result ->
                     _searchTags.update {
                         it.copy(
-                            topSearchTags = result.topShopNames,
+                            topSearchTags = result.topSearchTags,
                             topShopNames = result.topShopNames
                         )
                     }
                 }
-                isFetching = false
                 return@launch
             }
 
-            _searchTags.update { it.copy(isLoading = true) }
+            _searchTags.update { it.copy(isLoading = true, isEmpty = false) }
 
             try {
                 var emitted = false
@@ -210,6 +203,9 @@ class ShopViewModel(
                     _searchTags.update { it.copy(isEmpty = true, isLoading = false) }
                 }
 
+            } catch (e: CancellationException) {
+                e.printStackTrace()
+                println(e.message)
             } catch (e: Exception) {
                 e.printStackTrace()
                 _searchTags.update { it.copy(isEmpty = true, isLoading = false) }

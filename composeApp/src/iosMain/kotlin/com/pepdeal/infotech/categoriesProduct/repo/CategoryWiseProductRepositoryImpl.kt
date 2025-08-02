@@ -107,7 +107,7 @@ class CategoryWiseProductRepositoryImpl(
                     }
 
                     for (product in validProduct) {
-                        product?.let {
+                        product.let {
 
                             val imageResult = productRepo.fetchProductImages(product.productId)
                             val image =

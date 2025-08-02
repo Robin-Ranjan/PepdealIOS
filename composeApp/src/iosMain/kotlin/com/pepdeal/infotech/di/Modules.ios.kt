@@ -22,6 +22,8 @@ import com.pepdeal.infotech.product.listProduct.viewModel.ListAllProductViewModa
 import com.pepdeal.infotech.product.producrDetails.ProductDetailsViewModal
 import com.pepdeal.infotech.product.ProductViewModel
 import com.pepdeal.infotech.product.productUseCases.ProductUseCase
+import com.pepdeal.infotech.product.repository.AlgoliaProductSearchTagRepository
+import com.pepdeal.infotech.product.repository.AlgoliaProductSearchTagRepositoryImpl
 import com.pepdeal.infotech.product.repository.ProductRepository
 import com.pepdeal.infotech.product.repository.ProductRepositoryImpl
 import com.pepdeal.infotech.product.repository.ProductSearchRepository
@@ -34,6 +36,7 @@ import com.pepdeal.infotech.shop.viewModel.ShopViewModel
 import com.pepdeal.infotech.shop.repository.ShopRepository
 import com.pepdeal.infotech.shop.repository.ShopRepositoryImpl
 import com.pepdeal.infotech.shop.shopUseCases.ShopUseCase
+import com.pepdeal.infotech.shop.viewModel.SearchProductViewmodel
 import com.pepdeal.infotech.shop.viewModel.SearchShopViewmodel
 import com.pepdeal.infotech.shopVideo.favShopVideo.repository.FavoriteShopVideoRepository
 import com.pepdeal.infotech.shopVideo.favShopVideo.repository.FavoriteShopVideoRepositoryImpl
@@ -82,6 +85,7 @@ actual val platformModule: Module
         singleOf(::FavoriteShopVideoRepositoryImpl).bind<FavoriteShopVideoRepository>()
         singleOf(::AddressRepositoryImpl).bind<AddressRepository>()
         singleOf(::AlgoliaShopSearchTagRepositoryImpl).bind<AlgoliaShopSearchTagRepository>()
+        singleOf(::AlgoliaProductSearchTagRepositoryImpl).bind<AlgoliaProductSearchTagRepository>()
 
         viewModelOf(::ProductDetailsViewModal)
         viewModel { TicketViewModal(get(), get()) }
@@ -97,6 +101,7 @@ actual val platformModule: Module
         viewModelOf(::ProductViewModel)
         viewModelOf(::LocationViewModel)
         factoryOf(::SearchShopViewmodel)
+        factoryOf(::SearchProductViewmodel)
 
 
 //        Use Cases (business logic)
@@ -112,7 +117,7 @@ actual val platformModule: Module
             ProductUseCase(
                 productRepository = get(),
                 favRepo = get(),
-                productSearchRepository = get(),
+                productAlgoliaRepository = get(),
                 shopRepository = get(),
                 ticketRepository = get()
             )

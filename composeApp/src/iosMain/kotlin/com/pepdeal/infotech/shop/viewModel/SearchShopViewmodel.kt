@@ -46,7 +46,7 @@ class SearchShopViewmodel(
     private fun searchShops(query: String) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
-            shopUseCase.searchShop(searchQuery = query, pageSize = 1000, lastShopId = null)
+            shopUseCase.searchShop(searchQuery = query)
                 .catch { e ->
                     _state.update { it.copy(isEmpty = true, isLoading = false) }
                 }

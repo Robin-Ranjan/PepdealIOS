@@ -29,6 +29,7 @@ import com.pepdeal.infotech.product.ProductViewModel
 import com.pepdeal.infotech.product.addProduct.AddNewProductScreen
 import com.pepdeal.infotech.product.listProduct.screen.ListAllProductScreenRoot
 import com.pepdeal.infotech.product.producrDetails.ProductDetailScreenRoot
+import com.pepdeal.infotech.product.screen.ProductSearchScreenRoot
 import com.pepdeal.infotech.product.updateProduct.UpdateProductScreen
 import com.pepdeal.infotech.registration.RegisterScreen
 import com.pepdeal.infotech.shop.OpenYourShopScreen
@@ -188,6 +189,10 @@ fun AppNavigation() {
 
             composable<Routes.ShopSearchRoute> {
                 SearchShopScreenRoot()
+            }
+
+            composable<Routes.ProductSearchRoute> {
+                ProductSearchScreenRoot()
             }
 
             dialog(

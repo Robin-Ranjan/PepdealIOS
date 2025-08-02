@@ -26,4 +26,6 @@ interface ProductRepository {
         radiusKm: Double = 2.0
     ): Flow<AppResult<List<ShopItems>, DataError.Remote>>
 
+    suspend fun getShopItem(productId: String): ShopItems?
+
 }

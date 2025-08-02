@@ -205,7 +205,6 @@ fun ShopScreen(
     MaterialTheme {
         BindEffect(controller)
         Scaffold(
-            containerColor = BackGroundColor,
             snackbarHost = {
                 CustomSnackBarHost(
                     hostState = snackbarHostState,
@@ -216,7 +215,7 @@ fun ShopScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(BackGroundColor)
+                    .background(Color.White)
                     .padding(horizontal = 3.dp)
                     .pointerInput(Unit) {
                         awaitEachGesture {
@@ -270,6 +269,7 @@ fun ShopScreen(
                             )
                         }
                     }
+                    val suggestions = listOf("Food 🍔", "Fashion 👗", "Hotels 🏨", "Electronics 📱")
 
                     AppSearchBar(
                         searchQuery = searchTags.query,
@@ -277,6 +277,15 @@ fun ShopScreen(
                         isSearchActive = isSearchActive,
                         onSearchActiveChange = { isSearchActive = it },
                         isSearchLoading = searchTags.isLoading,
+                        onSearchTriggered = {
+                            NavigationProvider.navController.navigate(
+                                Routes.ShopSearchRoute(
+                                    it,
+                                    uiState.user?.userId
+                                )
+                            )
+                        },
+                        suggestionsList = suggestions,
                         onClearClick = { onAction(ShopViewModel.Action.OnSearchQueryChange("")) }
                     ) {
                         Box(
@@ -314,10 +323,10 @@ fun ShopScreen(
                                             .background(BackGroundColor)
                                     ) {
                                         items(searchTags.topSearchTags) {
-                                            SearchTagItemCard(it) { shopId ->
+                                            SearchTagItemCard(it) { queryTag ->
                                                 NavigationProvider.navController.navigate(
                                                     Routes.ShopSearchRoute(
-                                                        shopId,
+                                                        queryTag,
                                                         uiState.user?.userId
                                                     )
                                                 )
@@ -367,7 +376,10 @@ fun ShopScreen(
                                 }
                             }
                     ) {
-                        Column(modifier = Modifier.fillMaxSize().padding(top = 5.dp)) {
+                        Column(
+                            modifier = Modifier.fillMaxSize().background(BackGroundColor)
+                                .padding(top = 5.dp)
+                        ) {
                             // 🔹 Always show banners if available
                             if (uiState.bannerList.isNotEmpty()) {
                                 BannerCarouselWidget(
@@ -378,11 +390,10 @@ fun ShopScreen(
 
                             when {
                                 uiState.isLoading -> {
-                                    // 🔸 Show loader centered in remaining space
                                     Box(
                                         modifier = Modifier
                                             .fillMaxSize()
-                                            .weight(1f), // Fill rest of screen below banners
+                                            .weight(1f),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         CircularProgressIndicator(color = Color.Blue)

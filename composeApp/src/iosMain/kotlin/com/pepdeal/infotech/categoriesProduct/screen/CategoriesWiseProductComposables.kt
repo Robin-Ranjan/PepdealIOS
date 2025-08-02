@@ -19,10 +19,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -63,6 +63,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pepdeal.infotech.categoriesProduct.viewModel.CategoryWiseProductViewModal
 import com.pepdeal.infotech.core.base_ui.CustomSnackBarHost
 import com.pepdeal.infotech.navigation.routes.Routes
+import com.pepdeal.infotech.product.screen.component.ProductCardNew
 import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util.toDiscountFormat
 import com.pepdeal.infotech.util.Util.toNameFormat
@@ -192,14 +193,11 @@ fun CategoryWiseProductScreen(
                     }
 
                     else -> {
-                        LazyVerticalGrid(
-                            columns = GridCells.Fixed(2),
+                        LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(5.dp),
-                            horizontalArrangement = Arrangement.spacedBy(5.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp),
-                            state = rememberLazyGridState()
                         ) {
                             items(
                                 items = uiState.data,
@@ -212,9 +210,10 @@ fun CategoryWiseProductScreen(
                                     exit = fadeOut(tween(durationMillis = 300)) + slideOutVertically(
                                         targetOffsetY = { it })
                                 ) {
-                                    CategoriesWiseProductCard(
-                                        categoryProduct = item,
-                                        onLikeClicked = {
+                                    ProductCardNew(
+                                        shopItems = item.product,
+                                        isFavorite = item.isFavorite,
+                                        onFavoriteClick = {
                                             onAction(
                                                 CategoryWiseProductViewModal.Action.OnToggleFavoriteStatus(
                                                     productId = item.product.productId
@@ -224,7 +223,7 @@ fun CategoryWiseProductScreen(
                                         onProductClicked = {
                                             NavigationProvider.navController.navigate(
                                                 Routes.ProductDetailsPage(
-                                                    it
+                                                    item.product.productId
                                                 )
                                             )
                                         }

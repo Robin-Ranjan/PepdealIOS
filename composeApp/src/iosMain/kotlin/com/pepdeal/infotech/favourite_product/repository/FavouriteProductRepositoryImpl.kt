@@ -200,7 +200,8 @@ class FavouriteProductRepositoryImpl(
                 filters = listOf(
                     FirestoreFilter("userId", userId),
                     FirestoreFilter("productId", productId)
-                )
+                ),
+                limit = 1
             )
 
             val response = httpClient.post(DatabaseUtil.DATABASE_QUERY_URL) {

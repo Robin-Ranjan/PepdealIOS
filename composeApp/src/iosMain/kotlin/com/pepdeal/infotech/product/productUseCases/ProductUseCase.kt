@@ -8,10 +8,12 @@ import com.pepdeal.infotech.favourite_product.repository.FavouriteProductReposit
 import com.pepdeal.infotech.product.ProductUiDto
 import com.pepdeal.infotech.product.ProductWithImages
 import com.pepdeal.infotech.product.producrDetails.ProductDetailUiModel
+import com.pepdeal.infotech.product.repository.AlgoliaProductSearchTagRepository
 import com.pepdeal.infotech.product.repository.ProductRepository
-import com.pepdeal.infotech.product.repository.ProductSearchRepository
 import com.pepdeal.infotech.shop.repository.ShopRepository
 import com.pepdeal.infotech.tickets.domain.TicketRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
@@ -19,13 +21,14 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class ProductUseCase(
     private val favRepo: FavouriteProductRepository,
     private val productRepository: ProductRepository,
-    private val productSearchRepository: ProductSearchRepository,
     private val ticketRepository: TicketRepository,
-    private val shopRepository: ShopRepository
+    private val shopRepository: ShopRepository,
+    private val productAlgoliaRepository: AlgoliaProductSearchTagRepository
 ) {
     fun fetchedProducts(
         userId: String?,
@@ -35,6 +38,9 @@ class ProductUseCase(
     ): Flow<AppResult<ProductUiDto, DataError.Remote>> = channelFlow {
         try {
             println("📡 Fetching nearby products within $radiusKm km of ($userLat, $userLng)")
+            if (userId == null) {
+                println("⚠️ No userId available – favorites will be marked as false.")
+            }
 
             val productListResult = productRepository.getNearByProducts(
                 userLat = userLat,
@@ -46,85 +52,107 @@ class ProductUseCase(
                 val productList = productListResult.data
                 println("✅ Fetched ${productList.size} nearby products")
 
-                coroutineScope {
-                    productList.map { product ->
-                        launch {
+                productList.map { product ->
+                    launch {
+                        try {
                             var image = ""
-                            productRepository
-                                .fetchProductImages(product.productId, count = 1)
+                            productRepository.fetchProductImages(product.productId, count = 1)
                                 .onSuccess {
-                                    image = it?.firstOrNull()?.productImages ?: ""
-                                    println("🖼️ Image loaded for product ${product.productId}")
-                                }.onError {
-                                    println("⚠️ Error fetching image for ${product.productId}: ${it.message}")
+                                    image = it?.firstOrNull()?.productImages.orEmpty()
+                                    println("🖼️ Image loaded for ${product.productId}")
+                                }
+                                .onError {
+                                    println("⚠️ Error loading image for ${product.productId}: ${it.message}")
                                 }
 
-                            val isFav = userId?.let {
-                                val fav = favRepo.isFavorite(it, product.productId).isSuccess
-                                if (fav) println("❤️ Favorite: ${product.productId}")
-                                fav
+                            val isFav = userId?.let { uid ->
+                                println("🔍 Checking favorite for uid=$uid, pid=${product.productId}")
+                                val favResult = favRepo.isFavorite(uid, product.productId)
+                                println("❤️ Favorite check result: ${favResult.isSuccess}")
+                                favResult.getOrElse {
+                                    println("❌ Error checking favorite for ${product.productId}: ${it.message}")
+                                    false
+                                }
                             } ?: false
 
-                            send(
-                                AppResult.Success(
-                                    ProductUiDto(
-                                        product.copy(image = image),
-                                        isFavourite = isFav
-                                    )
-                                )
+                            val productDto = ProductUiDto(
+                                shopItem = product.copy(image = image),
+                                isFavourite = isFav
                             )
+
+                            // Ensure `send()` is not called in concurrent context
+                            withContext(coroutineContext) {
+                                send(AppResult.Success(productDto))
+                            }
+
+                        } catch (e: Exception) {
+                            println("❌ Exception while processing product ${product.productId}: ${e.message}")
                         }
-                    }.joinAll()
-                }
+                    }
+                }.joinAll()
+
             } else {
-                println("❌ Failed to get nearby product list.")
+                println("❌ Failed to fetch nearby product list.")
+                send(
+                    AppResult.Error(
+                        DataError.Remote(
+                            type = DataError.RemoteType.UNKNOWN,
+                            message = "Failed to load nearby products"
+                        )
+                    )
+                )
             }
+
         } catch (e: Exception) {
-            println("❌ General error: ${e.message}")
-            send(AppResult.Error(DataError.Remote(type = DataError.RemoteType.UNKNOWN, message = e.message)))
+            println("❌ General error in fetchedProducts: ${e.message}")
+            send(
+                AppResult.Error(
+                    DataError.Remote(
+                        type = DataError.RemoteType.SERVER,
+                        message = e.message
+                    )
+                )
+            )
         }
     }
 
     fun searchProduct(
         userId: String?,
-        startIndex: String?,
-        pageSize: Int,
         searchQuery: String
     ): Flow<AppResult<ProductUiDto, DataError.Remote>> = channelFlow {
         try {
-            val productListResult = productSearchRepository.getAllProductsSearchFlowPagination(
-                userId = userId,
-                startIndex = startIndex,
-                pageSize = pageSize,
-                searchQuery = searchQuery
-            ).first()
+            val productIds = productAlgoliaRepository.searchBestProducts(query = searchQuery)
 
-            if (productListResult is AppResult.Success) {
-                val productList = productListResult.data
+            coroutineScope {
+                productIds
+                    .filter { it.isNotBlank() }
+                    .map { productId ->
+                        async {
+                            val shopItem = productRepository.getShopItem(productId)
+                            if (shopItem != null) {
+                                var image = ""
+                                productRepository
+                                    .fetchProductImages(shopItem.productId, count = 1)
+                                    .onSuccess { image = it?.firstOrNull()?.productImages ?: "" }
 
-                coroutineScope {
-                    productList.map { product ->
-                        launch {
-                            var image = ""
-                            productRepository
-                                .fetchProductImages(product.productId, count = 1)
-                                .onSuccess { image = it?.firstOrNull()?.productImages ?: "" }
+                                val isFav = userId?.let { uid ->
+                                    favRepo.isFavorite(uid, productId).getOrElse {
+                                        println("❌ Favorite check failed for $productId: ${it.message}")
+                                        false
+                                    }
+                                } ?: false
 
-                            val isFav = userId?.let {
-                                favRepo.isFavorite(it, product.productId).isSuccess
-                            } ?: false
-
-                            send(
-                                AppResult.Success(
-                                    ProductUiDto(
-                                        product.copy(image = image),
-                                        isFavourite = isFav
+                                send(
+                                    AppResult.Success(
+                                        ProductUiDto(
+                                            shopItem.copy(image = image),
+                                            isFavourite = isFav
+                                        )
                                     )
                                 )
-                            )
+                            }
                         }
-                    }.joinAll()
-                }
+                    }.awaitAll()
             }
         } catch (e: Exception) {
             println("❌ General error: ${e.message}")
@@ -146,7 +174,8 @@ class ProductUseCase(
         try {
             val productResult = productRepository.fetchProductDetails(productId)
             val productImagesResult = productRepository.fetchProductImages(productId, 3)
-            val isFavourite = userId?.let { favRepo.isFavorite(it, productId).isSuccess } ?: false
+            val isFavourite =
+                userId?.let { favRepo.isFavorite(it, productId).getOrElse { false } } ?: false
 
             if (productResult is AppResult.Success && productImagesResult is AppResult.Success) {
                 val product = productResult.data

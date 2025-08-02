@@ -5,7 +5,6 @@ import com.pepdeal.infotech.core.domain.DataError
 import com.pepdeal.infotech.product.repository.ProductRepository
 import com.pepdeal.infotech.shop.modal.ShopWithProducts
 import com.pepdeal.infotech.shop.repository.AlgoliaShopSearchTagRepository
-import com.pepdeal.infotech.shop.repository.SearchShopRepository
 import com.pepdeal.infotech.shop.repository.ShopRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -73,8 +72,6 @@ class ShopUseCase(
     }
 
     fun searchShop(
-        lastShopId: String?,
-        pageSize: Int,
         searchQuery: String
     ): Flow<ShopWithProducts> = flow {
         try {

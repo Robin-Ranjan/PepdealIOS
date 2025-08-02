@@ -64,6 +64,8 @@ import com.pepdeal.infotech.PreferencesKeys
 import com.pepdeal.infotech.fonts.FontUtils.getFontResourceByName
 import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.product.ProductWithImages
+import com.pepdeal.infotech.product.repository.toShopItem
+import com.pepdeal.infotech.product.screen.component.ProductCardNew
 import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util
 import com.pepdeal.infotech.util.Util.fromHex
@@ -259,7 +261,8 @@ fun ShopDetailsWithProductPage(
                             contentPadding = PaddingValues(8.dp),
                             modifier = Modifier.fillMaxSize()
                         ) {
-                            items(items = shopProducts,
+                            items(
+                                items = shopProducts,
                                 key = { it.product.productId }) { product ->
 
                                 // Determine the heart icon state
@@ -287,13 +290,15 @@ fun ShopDetailsWithProductPage(
                                     exit = fadeOut(tween(durationMillis = 300)) + slideOutVertically(
                                         targetOffsetY = { it })
                                 ) {
-                                    ShopProductCard(product,
-                                        painterResource(heartIcon),
-                                        onLikeClicked = {
+                                    ProductCardNew(
+                                        product.product.toShopItem()
+                                            .copy(image = product.images.firstOrNull() ?: ""),
+                                        isFavorite = isFavorite,
+                                        onFavoriteClick = {
 
                                             if (currentUserId == "-1") {
                                                 Util.showToast("Login Please")
-                                                return@ShopProductCard
+                                                return@ProductCardNew
                                             }
                                             val newFavoriteState = !isFavorite
                                             favoriteStates[product.product.productId] =

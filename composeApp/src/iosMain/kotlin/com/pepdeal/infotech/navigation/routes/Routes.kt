@@ -86,6 +86,9 @@ sealed class Routes {
     @Serializable
     data class ShopSearchRoute(val query: String, val userId: String?) : Routes()
 
+    @Serializable
+    data class ProductSearchRoute(val query: String, val userId: String?) : Routes()
+
     companion object {
         const val ColorBottomSheet = "color_bottom_sheet"
         const val EditShopColorBottomSheet = "edit_shop_color_bottom_sheet"

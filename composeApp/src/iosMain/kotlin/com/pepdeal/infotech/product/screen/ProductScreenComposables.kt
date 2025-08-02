@@ -22,10 +22,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.CircularProgressIndicator
@@ -42,13 +40,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -56,8 +54,12 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pepdeal.infotech.core.base_ui.CustomSnackBarHost
 import com.pepdeal.infotech.core.basic_ui.AppSearchBar
+import com.pepdeal.infotech.navigation.routes.Routes
 import com.pepdeal.infotech.product.ProductViewModel
-import com.pepdeal.infotech.product.screen.component.ProductCard
+import com.pepdeal.infotech.product.screen.component.ProductCardNew
+import com.pepdeal.infotech.shop.BackGroundColor
+import com.pepdeal.infotech.shop.screen.component.SearchTagItemCard
+import com.pepdeal.infotech.util.NavigationProvider
 import com.pepdeal.infotech.util.Util.toNameFormat
 import dev.jordond.compass.geocoder.MobileGeocoder
 import dev.jordond.compass.geocoder.placeOrNull
@@ -65,17 +67,17 @@ import dev.jordond.compass.geolocation.Geolocator
 import dev.jordond.compass.geolocation.GeolocatorResult
 import dev.jordond.compass.geolocation.mobile
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
+import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 import pepdealios.composeapp.generated.resources.Res
+import pepdealios.composeapp.generated.resources.manrope_medium
 import pepdealios.composeapp.generated.resources.pepdeal_logo
 
 @Composable
 fun ProductScreenRoot(viewModel: ProductViewModel = koinViewModel()) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
+    val searchTags by viewModel.searchTags.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(uiState.message) {
@@ -89,6 +91,7 @@ fun ProductScreenRoot(viewModel: ProductViewModel = koinViewModel()) {
 
     ProductScreen(
         uiState,
+        searchTags,
         onAction = viewModel::onAction,
         viewModel = viewModel,
         snackbarHostState = snackbarHostState,
@@ -100,19 +103,14 @@ fun ProductScreenRoot(viewModel: ProductViewModel = koinViewModel()) {
 @Composable
 fun ProductScreen(
     uiState: ProductViewModel.UiState,
+    searchTags: ProductViewModel.SearchProductTags,
     onAction: (ProductViewModel.Action) -> Unit,
     snackbarHostState: SnackbarHostState,
     viewModel: ProductViewModel,
     newAddress: String? = null,
 ) {
-    // Observables
-    val filteredProducts by viewModel.searchedProducts.collectAsStateWithLifecycle()
-    val isSearchLoading by viewModel.isSearchLoading.collectAsStateWithLifecycle(initialValue = false)
-
     // Variables
-    val listState = rememberLazyGridState()
     var locationName: String? by rememberSaveable { mutableStateOf(null) }
-    var searchQuery by rememberSaveable { mutableStateOf("") }
     val keyboardController = LocalSoftwareKeyboardController.current
     var isSearchActive by rememberSaveable { mutableStateOf(false) }
 
@@ -148,16 +146,6 @@ fun ProductScreen(
         }
     }
     val displayedLocation = newAddress ?: locationName
-    LaunchedEffect(searchQuery) {
-        snapshotFlow { searchQuery.trim() }
-            .debounce(1000)
-            .distinctUntilChanged()
-            .collectLatest { debouncedQuery ->
-                if (debouncedQuery.isNotEmpty()) {
-                    viewModel.fetchSearchedItemsPage(debouncedQuery)
-                }
-            }
-    }
 
     MaterialTheme {
         Scaffold(
@@ -225,14 +213,25 @@ fun ProductScreen(
                             )
                         }
                     }
-
+                    val suggestions = listOf("Food 🍔", "Fashion 👗", "Hotels 🏨", "Electronics 📱")
                     AppSearchBar(
-                        searchQuery = searchQuery,
-                        onSearchQueryChange = { searchQuery = it },
+                        searchQuery = searchTags.query,
+                        onSearchQueryChange = {
+                            onAction(ProductViewModel.Action.OnSearchQueryChange(it))
+                        },
                         isSearchActive = isSearchActive,
                         onSearchActiveChange = { isSearchActive = it },
-                        isSearchLoading = isSearchLoading,
-                        onClearClick = { searchQuery = "" }
+                        isSearchLoading = searchTags.isLoading,
+                        suggestionsList = suggestions,
+                        onSearchTriggered = {
+                            NavigationProvider.navController.navigate(
+                                Routes.ProductSearchRoute(
+                                    it,
+                                    uiState.user?.userId
+                                )
+                            )
+                        },
+                        onClearClick = { onAction(ProductViewModel.Action.OnSearchQueryChange("")) }
                     ) {
                         Box(
                             modifier = Modifier
@@ -246,43 +245,65 @@ fun ProductScreen(
                                     }
                                 }
                         ) {
-                            LazyVerticalGrid(
-                                columns = GridCells.Fixed(2),
-                                modifier = Modifier.fillMaxSize().padding(5.dp),
-                                horizontalArrangement = Arrangement.spacedBy(5.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                if (filteredProducts.isEmpty()) {
-                                    item {
-                                        Text(
-                                            text = "No products found",
-                                            modifier = Modifier.padding(16.dp),
-                                            color = Color.Gray
-                                        )
-                                    }
-                                } else {
-                                    items(
-                                        filteredProducts,
-                                        key = { it.shopItem.productId }) { product ->
+                            when {
+                                searchTags.isLoading -> {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.align(Alignment.Center)
+                                    )
+                                }
 
-                                        ProductCard(
-                                            shopItems = product.shopItem,
-                                            isFavorite = product.isFavourite,
-                                            onLikeClicked = {
-                                                onAction(
-                                                    ProductViewModel.Action.OnSearchedFavClick(
-                                                        product.shopItem
-                                                    )
-                                                )
-                                            },
-                                            onProductClicked = {
-                                                onAction(
-                                                    ProductViewModel.Action.OnClickProduct(
-                                                        product.shopItem
+                                searchTags.isEmpty -> {
+                                    Text(
+                                        text = "No Tags found",
+                                        modifier = Modifier.align(Alignment.Center),
+                                        color = Color.Gray
+                                    )
+                                }
+
+                                else -> {
+                                    LazyColumn(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 5.dp)
+                                            .background(BackGroundColor)
+                                    ) {
+                                        items(searchTags.topSearchTags) {
+                                            SearchTagItemCard(it) { queryTag ->
+                                                NavigationProvider.navController.navigate(
+                                                    Routes.ProductSearchRoute(
+                                                        queryTag,
+                                                        uiState.user?.userId
                                                     )
                                                 )
                                             }
-                                        )
+                                        }
+
+                                        if (searchTags.topProductNames.isNotEmpty()) {
+                                            item {
+                                                Text(
+                                                    text = "Search By Product Name",
+                                                    fontFamily = FontFamily(Font(Res.font.manrope_medium)),
+                                                    color = Color.DarkGray,
+                                                    modifier = Modifier.padding(
+                                                        top = 8.dp,
+                                                        bottom = 4.dp,
+                                                        start = 12.dp
+                                                    ),
+                                                    fontSize = 14.sp
+                                                )
+                                            }
+                                        }
+
+                                        items(searchTags.topProductNames) {
+                                            SearchTagItemCard(it) { queryTag ->
+                                                NavigationProvider.navController.navigate(
+                                                    Routes.ProductSearchRoute(
+                                                        it,
+                                                        uiState.user?.userId
+                                                    )
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -313,15 +334,11 @@ fun ProductScreen(
 
                         else -> {
                             val product = uiState.products
-                            LazyVerticalGrid(
-                                columns = GridCells.Fixed(2),
+                            LazyColumn(
                                 modifier = Modifier.fillMaxSize().padding(5.dp),
-                                horizontalArrangement = Arrangement.spacedBy(5.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
-                                state = listState
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 items(product, key = { it.shopItem.productId }) { product ->
-                                    // Product Card with Animation
                                     AnimatedVisibility(
                                         visible = true,
                                         enter = fadeIn(tween(300)) + slideInVertically(
@@ -329,10 +346,11 @@ fun ProductScreen(
                                         exit = fadeOut(tween(300)) + slideOutVertically(
                                             targetOffsetY = { it })
                                     ) {
-                                        ProductCard(
+                                        ProductCardNew(
                                             shopItems = product.shopItem,
                                             isFavorite = product.isFavourite,
-                                            onLikeClicked = {
+                                            onFavoriteClick = {
+                                                println("click happen ")
                                                 onAction(
                                                     ProductViewModel.Action.OnFavClick(
                                                         product.shopItem

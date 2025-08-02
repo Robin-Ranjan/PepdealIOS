@@ -52,7 +52,7 @@ fun AppSearchBar(
     isSearchActive: Boolean,
     onSearchActiveChange: (Boolean) -> Unit,
     isSearchLoading: Boolean = false,
-    placeholderText: String = "Search...",
+    suggestionsList: List<String>,
     onSearchTriggered: (String) -> Unit = {},
     onClearClick: () -> Unit = {},
     content: @Composable () -> Unit
@@ -64,7 +64,7 @@ fun AppSearchBar(
             .fillMaxWidth()
             .border(1.dp, Color.Gray, RoundedCornerShape(8.dp)),
         colors = SearchBarColors(
-            containerColor = BackGroundColor,
+            containerColor = Color.White,
             dividerColor = Color.Gray
         ),
         shape = RectangleShape,
@@ -81,7 +81,7 @@ fun AppSearchBar(
                     .padding(0.dp),
                 placeholder = {
                     if (searchQuery.isEmpty()) {
-                        AnimatedSearchHintText(query = searchQuery)
+                        AnimatedSearchHintText(query = searchQuery, suggestionsList)
                     }
                 },
                 leadingIcon = {
@@ -152,15 +152,15 @@ fun AppSearchBar(
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun AnimatedSearchHintText(query: String) {
-    val suggestions = listOf("Food 🍔", "Fashion 👗", "Hotels 🏨", "Electronics 📱")
+fun AnimatedSearchHintText(query: String, suggestionsList: List<String>) {
+
     var index by remember { mutableStateOf(0) }
 
     LaunchedEffect(key1 = query.isEmpty()) {
         if (query.isEmpty()) {
             while (true) {
                 delay(2500)
-                index = (index + 1) % suggestions.size
+                index = (index + 1) % suggestionsList.size
             }
         }
     }
@@ -177,7 +177,7 @@ fun AnimatedSearchHintText(query: String) {
 
         // Animated suggestion part
         AnimatedContent(
-            targetState = suggestions[index],
+            targetState = suggestionsList[index],
             transitionSpec = {
                 slideInVertically { height -> height } + fadeIn() with
                         slideOutVertically { height -> -height } + fadeOut()
